@@ -14,4 +14,4 @@ to its `main`; they are not hand-maintained.
 
 | Formula | Platforms | What |
 |---------|-----------|------|
-| `speaker-eq` | Linux (x86_64, arm64) | Measure any speaker with any mic and build a PipeWire EQ profile. |
+| `pwtune` | Linux (x86_64, arm64) | Measure any speaker with any mic and build a PipeWire EQ profile. |
