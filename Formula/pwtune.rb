@@ -1,17 +1,17 @@
 class Pwtune < Formula
   desc "Measure any speaker with any mic and build a PipeWire EQ profile"
   homepage "https://github.com/jakobhviid/pwtune"
-  version "0.1.17"
+  version "0.1.18"
   license "MIT"
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/pwtune/releases/download/v0.1.17/pwtune-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "1a7e5ac7d939f528d49d3ca95296b9afd76de9e0a9afba7b9e84eb7e6389573f"
+      url "https://github.com/jakobhviid/pwtune/releases/download/v0.1.18/pwtune-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "52905c4a7054fa2aa8d9f7c3aea03ffa896fdb94290d3bfdcaff27c93ae501c1"
     end
     on_arm do
-      url "https://github.com/jakobhviid/pwtune/releases/download/v0.1.17/pwtune-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "22563d253ca9edd02c2b8fe96f1aaf36bc97eefe26707030ceed35547e6dcbdf"
+      url "https://github.com/jakobhviid/pwtune/releases/download/v0.1.18/pwtune-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "d613bf0ff6209d2ca2d3d4e4bea6a5c2acce40e435b2cad12263f8fe4e833d02"
     end
   end
 
