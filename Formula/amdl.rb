@@ -1,7 +1,7 @@
 class Amdl < Formula
   desc "Music-library harness: validate, transcode to Opus, and organize (wraps gamdl + ffmpeg)"
   homepage "https://github.com/jakobhviid/amdl"
-  version "0.1.2"
+  version "0.1.3"
   license "MIT"
 
   depends_on "ffmpeg"
@@ -9,12 +9,12 @@ class Amdl < Formula
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/amdl/releases/download/v0.1.2/amdl-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "1b13b0e3e62c8f69a520e3d7238a64424295efb5c888c36db347e65bc814cd43"
+      url "https://github.com/jakobhviid/amdl/releases/download/v0.1.3/amdl-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "ea9d8b2609ee5bc07ae2d1e95adbf5568c9e42f2d4fb1490c5e9494b1f7789c4"
     end
     on_arm do
-      url "https://github.com/jakobhviid/amdl/releases/download/v0.1.2/amdl-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "810745235cee4270093c346fa3e19e321373a056f525414cbb6760734c363a50"
+      url "https://github.com/jakobhviid/amdl/releases/download/v0.1.3/amdl-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "f9f15a93be7c949a399eff85861c759863c8aef89c781c152654af130deadbd4"
     end
   end
 
