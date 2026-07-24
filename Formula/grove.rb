@@ -1,47 +1,52 @@
 class Grove < Formula
   desc "Portable git shortcuts plus a multi-repo overview & sync, for any shell"
   homepage "https://github.com/jakobhviid/grove"
-  version "0.1.1"
+  version "0.1.2"
   license "MIT"
 
   depends_on "git"
 
   on_macos do
     on_intel do
-      url "https://github.com/jakobhviid/grove/releases/download/v0.1.1/grove-x86_64-apple-darwin.tar.gz"
-      sha256 "66f76f4ef575b34938cef774f3929a235b50e68fb19759a8011576bfd881d2f5"
+      url "https://github.com/jakobhviid/grove/releases/download/v0.1.2/grove-x86_64-apple-darwin.tar.gz"
+      sha256 "bbc344878caac645552a4d02c8f1bbd264b78021d5caaec32d6f5e3cb920b05a"
     end
     on_arm do
-      url "https://github.com/jakobhviid/grove/releases/download/v0.1.1/grove-aarch64-apple-darwin.tar.gz"
-      sha256 "82f9848dced460acb19a8494f0b4902937cb4d6c5cc5ee0dcc056d3fa32f4ffa"
+      url "https://github.com/jakobhviid/grove/releases/download/v0.1.2/grove-aarch64-apple-darwin.tar.gz"
+      sha256 "8fd329c22f6c10a6987df0fd337e8e3b88fe98723dff87389138a01e5eab515c"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/grove/releases/download/v0.1.1/grove-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "f1803ecc550f7e392cb977637464242f6fafd32700eaf842ae76cf6aaebcb094"
+      url "https://github.com/jakobhviid/grove/releases/download/v0.1.2/grove-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "0374d36cdefe39856c9935cc118d76ec129412489f248ca27d43c8fcded44945"
     end
     on_arm do
-      url "https://github.com/jakobhviid/grove/releases/download/v0.1.1/grove-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "83ce3041e6a383ec181844a6545b9cb4ffa341046795e91a59b5c2c387413c36"
+      url "https://github.com/jakobhviid/grove/releases/download/v0.1.2/grove-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "bd7dd69d759ff88fe65d6d7e60c8181b984b7bfda8877d559888c4606a6321d2"
     end
   end
 
   def install
     bin.install "grove"
+    # Short commands are symlinks to grove (it dispatches on the invoked name),
+    # so they work in any shell with no setup.
+    %w[gst ga gc gcp gp gpp lg lgp lt].each do |name|
+      bin.install_symlink "grove" => name
+    end
     generate_completions_from_executable(bin/"grove", "completions")
     (man1/"grove.1").write Utils.safe_popen_read(bin/"grove", "man")
   end
 
   def caveats
     <<~EOS
-      Enable the short aliases (gs, ga, gc, gcp, gp, gpp, lg, lgp, lt) by adding
-      one line to your shell rc:
+      The short commands work immediately in any shell — no setup:
+        gst ga gc gcp gp gpp   (git status/add/commit/commit+push/pull/push)
+        lg lgp lt              (multi-repo overview / sync / tree)
 
-        zsh:   eval "$(grove init zsh)"
-        bash:  eval "$(grove init bash)"
-        fish:  grove init fish | source
+      Optional: `grove init zsh|bash|fish` prints them as shell aliases instead,
+      if you'd rather alias them or rename them.
 
       The `lt` tree view uses Nerd Font icons — use a Nerd Font for best results.
     EOS
