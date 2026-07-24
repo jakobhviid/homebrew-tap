@@ -1,30 +1,30 @@
 class Grove < Formula
   desc "Portable git shortcuts plus a multi-repo overview & sync, for any shell"
   homepage "https://github.com/jakobhviid/grove"
-  version "0.1.3"
+  version "0.1.4"
   license "MIT"
 
   depends_on "git"
 
   on_macos do
     on_intel do
-      url "https://github.com/jakobhviid/grove/releases/download/v0.1.3/grove-x86_64-apple-darwin.tar.gz"
-      sha256 "211f0fdeb8885a4de0bec4e0b398ad899d33d2077434171213e5c420283c46ef"
+      url "https://github.com/jakobhviid/grove/releases/download/v0.1.4/grove-x86_64-apple-darwin.tar.gz"
+      sha256 "12bbab0371d17b58f1df70a40c97642de8fc62678f0eba87c353f953ba9dfec6"
     end
     on_arm do
-      url "https://github.com/jakobhviid/grove/releases/download/v0.1.3/grove-aarch64-apple-darwin.tar.gz"
-      sha256 "cc18b8c0d0655c500c7cfda7852d3f7c42c8e7232ac23ab1b726da074f4bf3ae"
+      url "https://github.com/jakobhviid/grove/releases/download/v0.1.4/grove-aarch64-apple-darwin.tar.gz"
+      sha256 "70fd3ebe43908f2f7ab1b0f3068e9096335025438ebe9050e7726239f3478e55"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/grove/releases/download/v0.1.3/grove-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "4db8ac18aeb5def04fbcd07df4394ec348f6a1923fb591f8146c194f6bd64305"
+      url "https://github.com/jakobhviid/grove/releases/download/v0.1.4/grove-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "6266b694af95d6d4650e3d7e8e69fc9b739f722045aa27190747cf9be86aeb61"
     end
     on_arm do
-      url "https://github.com/jakobhviid/grove/releases/download/v0.1.3/grove-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "b45495654ae9c8026ead1d3f1a6a3c998e5afe066f9f43002b344d6b22f5b78e"
+      url "https://github.com/jakobhviid/grove/releases/download/v0.1.4/grove-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "8b167e2c802b414e0fc53bbceed2f45626803ef629723797527b9a08437dc732"
     end
   end
 
