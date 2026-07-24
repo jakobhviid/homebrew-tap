@@ -1,24 +1,24 @@
 class Pwtune < Formula
   desc "Measure any speaker with any mic and build a PipeWire EQ profile"
   homepage "https://github.com/jakobhviid/pwtune"
-  version "0.1.20"
+  version "0.1.21"
   license "MIT"
 
   # Prebuilt x86_64 Linux bottle so `brew install` pours it (no C compiler);
   # aarch64 falls back to the url+install path below.
   bottle do
-    root_url "https://github.com/jakobhviid/pwtune/releases/download/v0.1.20"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "e8d9c43230ce37eeb8b516f2faeb07e8e6ceb545bf4764e1a1ad4f2e462fdd7e"
+    root_url "https://github.com/jakobhviid/pwtune/releases/download/v0.1.21"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "f2c25d12a7394dbb80434529bb676db82066f5ad62302c88ac4a36680e3a06e5"
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/pwtune/releases/download/v0.1.20/pwtune-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "7d298eb5df8992c69b8aa8a1c40db4b5e7eb69f5bef1746039058794e03f10b8"
+      url "https://github.com/jakobhviid/pwtune/releases/download/v0.1.21/pwtune-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "37f8f081fce7591f7a0c2eb2a1aaa7a0f592840cf49fe48689f2fe91f90ca869"
     end
     on_arm do
-      url "https://github.com/jakobhviid/pwtune/releases/download/v0.1.20/pwtune-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "468737e8c1adc97f4c7b6f6270a5a5d96aeb136851e246031a33df9d730dfbb3"
+      url "https://github.com/jakobhviid/pwtune/releases/download/v0.1.21/pwtune-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "69e3b9e423f3642fd9647c10329b22acf133a72d767940de0916c79e3b239816"
     end
   end
 
