@@ -1,14 +1,14 @@
 class Amdl < Formula
   desc "Music-library harness: validate, transcode to Opus, and organize (wraps gamdl + ffmpeg)"
   homepage "https://github.com/jakobhviid/amdl"
-  version "0.2.20"
+  version "1.0.21"
   license "MIT"
 
   # Prebuilt x86_64 Linux bottle so `brew install` pours it (no C compiler);
   # other platforms fall back to the url+install path below.
   bottle do
-    root_url "https://github.com/jakobhviid/amdl/releases/download/v0.2.20"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "e7a6e3b18537cfd6239af497981c1bda67ff4095a4ef73fdb34b8d0083f2ad7c"
+    root_url "https://github.com/jakobhviid/amdl/releases/download/v1.0.21"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "a46b750139f95e694d8f0be9fbcfdc6aa5a42f807d9ec897b2d6e9812a059bd6"
   end
 
   depends_on "chromaprint" # fpcalc, for `identify`
@@ -17,23 +17,23 @@ class Amdl < Formula
 
   on_macos do
     on_intel do
-      url "https://github.com/jakobhviid/amdl/releases/download/v0.2.20/amdl-x86_64-apple-darwin.tar.gz"
-      sha256 "674490b134d209c35d3bc061446373b6b82a1d27100bf255b5ba9886af1c40f5"
+      url "https://github.com/jakobhviid/amdl/releases/download/v1.0.21/amdl-x86_64-apple-darwin.tar.gz"
+      sha256 "33941ba193f4838a1fc9b5c9db98f5450f2cb2cd05be48b83c5de4e74bb4abdd"
     end
     on_arm do
-      url "https://github.com/jakobhviid/amdl/releases/download/v0.2.20/amdl-aarch64-apple-darwin.tar.gz"
-      sha256 "38fe954741277af8c45761d91e7c5616714461e800fafd471c732848a4e2f9a7"
+      url "https://github.com/jakobhviid/amdl/releases/download/v1.0.21/amdl-aarch64-apple-darwin.tar.gz"
+      sha256 "5546b3db4f39cdd5589704738f4cf07eb7af27951fb9746152d9496fe0f5e289"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/amdl/releases/download/v0.2.20/amdl-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "4302554ba0e45bc75af16fdff173cf934a9f525e99ceaffb50b309d0a9145a27"
+      url "https://github.com/jakobhviid/amdl/releases/download/v1.0.21/amdl-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "912185950e6516871981bdff75bb3b5785c5e1cfa4de5e3b4ee390a4e15465a9"
     end
     on_arm do
-      url "https://github.com/jakobhviid/amdl/releases/download/v0.2.20/amdl-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "baa2a665d9ad6ee4b5957cd4ff81159eb4ccb07b140b65da636f1f3b7253ff65"
+      url "https://github.com/jakobhviid/amdl/releases/download/v1.0.21/amdl-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "6e04e7b7fb1abd2b55638c84cc117c43a23d6e3d0266364cc4425868af10d6a9"
     end
   end
 
