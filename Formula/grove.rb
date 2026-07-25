@@ -1,38 +1,38 @@
 class Grove < Formula
   desc "Portable git shortcuts plus a multi-repo overview & sync, for any shell"
   homepage "https://github.com/jakobhviid/grove"
-  version "1.0.13"
+  version "1.0.14"
   license "MIT"
 
   # Prebuilt x86_64 Linux bottle: `brew install` pours it directly, so it needs
   # no C compiler / build tools (works on minimal & immutable distros). Other
   # platforms fall back to the url+install path below (Macs have the toolchain).
   bottle do
-    root_url "https://github.com/jakobhviid/grove/releases/download/v1.0.13"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "03713c0a59335f010d17cff10043dbe98c84c85509a5bbc84c4516e1c3f1799a"
+    root_url "https://github.com/jakobhviid/grove/releases/download/v1.0.14"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "04b45323f5b1c9070d4a4b8cbbf73f10e8ed5d484b8a8913929bdbf9df6622bb"
   end
 
   depends_on "git"
 
   on_macos do
     on_intel do
-      url "https://github.com/jakobhviid/grove/releases/download/v1.0.13/grove-x86_64-apple-darwin.tar.gz"
-      sha256 "80297d1145708db9850cd38399ca4d5a211b1f9c2c16c984a3510ab9d80c4748"
+      url "https://github.com/jakobhviid/grove/releases/download/v1.0.14/grove-x86_64-apple-darwin.tar.gz"
+      sha256 "49dcfd91220c179c99e6584d4e746ab72a6b3fd525ed8e5cf01502d5dcedc8ef"
     end
     on_arm do
-      url "https://github.com/jakobhviid/grove/releases/download/v1.0.13/grove-aarch64-apple-darwin.tar.gz"
-      sha256 "3f6a4b573af3514ebf626027aade9f92fc17abdd77edeb68a6d12d93360a9efb"
+      url "https://github.com/jakobhviid/grove/releases/download/v1.0.14/grove-aarch64-apple-darwin.tar.gz"
+      sha256 "c5df1815a6b1a7af2d300fbe1bb100f3f6f9d386549449b922c85154a7217d03"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/grove/releases/download/v1.0.13/grove-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "ae93cced346e8f8cf4e7b015536157069e718792084c67d0f5d491e4eaa59150"
+      url "https://github.com/jakobhviid/grove/releases/download/v1.0.14/grove-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "9940914bc44225b5b4ab1587b388a4e2562340a68383a9de86caf086e6f1c2eb"
     end
     on_arm do
-      url "https://github.com/jakobhviid/grove/releases/download/v1.0.13/grove-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "a11b30decbe989ac19ab3ca1072a575a0f8d46f2fce4824527d7f9bfae42c87a"
+      url "https://github.com/jakobhviid/grove/releases/download/v1.0.14/grove-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "e5d20f7c1ee354e6867220e32a72ac66c69d58f241d88f77a1e76b629f290707"
     end
   end
 
