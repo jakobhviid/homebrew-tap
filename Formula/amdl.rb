@@ -1,14 +1,14 @@
 class Amdl < Formula
   desc "Music-library harness: validate, transcode to Opus, and organize (wraps gamdl + ffmpeg)"
   homepage "https://github.com/jakobhviid/amdl"
-  version "1.9.0"
+  version "1.10.0"
   license "MIT"
 
   # Prebuilt x86_64 Linux bottle so `brew install` pours it (no C compiler);
   # other platforms fall back to the url+install path below.
   bottle do
-    root_url "https://github.com/jakobhviid/amdl/releases/download/v1.9.0"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "e1c9ed53eb6232fe0b40ee7acc59ff75239d0b4986380c22ea172a4a09089dec"
+    root_url "https://github.com/jakobhviid/amdl/releases/download/v1.10.0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "7f4a64f5a9c57499f53cf054f5cb3149345de154d816e156a37a75b66216d5d5"
   end
 
   depends_on "chromaprint" # fpcalc, for `identify`
@@ -17,23 +17,23 @@ class Amdl < Formula
 
   on_macos do
     on_intel do
-      url "https://github.com/jakobhviid/amdl/releases/download/v1.9.0/amdl-x86_64-apple-darwin.tar.gz"
-      sha256 "54809e87f75f98f5d8c4ba0825f1318158f09e21e0aac316e24012afeaa4cbc5"
+      url "https://github.com/jakobhviid/amdl/releases/download/v1.10.0/amdl-x86_64-apple-darwin.tar.gz"
+      sha256 "1bdb7f4ab42db761d1b8346d34bbb2048e482c2be592dd46bffe2bce1c93301a"
     end
     on_arm do
-      url "https://github.com/jakobhviid/amdl/releases/download/v1.9.0/amdl-aarch64-apple-darwin.tar.gz"
-      sha256 "5d0c8463ad42837f9c67859294a5dabb42f047c3dd755b1228a80f8f6a997717"
+      url "https://github.com/jakobhviid/amdl/releases/download/v1.10.0/amdl-aarch64-apple-darwin.tar.gz"
+      sha256 "309595bc81eb742c14bac4f1c40e38cfd50db84347c5a50f68679ad1109e02c9"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/amdl/releases/download/v1.9.0/amdl-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "7553cdaf6f37ee93d58bdbb421532966ea0bb17ca1f4bad5c30ce75aafaea3b4"
+      url "https://github.com/jakobhviid/amdl/releases/download/v1.10.0/amdl-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "95362c676c1b15b09ca3cd3b2073baf2ebe2f129bc0d32ef419301cc03893256"
     end
     on_arm do
-      url "https://github.com/jakobhviid/amdl/releases/download/v1.9.0/amdl-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "04cd8a9dc56d045e38ed797aa465357d9fce9656268231444bd4307e2b285d8e"
+      url "https://github.com/jakobhviid/amdl/releases/download/v1.10.0/amdl-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "fba38050e3390dae43338bd83c5d5c956cea2a90efd6d812aedba7734254f9a2"
     end
   end
 
