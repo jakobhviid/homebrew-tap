@@ -8,7 +8,7 @@ class Amdl < Formula
   # other platforms fall back to the url+install path below.
   bottle do
     root_url "https://github.com/jakobhviid/amdl/releases/download/v1.11.0"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "c204129a81a54e7ba2002c5c5fd6a6b761e8e17ee3baed9861779f0147fad3c4"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "ee78a586d21c786139107504657523fe16b020d55edbe62f2f9a5da76048be5a"
   end
 
   depends_on "chromaprint" # fpcalc, for `identify`
@@ -18,22 +18,22 @@ class Amdl < Formula
   on_macos do
     on_intel do
       url "https://github.com/jakobhviid/amdl/releases/download/v1.11.0/amdl-x86_64-apple-darwin.tar.gz"
-      sha256 "e05ddf6c194251461d734312a12a62a33b3e64c187db656a2ae3998645de5877"
+      sha256 "2c2c75ebdfc1a137b79189ff88fac519137b580c3f65cbf3ef1502eae0629ebd"
     end
     on_arm do
       url "https://github.com/jakobhviid/amdl/releases/download/v1.11.0/amdl-aarch64-apple-darwin.tar.gz"
-      sha256 "d8595d408a5faf5d4d62d76d5c0fde8c36b733ed44f4a417e3dda74512964c8f"
+      sha256 "ed5b383b6ee26b8c3d66889dcf2670a4ea0ec27f370c45028b8347323378202e"
     end
   end
 
   on_linux do
     on_intel do
       url "https://github.com/jakobhviid/amdl/releases/download/v1.11.0/amdl-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "b90d6ecaf82a436c18f2a7375be2f3af6a3f01b398b31f579f1f0587aa9d456f"
+      sha256 "d26c44dee0c02bf8125cdbea0bccf4c6311ae2d3fd42aa859e39551135f03c05"
     end
     on_arm do
       url "https://github.com/jakobhviid/amdl/releases/download/v1.11.0/amdl-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "a7136453e82a4280beb170437d57824be8cc5320b014c9314df71a62bff1f8b8"
+      sha256 "49267f37b1b05cabd5ad6ce698781f54231f46acbc41db877f6e1b2c0ffdd027"
     end
   end
 
