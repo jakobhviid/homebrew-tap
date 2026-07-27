@@ -10,9 +10,9 @@ class Amdl < Formula
   # the url+install path below.
   bottle do
     root_url "https://github.com/jakobhviid/amdl/releases/download/v4.2.12"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "04e6ee85319d43e448588300cbb5438579b1e7c4190ec22f7f6d99be564632f4"
-    sha256 cellar: :any_skip_relocation, tahoe: "255d48cf0fe88d0b55ff712152624815a1d8a7454668d647ba37810264b17c40"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "31e247d0c18f1e9bc9ccbcb9234f5d09ce2caceb6a0948146d43628eaf2dd2b3"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "e24054be678f5c1c90900ca481723c903220265a8c86b9906bd50d9bbf264207"
+    sha256 cellar: :any_skip_relocation, tahoe: "c570663bedc7c25b218870d439e0ec9e03f66295cbfc6a0dc00026bc016910e2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "39a2cddb6f6b7c1d56b369522efa8a6213af84a4e228a61c49f702da2f2f8c83"
   end
 
   depends_on "chromaprint" # fpcalc, for `identify`
@@ -22,22 +22,22 @@ class Amdl < Formula
   on_macos do
     on_intel do
       url "https://github.com/jakobhviid/amdl/releases/download/v4.2.12/amdl-x86_64-apple-darwin.tar.gz"
-      sha256 "b15483539d5f184de8c6031c9a3edf6a7298133d3a2762cae196e1e0c66cc9d4"
+      sha256 "084a64a38219d50bbbbac988959bebba2786f759ac9304c43dae8b827dc20022"
     end
     on_arm do
       url "https://github.com/jakobhviid/amdl/releases/download/v4.2.12/amdl-aarch64-apple-darwin.tar.gz"
-      sha256 "b3737ab4d049d1e5299dcf5e66357414ef81ad85c8819b7f36b11698547525ef"
+      sha256 "4022377038ae0f903fcf33b59fe1a17474c51e5fcffed2e7f5a94152d7257a5c"
     end
   end
 
   on_linux do
     on_intel do
       url "https://github.com/jakobhviid/amdl/releases/download/v4.2.12/amdl-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "e41f557d61d9dec0f89664f453db970a53d1e35c6210e8dd9b06480511d69761"
+      sha256 "dcb779c0f7de38c90d5ea563d0b57a6925f93b727c00047543d27e2d2eb99b8a"
     end
     on_arm do
       url "https://github.com/jakobhviid/amdl/releases/download/v4.2.12/amdl-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "e1b3b712f56ed844aa19bcbfacb8fbda6027a573ae65fb615aacc09e9e3f6bba"
+      sha256 "4bfefaf60b377f52f383cc206d8019d68c4299da1566affdc86015a13b47f778"
     end
   end
 
