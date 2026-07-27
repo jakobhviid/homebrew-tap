@@ -1,7 +1,7 @@
 class Dotsync < Formula
   desc "Sync user-level config between machines through a cloud folder, using symlinks"
   homepage "https://github.com/jakobhviid/dotsync"
-  version "1.7.0"
+  version "1.8.0"
   license "MIT"
 
   # Prebuilt bottles so `brew install` pours (no C compiler / Xcode gate):
@@ -9,31 +9,31 @@ class Dotsync < Formula
   # — e.g. a macOS older than the build runner, or arm64 Linux — falls back to
   # the url+install path below.
   bottle do
-    root_url "https://github.com/jakobhviid/dotsync/releases/download/v1.7.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "26be99d657894c0723e888dedb26f19846dcfa2fbcc9be7d5d5ddfdc1c5a84da"
-    sha256 cellar: :any_skip_relocation, tahoe: "834309ba56bb943f9279d02cfe743431fe13c67680dbdae39b9ca05d9f2be7c1"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "295e3377e2b74db60ae5b75218c297ab1f1665a35fd233a55ffdbd36bcdc6345"
+    root_url "https://github.com/jakobhviid/dotsync/releases/download/v1.8.0"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "805183aee193fc2b81fac0258ee51cf6b3a245e0a1ca457d9d3da90fcaed3857"
+    sha256 cellar: :any_skip_relocation, tahoe: "0a035ce4894407ebc6c86ab493e0281b1687544950c280716a74c775aed7f703"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "12cbf81a715fcba549a88fbf0c219812fff97c9f983db8f8f79c18bf244c693b"
   end
 
   on_macos do
     on_intel do
-      url "https://github.com/jakobhviid/dotsync/releases/download/v1.7.0/dotsync-x86_64-apple-darwin.tar.gz"
-      sha256 "d4499e01a6f6e08a39d093657898e8189d0cad43e8aede0d58f0d81f15f4d903"
+      url "https://github.com/jakobhviid/dotsync/releases/download/v1.8.0/dotsync-x86_64-apple-darwin.tar.gz"
+      sha256 "bbdc6dc185526f412020c1aab23d956224e407269a8383f147bddf7a23a84200"
     end
     on_arm do
-      url "https://github.com/jakobhviid/dotsync/releases/download/v1.7.0/dotsync-aarch64-apple-darwin.tar.gz"
-      sha256 "203072a78d549afc63bf62ee6c1691c4c372df596b0b98633a55379508c2068f"
+      url "https://github.com/jakobhviid/dotsync/releases/download/v1.8.0/dotsync-aarch64-apple-darwin.tar.gz"
+      sha256 "aa6a3b719bec53a7960888f5e2f43d4c4671d8e6711728744dc3e4c10a6ec266"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/dotsync/releases/download/v1.7.0/dotsync-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "4d805e91f598df4623f741ebce60202618d8a6221d1c4b656b5c963b8db7a604"
+      url "https://github.com/jakobhviid/dotsync/releases/download/v1.8.0/dotsync-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "d6d5e554de2b4002a58d6f99387d794356790e844d104d874791081f3597f5f1"
     end
     on_arm do
-      url "https://github.com/jakobhviid/dotsync/releases/download/v1.7.0/dotsync-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "5582ab95c6a847d1810849107ac4578713d1a7e4bba8feef1b984ab3923687e0"
+      url "https://github.com/jakobhviid/dotsync/releases/download/v1.8.0/dotsync-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "ec0f58faea5beda6af29d7a725f03ed7f83ca9fc7ebaffdd953ea0f649cbd059"
     end
   end
 
