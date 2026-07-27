@@ -1,7 +1,7 @@
 class Amdl < Formula
   desc "Maintain a uniform Opus music library: complete tags, cover art, and lyrics"
   homepage "https://github.com/jakobhviid/amdl"
-  version "4.2.9"
+  version "4.2.10"
   license "MIT"
 
   # Prebuilt bottles so `brew install` pours (no C compiler / Xcode gate):
@@ -9,10 +9,10 @@ class Amdl < Formula
   # — e.g. a macOS older than the build runner, or arm64 Linux — falls back to
   # the url+install path below.
   bottle do
-    root_url "https://github.com/jakobhviid/amdl/releases/download/v4.2.9"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "dd2c5077f3f107636bda24f21202594c5db042586881c8ee5f242b7161ae0f18"
-    sha256 cellar: :any_skip_relocation, tahoe: "408620ba5ffc6327dbe209db3d97705285840d0eacc3dcf3ff33851090d754ab"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "a6e775f5530d123f4695d311d175bd8d1e5b7433869e3b4fbdf3aa8d11d1a298"
+    root_url "https://github.com/jakobhviid/amdl/releases/download/v4.2.10"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "51aa36b3b36e7311a66ee3e89d585d9405ef286254c3e256ac4bedc2fa4c9e02"
+    sha256 cellar: :any_skip_relocation, tahoe: "39b1d4c66be7b9b9160ebd7c0ac6363e01b450f9c7c9748f95886ae382e9dbb8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "34bbad2ca739fa2c92734fc8353949fb0faa2267f742cae63c1db4813d10f351"
   end
 
   depends_on "chromaprint" # fpcalc, for `identify`
@@ -21,23 +21,23 @@ class Amdl < Formula
 
   on_macos do
     on_intel do
-      url "https://github.com/jakobhviid/amdl/releases/download/v4.2.9/amdl-x86_64-apple-darwin.tar.gz"
-      sha256 "460de3a4afe88b415c6416b93270c4550b4aa1ee4d4b789443c32b810691f77d"
+      url "https://github.com/jakobhviid/amdl/releases/download/v4.2.10/amdl-x86_64-apple-darwin.tar.gz"
+      sha256 "269192b0c72f27a487983a35557483c1f5fac648b6baffc7c17c1e4d3c9591c7"
     end
     on_arm do
-      url "https://github.com/jakobhviid/amdl/releases/download/v4.2.9/amdl-aarch64-apple-darwin.tar.gz"
-      sha256 "626a453a4f0c49b5667e729d0e72ab593383ec804e7fd765e1bf12774dded71c"
+      url "https://github.com/jakobhviid/amdl/releases/download/v4.2.10/amdl-aarch64-apple-darwin.tar.gz"
+      sha256 "503923ebc0a175eccd3d6c88ebfeeb09b0200903b98e512d331b4c1891044a3e"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/amdl/releases/download/v4.2.9/amdl-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "40d58c0cd93a8eddc28d3afcf97327f730807e242734ec44bdcfe68fa84626c9"
+      url "https://github.com/jakobhviid/amdl/releases/download/v4.2.10/amdl-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "2028ea1b74a7bdf8e8180a0f1ca12b8ea31f76badc0aefb580812b9a5f95bd62"
     end
     on_arm do
-      url "https://github.com/jakobhviid/amdl/releases/download/v4.2.9/amdl-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "83810f77a320ccbe7820a4cd18f680ee88fdab7c3a56d326b343e3503f8b4f3d"
+      url "https://github.com/jakobhviid/amdl/releases/download/v4.2.10/amdl-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "fe21a02787ccac764edf7b4028d50efad6ac2241f945dc8c5fa3cad427345322"
     end
   end
 
@@ -45,12 +45,6 @@ class Amdl < Formula
     bin.install "amdl"
     generate_completions_from_executable(bin/"amdl", "completions")
     (man1/"amdl.1").write Utils.safe_popen_read(bin/"amdl", "man")
-  end
-
-  def caveats
-    "Acquisition is handled by gamdl — install/configure it per its own terms. " \
-      "amdl auto-detects Apple Music cookies from your browser (Safari/Chrome/Firefox/…); " \
-      "on a headless host, pass them with `--cookies -`."
   end
 
   test do
