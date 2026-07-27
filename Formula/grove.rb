@@ -1,64 +1,71 @@
 class Grove < Formula
   desc "Portable git shortcuts plus a multi-repo overview & sync, for any shell"
   homepage "https://github.com/jakobhviid/grove"
-  version "1.1.1"
+  version "2.0.0"
   license "MIT"
 
   # Prebuilt x86_64 Linux bottle: `brew install` pours it directly, so it needs
   # no C compiler / build tools (works on minimal & immutable distros). Other
   # platforms fall back to the url+install path below (Macs have the toolchain).
   bottle do
-    root_url "https://github.com/jakobhviid/grove/releases/download/v1.1.1"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "f6ec1d05659f0f210b2cae2b9a4c593d0cd302ac2ca21e616d5bd53412fe66d8"
+    root_url "https://github.com/jakobhviid/grove/releases/download/v2.0.0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "5decb175646e204855609ee6aa9c888d8fc790bdd4787145d0258ea6eba2cb71"
   end
 
   depends_on "git"
 
   on_macos do
     on_intel do
-      url "https://github.com/jakobhviid/grove/releases/download/v1.1.1/grove-x86_64-apple-darwin.tar.gz"
-      sha256 "c3d4ef9ee9d08207b558774f9e8d4197d5990409b5cd9ae737c017a00060bca0"
+      url "https://github.com/jakobhviid/grove/releases/download/v2.0.0/grove-x86_64-apple-darwin.tar.gz"
+      sha256 "e6ebbbd5d01e06e74845d148004e707609a0bf327aa66a3e436695a9069efd28"
     end
     on_arm do
-      url "https://github.com/jakobhviid/grove/releases/download/v1.1.1/grove-aarch64-apple-darwin.tar.gz"
-      sha256 "53a7afdbb9e83d3f5be81ca3bc09079c8332d7cfa381480b89244dd3457522ea"
+      url "https://github.com/jakobhviid/grove/releases/download/v2.0.0/grove-aarch64-apple-darwin.tar.gz"
+      sha256 "bd3d34e997c2d59c6808c44191547cfab2c82ba94d24105339dc6eda83d86521"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/grove/releases/download/v1.1.1/grove-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "cf3847bc10e165cf7b679da070277a72dd2f48a6f7c8118913655ffdd8e6e433"
+      url "https://github.com/jakobhviid/grove/releases/download/v2.0.0/grove-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "9d8cacf6f3ad985f9227bfc732351f3693e84ccd55da98a3d499f274f022a64b"
     end
     on_arm do
-      url "https://github.com/jakobhviid/grove/releases/download/v1.1.1/grove-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "e0ca7e8e81d3ee0084d3e5f24829108e590fa52aa04ad6a2baaa1b417be56413"
+      url "https://github.com/jakobhviid/grove/releases/download/v2.0.0/grove-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "e314505101111fd2fb20e832f1a9b1ba04fec3b5efcccc7e602b6f703a6fbd9f"
     end
   end
 
   def install
-    # Each command is its own binary — no setup, works in any shell.
-    bin.install %w[grove gst ga gc gp gpp lg lgp lgpp lt]
+    # grove bundles the git verbs (status/add/commit/pull/push) as subcommands;
+    # the multi-repo/tree tools are their own binaries.
+    bin.install %w[grove lg lgp lgpp lt]
+    # `grove completions <shell>` emits the suite's completions. For zsh it's a
+    # single `_grove` file tagged for grove + lg/lgp/lgpp/lt (and the short
+    # aliases inherit grove's completion); bash/fish cover `grove` itself.
     generate_completions_from_executable(bin/"grove", "completions")
-    # Man page for each command: grove has a `man` subcommand; the rest render
-    # theirs with a hidden `--man` flag.
+    # Man pages: grove has a `man` subcommand; lg/lgp/lgpp/lt render theirs with
+    # a hidden `--man` flag.
     (man1/"grove.1").write Utils.safe_popen_read(bin/"grove", "man")
-    %w[gst ga gc gp gpp lg lgp lgpp lt].each do |c|
+    %w[lg lgp lgpp lt].each do |c|
       (man1/"#{c}.1").write Utils.safe_popen_read(bin/c, "--man")
     end
   end
 
   def caveats
     <<~EOS
-      The commands work immediately in any shell — no setup:
-        gst ga gc gp gpp   (git status / add / commit / pull / push)
-        lg lgp lt          (multi-repo overview / sync / tree)
-      Run `grove` for an overview.
+      The multi-repo/tree tools work immediately — no setup:
+        lg lgp lgpp lt     (overview / sync / bulk-push / tree)
 
-      Optional short aliases (gs, gcp, …) via a grove file:
-        grove example > ~/.config/grove/aliases     # then edit to taste
-        eval "$(grove init zsh)"                     # zsh (or bash / fish)
+      The everyday git verbs are `grove` subcommands:
+        grove status / add / commit / pull / push
 
+      For the short names (gs ga gc gcp gp gpp), provision your shell once:
+        grove setup            # writes ~/.config/grove/aliases + one line in your rc
+      then open a new shell. (`grove init <shell>` just prints the lines to eval.)
+      Rename any alias that clashes on your system (e.g. gc) in the grove file.
+
+      Run `grove` for an overview, or `grove --llm` for a machine-readable guide.
       The `lt` tree view uses Nerd Font icons — use a Nerd Font for best results.
     EOS
   end
