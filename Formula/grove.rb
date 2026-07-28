@@ -1,38 +1,38 @@
 class Grove < Formula
   desc "Portable git shortcuts plus a multi-repo overview & sync, for any shell"
   homepage "https://github.com/jakobhviid/grove"
-  version "2.1.0"
+  version "2.2.0"
   license "MIT"
 
   # Prebuilt x86_64 Linux bottle: `brew install` pours it directly, so it needs
   # no C compiler / build tools (works on minimal & immutable distros). Other
   # platforms fall back to the url+install path below (Macs have the toolchain).
   bottle do
-    root_url "https://github.com/jakobhviid/grove/releases/download/v2.1.0"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "c9151bd3e59e310a2b8b3ddb3c6093521d9436487ca5d5eeecd0c35a0b3b8f9b"
+    root_url "https://github.com/jakobhviid/grove/releases/download/v2.2.0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "703ee421ef26fb4eecad0409b8570778b43df924d887eab9c50fd917f90b23b2"
   end
 
   depends_on "git"
 
   on_macos do
     on_intel do
-      url "https://github.com/jakobhviid/grove/releases/download/v2.1.0/grove-x86_64-apple-darwin.tar.gz"
-      sha256 "c5f1afdc60cdccd3062a1a4e9ca67d13fef0d6b4f4a9986ee4bccdce0b6a3237"
+      url "https://github.com/jakobhviid/grove/releases/download/v2.2.0/grove-x86_64-apple-darwin.tar.gz"
+      sha256 "2260bcff0d2f9edb19c77d38cdb3ad654ea75721ae39d24e4e4f44e8cc522ba6"
     end
     on_arm do
-      url "https://github.com/jakobhviid/grove/releases/download/v2.1.0/grove-aarch64-apple-darwin.tar.gz"
-      sha256 "2ce52b16b04edcc15d9df7bd9d6ea4d853e8f39ffdc78de7138ccdea2b202ac8"
+      url "https://github.com/jakobhviid/grove/releases/download/v2.2.0/grove-aarch64-apple-darwin.tar.gz"
+      sha256 "01e50d61fa4e02ed1de16b69873e96a4e8f3c83f5f3dc1ca0ab837a77f6f2ddd"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/grove/releases/download/v2.1.0/grove-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "ce7e24df7f8df1a083d51963b8b884c8e382e185de02b351bb9f25226e697584"
+      url "https://github.com/jakobhviid/grove/releases/download/v2.2.0/grove-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "296e9f8900c94a90a727e0254bbaf21a08937f9f30b5df1be62621ef82924061"
     end
     on_arm do
-      url "https://github.com/jakobhviid/grove/releases/download/v2.1.0/grove-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "09905c78f7ad7b1488a628a6c75530c95a17397c89c3946fb67226683db7232f"
+      url "https://github.com/jakobhviid/grove/releases/download/v2.2.0/grove-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "26a1759b3d9367b3e9d9d4592ef518ea54f014194d7903e595449888e98ffa18"
     end
   end
 
@@ -66,7 +66,8 @@ class Grove < Formula
       Rename any alias that clashes on your system (e.g. gc) in the grove file.
 
       Run `grove` for an overview, or `grove --llm` for a machine-readable guide.
-      The `lt` tree view uses Nerd Font icons — use a Nerd Font for best results.
+      The `lt` tree view and `lg`'s clickable repo links use Nerd Font icons —
+      use a Nerd Font for best results.
     EOS
   end
 
