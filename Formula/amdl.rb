@@ -1,7 +1,7 @@
 class Amdl < Formula
   desc "Maintain a uniform Opus music library: complete tags, cover art, and lyrics"
   homepage "https://github.com/jakobhviid/amdl"
-  version "4.3.1"
+  version "4.3.2"
   license "MIT"
 
   # Prebuilt bottles so `brew install` pours (no C compiler / Xcode gate):
@@ -9,10 +9,10 @@ class Amdl < Formula
   # — e.g. a macOS older than the build runner, or arm64 Linux — falls back to
   # the url+install path below.
   bottle do
-    root_url "https://github.com/jakobhviid/amdl/releases/download/v4.3.1"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "91ac90200baa9af9e67af63d3fb3abea39bfe24f0db034637f122ae7f24a56ae"
-    sha256 cellar: :any_skip_relocation, tahoe: "a71375a18922b842e0f6d6fc8860bcb29329d757642556f1a5214d09b029958a"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "5b3b9141a24c6dab10ba92cf7ac6f35d9263013b06282081b398b687d087199a"
+    root_url "https://github.com/jakobhviid/amdl/releases/download/v4.3.2"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "89604919bb568c285abf39b1769de2f91bc5401a7543e5797ee7df5250acae7d"
+    sha256 cellar: :any_skip_relocation, tahoe: "4951f6a7473994aa0b64d614a158ecd12023d33a819320de814af13abf965582"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "da347175d38be826ad9172a1c59ce7c20b9e5ffff0bfc27a841d17bb6a9b7933"
   end
 
   depends_on "chromaprint" # fpcalc, for `identify`
@@ -21,23 +21,23 @@ class Amdl < Formula
 
   on_macos do
     on_intel do
-      url "https://github.com/jakobhviid/amdl/releases/download/v4.3.1/amdl-x86_64-apple-darwin.tar.gz"
-      sha256 "057384c0e6dda7f975558bda3b5c6f6a59612f5407bc4f64a795446f0eb8fe0d"
+      url "https://github.com/jakobhviid/amdl/releases/download/v4.3.2/amdl-x86_64-apple-darwin.tar.gz"
+      sha256 "48f2b3c6d8977e6458a6c2a9edac5cfe57032f808142050ad48078c58f01f1f4"
     end
     on_arm do
-      url "https://github.com/jakobhviid/amdl/releases/download/v4.3.1/amdl-aarch64-apple-darwin.tar.gz"
-      sha256 "ceb7c2b1c033799e116ef0f8dd2d2dc513bd42de944e8077ffd35b3d7bdcdbc2"
+      url "https://github.com/jakobhviid/amdl/releases/download/v4.3.2/amdl-aarch64-apple-darwin.tar.gz"
+      sha256 "c60d6220d1620b4fa10c62d9298d6e0a973789908040c71b2f6982d409819c6c"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/amdl/releases/download/v4.3.1/amdl-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "e83d6fe7d8e9b08b04dd9ca0905dd7ca0d8ba8c2a7ffaf5971bc2334988b540d"
+      url "https://github.com/jakobhviid/amdl/releases/download/v4.3.2/amdl-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "1f57028195672f2ed622e8182785fe3f333692a82b6e250cf4dcdd41ea1db246"
     end
     on_arm do
-      url "https://github.com/jakobhviid/amdl/releases/download/v4.3.1/amdl-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "bbcb0269c9edc49298ee6c8d25e4750d5959b09a42688e8d057617a448776b3f"
+      url "https://github.com/jakobhviid/amdl/releases/download/v4.3.2/amdl-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "1d00190ad7ad1f6f4ae6f08435ad3068b8435d80cc919aa11cceacd7cdb0b06c"
     end
   end
 
