@@ -9,30 +9,34 @@ class OpencodeProviderManager < Formula
   # back to the url+install path below.
   bottle do
     root_url "https://github.com/jakobhviid/opencode-provider-manager/releases/download/v2.7.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "2bebbcfd93158ad9393906823aacecea4bb2851f89cef4533c177dd15650e750"
-    sha256 cellar: :any_skip_relocation, tahoe: "928c57318a9710c046142c0314449a1dd418113fcacc2559bf0c0e3532c62044"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "abdf58df21b016eca7b446c31ca2478e1aea3b04053027b72711b32e9664edff"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "3430401a71097947b293a49449586caa2b89b0bf99730fa8c80b78ce65d13f4c"
+    sha256 cellar: :any_skip_relocation, tahoe: "92d5c38359d8f51f87d93bf1e5dc4016e10452de756856edaab7418dba42b816"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "fec017685167ccff86d2b9fe2d553a0ebcdcb6812c2f7b00c2d6b4ac8c571fda"
   end
+
+  # The plugin loads inside opencode, and `setup` wires it into opencode's
+  # config — so opencode must be present. Homebrew installs it first.
+  depends_on "opencode"
 
   on_macos do
     on_intel do
       url "https://github.com/jakobhviid/opencode-provider-manager/releases/download/v2.7.0/opencode-provider-manager-x86_64-apple-darwin.tar.gz"
-      sha256 "8fdd598c81400425816dc18169e982f5e4cced3ce8a067c6c98990c5132d1f40"
+      sha256 "30a39ec9187202cd9721aeadeef072761aac965fd6908230225ce7424222f0e3"
     end
     on_arm do
       url "https://github.com/jakobhviid/opencode-provider-manager/releases/download/v2.7.0/opencode-provider-manager-aarch64-apple-darwin.tar.gz"
-      sha256 "73854c1e134001cd88ee57223c19316797d3011048d5203dd5eb0ace2fa069d7"
+      sha256 "24000d6c0fd2a9f44f217cad26b5cd25177dc5605dcbf86833b2d0e50d4d0488"
     end
   end
 
   on_linux do
     on_intel do
       url "https://github.com/jakobhviid/opencode-provider-manager/releases/download/v2.7.0/opencode-provider-manager-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "a1f1c2193e9b5882e8fa93518a9f871355fa4175f47f97943ab78527bbfded03"
+      sha256 "409f0930e3617b3213c2e14e86b9b0d5ba15c8396a8354679bb35008ccc50740"
     end
     on_arm do
       url "https://github.com/jakobhviid/opencode-provider-manager/releases/download/v2.7.0/opencode-provider-manager-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "a24434bc2eaa17aacbf1e66661b2c151a9734277870a05d38065a63ee2a97d3a"
+      sha256 "f99477b28559ccd7fc0bf048795b043a088aa78b741cd8044fbc3059b54fdd07"
     end
   end
 
