@@ -1,7 +1,7 @@
 class Temper < Formula
   desc "Converge a machine to a declared spec kept in a folder of human-readable files"
   homepage "https://github.com/jakobhviid/temper"
-  version "1.41.0"
+  version "2.0.1"
   license "MIT"
 
   # Prebuilt bottles so `brew install` pours (no C compiler / Xcode gate):
@@ -9,31 +9,31 @@ class Temper < Formula
   # — e.g. a macOS older than the build runner, or arm64 Linux — falls back to
   # the url+install path below.
   bottle do
-    root_url "https://github.com/jakobhviid/temper/releases/download/v1.41.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "9ff305e071b70a61d1058b6d73d22bb17dbeeece5409676dc557fcea01be9410"
-    sha256 cellar: :any_skip_relocation, tahoe: "e497b5e6354639984437ce4d770632611980b177ad76b54864631357f9a44651"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "be7c61260b2786a4756b319dad15713208196ed94aebb1f1bd942f86ab4e7c3e"
+    root_url "https://github.com/jakobhviid/temper/releases/download/v2.0.1"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "661706b052ec27387c4f03606abc4ab3f8b37a76a08a02dc08209076830aa47f"
+    sha256 cellar: :any_skip_relocation, tahoe: "e92e6737a515e969284850eb33426c91c736212b97158a523f9048f2a4281267"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "897ac979c7bf9e9cfc036694c53b0342e7b11b5fc96c0919820fa431c3798c19"
   end
 
   on_macos do
     on_intel do
-      url "https://github.com/jakobhviid/temper/releases/download/v1.41.0/temper-x86_64-apple-darwin.tar.gz"
-      sha256 "e515fbeb86977f6c0e040ac42a7d311460cb2cfbc8c8a56e87ffaa62c9e1e62f"
+      url "https://github.com/jakobhviid/temper/releases/download/v2.0.1/temper-x86_64-apple-darwin.tar.gz"
+      sha256 "1d27fb8efe31d231578e4d7748e5034e1eec0b04a00c54b8bce970833900adc2"
     end
     on_arm do
-      url "https://github.com/jakobhviid/temper/releases/download/v1.41.0/temper-aarch64-apple-darwin.tar.gz"
-      sha256 "15dd3fea0170524e2212e0383d0cd3d4a139b40becaa69f761643842beee88ac"
+      url "https://github.com/jakobhviid/temper/releases/download/v2.0.1/temper-aarch64-apple-darwin.tar.gz"
+      sha256 "c3dc7d7474c2c85c15e66fda755950aef6d85ec15ce0e55ad62c36c17b60bfd1"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/temper/releases/download/v1.41.0/temper-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "581dc0e4b6db11e7d4039cf9dda2c4b0436d40cf2774eabc789cba4ee6d23544"
+      url "https://github.com/jakobhviid/temper/releases/download/v2.0.1/temper-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "67b42dfd4838eba367efb33559a3ff67e2fac673797c2f19acc6b9b2a4eb6f5f"
     end
     on_arm do
-      url "https://github.com/jakobhviid/temper/releases/download/v1.41.0/temper-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "7ee927f39851ab1575b57f1d145102d358663b3015482b95366a0bd9bfb9aa16"
+      url "https://github.com/jakobhviid/temper/releases/download/v2.0.1/temper-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "bf02754f93137b2765c83964b724df49edd29799dfbed8424aa6da54749cbe86"
     end
   end
 
