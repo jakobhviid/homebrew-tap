@@ -10,9 +10,9 @@ class Amdl < Formula
   # the url+install path below.
   bottle do
     root_url "https://github.com/jakobhviid/amdl/releases/download/v5.0.4"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "386505d94d2d99ad86b76192f118faa3620fc3d5d67b1df36ec3ea0f5438c2a9"
-    sha256 cellar: :any_skip_relocation, tahoe: "3578286affb2c6068d600b503b50d3874f3566a0d177ef0d99c9429a347ce640"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "bb2858626069fe8945e6eb70cea8c3188ead2755f30972765c9568c4e380c38b"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "9adb0fb57bb3d2377493368a85b2571ae68366514da40280ac787e0f328494b6"
+    sha256 cellar: :any_skip_relocation, tahoe: "45c014d9789b155721155391e08c6e7227e0e0afb0eee0509b4ea4545bc2f4ae"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "732d081a56294d970397fd1e0a36eb46e0da85c0a40220ff9c94c549ec8ae81e"
   end
 
   depends_on "chromaprint" # fpcalc, for `identify`
@@ -22,22 +22,22 @@ class Amdl < Formula
   on_macos do
     on_intel do
       url "https://github.com/jakobhviid/amdl/releases/download/v5.0.4/amdl-x86_64-apple-darwin.tar.gz"
-      sha256 "c5a8f45799c60f4ec4beb739e41e483a5f9cc2de9948ea67772878d3f061fd15"
+      sha256 "0a7606d8215c62fca5f3b5bd89ee1f6d73a59b6f56a22816fdf4d7e8fe4f4df5"
     end
     on_arm do
       url "https://github.com/jakobhviid/amdl/releases/download/v5.0.4/amdl-aarch64-apple-darwin.tar.gz"
-      sha256 "7198c3392daacb7c89c65327cdd0b48b5f232e99de596d8372cc4a13a93d7442"
+      sha256 "9f33ebab3d6662c4798f6f2cc6a7cb2bb69d286cf64674c848313afe5b7c73b4"
     end
   end
 
   on_linux do
     on_intel do
       url "https://github.com/jakobhviid/amdl/releases/download/v5.0.4/amdl-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "f610004005b01aa69ef8945dbcedf476bd4c9d2128eddcbb7cdbab10505a0b71"
+      sha256 "86b892e6afca04f66798ac6b25b643750d448852aac26c1584479b0eb9baa883"
     end
     on_arm do
       url "https://github.com/jakobhviid/amdl/releases/download/v5.0.4/amdl-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "935ef11705f05e6e7b78df782e1da4365c855f71ce014adffcc05f884c9dedb3"
+      sha256 "b53ed92c4ff11f1ad2f8ec1f44bea53f6449e58fc1cea87218f4ea995e6591b5"
     end
   end
 
