@@ -6,24 +6,24 @@ class Pwtune < Formula
   # sees an empty spec and every `brew` command errors with "formula requires at
   # least a URL". So x86_64-linux is the top-level default and `depends_on :linux`
   # is what actually keeps macOS from installing it.
-  url "https://github.com/jakobhviid/pwtune/releases/download/v1.1.3/pwtune-x86_64-unknown-linux-musl.tar.gz"
-  version "1.1.3"
-  sha256 "f4c256c4ef3f6430e94c1026361898466bd385b31457cca3e5fc09696e921e46"
+  url "https://github.com/jakobhviid/pwtune/releases/download/v1.3.8/pwtune-x86_64-unknown-linux-musl.tar.gz"
+  version "1.3.8"
+  sha256 "35ff4fc895d2ccb737ac9135a8a1b73e6e81c1e08186e8bcc37f00f98041735c"
   license "MIT"
 
   # Prebuilt x86_64 Linux bottle so `brew install` pours it (no C compiler);
   # aarch64 falls back to the url+install path above.
   bottle do
-    root_url "https://github.com/jakobhviid/pwtune/releases/download/v1.1.3"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "368e8e1f65110ecd207974d3ffcea87334053ae27ffcbc6066f7c570eeb7d43f"
+    root_url "https://github.com/jakobhviid/pwtune/releases/download/v1.3.8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "b9504c753595de6898512d3b67a33fa48a534db44708a7e0175f7978feebf5ac"
   end
 
   depends_on :linux
 
   on_linux do
     on_arm do
-      url "https://github.com/jakobhviid/pwtune/releases/download/v1.1.3/pwtune-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "dbed0db9550697a7c2f34eb3885770a406a63de9e997ce889bee0e3525be3ee2"
+      url "https://github.com/jakobhviid/pwtune/releases/download/v1.3.8/pwtune-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "9c1df23fd5188b293531d6bd90650b6125a40715a95c3efe8e8b9e065aa692ee"
     end
   end
 
