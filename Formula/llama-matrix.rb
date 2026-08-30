@@ -1,7 +1,7 @@
 class LlamaMatrix < Formula
   desc "Measure llama-swap model memory footprints and generate a co-residency matrix so as many models run concurrently as physically fit — without exceeding VRAM"
   homepage "https://github.com/jakobhviid/llama-matrix"
-  version "1.8.0"
+  version "1.9.0"
   license "MIT"
 
   # Prebuilt bottles so `brew install` pours (no C compiler / Xcode gate):
@@ -9,31 +9,31 @@ class LlamaMatrix < Formula
   # — e.g. a macOS older than the build runner, or arm64 Linux — falls back to
   # the url+install path below.
   bottle do
-    root_url "https://github.com/jakobhviid/llama-matrix/releases/download/v1.8.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "b55e12d7b27339feda3148e9f0adae50d7f4af0ee0f5a9fb9ca41412fb1efd7a"
-    sha256 cellar: :any_skip_relocation, tahoe: "a28dd1b4c23622a5ec53c85f2c2e2c0cb035058f25c3c78a8098b2fd99b772cb"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "4c7982aae3c0456bbd19884ac7800fdc7086aad9ba6604c0daa4e3068dc6bf03"
+    root_url "https://github.com/jakobhviid/llama-matrix/releases/download/v1.9.0"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "0b76b7d0444ed29d11ec7d5f3109a54dec3641e367837da188f9360f4249017a"
+    sha256 cellar: :any_skip_relocation, tahoe: "3c8249b6071b03c0727d650661be174840f3e09bd9c6159db454bcfe694ede70"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "77f3c445c2ed1a4bfb70b627cbd90d28ef0e26c4de08e690f246e10e78fb6336"
   end
 
   on_macos do
     on_intel do
-      url "https://github.com/jakobhviid/llama-matrix/releases/download/v1.8.0/llama-matrix-x86_64-apple-darwin.tar.gz"
-      sha256 "b395acf3128a82fae84212da8e48d0971cacbcf2bc3a5147a2eef2fc8da1c96c"
+      url "https://github.com/jakobhviid/llama-matrix/releases/download/v1.9.0/llama-matrix-x86_64-apple-darwin.tar.gz"
+      sha256 "731a8c58882042de0126336e6b418e8b3c54d3c6a4e6a6190e7dec0983a02102"
     end
     on_arm do
-      url "https://github.com/jakobhviid/llama-matrix/releases/download/v1.8.0/llama-matrix-aarch64-apple-darwin.tar.gz"
-      sha256 "325e19daa298c2b2367a5cb96d02b43bcfe8f28ad98dcb3e1b648de591c2cc22"
+      url "https://github.com/jakobhviid/llama-matrix/releases/download/v1.9.0/llama-matrix-aarch64-apple-darwin.tar.gz"
+      sha256 "ea2474e775daafc1d294d21fb30a873968698aa0f4e7a423768700f4301ef32e"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/jakobhviid/llama-matrix/releases/download/v1.8.0/llama-matrix-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "7524c4fc5dcd58583759ec704f0d8d30e511e7f413f2227e58fd557c717cf047"
+      url "https://github.com/jakobhviid/llama-matrix/releases/download/v1.9.0/llama-matrix-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "5f443dd58cf79bac91eefd3a69b548ed07c3c0ef3e6940b775f63d2a77b0b9c7"
     end
     on_arm do
-      url "https://github.com/jakobhviid/llama-matrix/releases/download/v1.8.0/llama-matrix-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "df93a4309024703083773d4c592d4e673df3d2b0de35a4e85a29c67ae5dffd03"
+      url "https://github.com/jakobhviid/llama-matrix/releases/download/v1.9.0/llama-matrix-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "d0be98c49662b201d0fefa0659382d2698da0e1ae5b70c64270142c0ef70c7b7"
     end
   end
 
