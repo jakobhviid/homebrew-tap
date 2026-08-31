@@ -17,6 +17,7 @@ distros. Platforms without a matching bottle fall back to a direct download.
 | Tool | What it does | Platforms |
 | --- | --- | --- |
 | [amdl](https://github.com/jakobhviid/amdl) | Maintain a uniform Opus music library: complete tags, cover art, and lyrics | macOS, Linux (x86_64, arm64) |
+| [crw](https://github.com/us/crw) | Turn URLs into clean markdown or JSON — scrape, crawl, search, MCP server | macOS, Linux (x86_64, arm64) |
 | [dotsync](https://github.com/jakobhviid/dotsync) | Sync user-level config between machines through a cloud folder, using symlinks | macOS, Linux (x86_64, arm64) |
 | [grove](https://github.com/jakobhviid/grove) | Portable git shortcuts plus a multi-repo overview & sync, for any shell | macOS, Linux (x86_64, arm64) |
 | [llama-matrix](https://github.com/jakobhviid/llama-matrix) | Measure llama-swap model memory footprints and generate a co-residency matrix so as many models run concurrently as physically fit - without exceeding VRAM | macOS, Linux (x86_64, arm64) |
