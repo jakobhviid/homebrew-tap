@@ -1,0 +1,10 @@
+# GitHub language stats (Linguist).
+#
+# This repo is a Homebrew tap: the content is the formulae. Everything else is
+# local tooling and should stay out of the language bar.
+
+# The formulae are the tap — Ruby DSL, count them.
+Formula/*.rb linguist-language=Ruby
+
+# Helper scripts that only maintain this repo, not part of what it ships.
+scripts/** linguist-detectable=false
