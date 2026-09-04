@@ -1,12 +1,14 @@
 name: Sync README tool list
 
-# Keeps the catalog table in README.md in step with Formula/*.rb. Runs whenever a
-# formula changes — including the pushes each tool's own release CI makes here.
+# Keeps the catalog table in README.md in step with Formula/*.rb and Casks/*.rb.
+# Runs whenever a formula or cask changes — including the pushes each tool's own
+# release CI makes here.
 on:
   push:
     branches: [main]
     paths:
       - "Formula/**"
+      - "Casks/**"
   workflow_dispatch:
 
 permissions:
@@ -21,7 +23,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Regenerate tool list
         run: python3 scripts/gen-readme.py
@@ -29,14 +31,14 @@ jobs:
       - name: Commit if the table changed
         run: |
           if git diff --quiet -- README.md; then
-            echo "README already in sync with the formulae."
+            echo "README already in sync with the formulae and casks."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add README.md
-          git commit -m "docs: sync README tool list with formulae"
-          # A README-only commit doesn't touch Formula/**, so it won't re-trigger
+          git commit -m "docs: sync README tool list with formulae and casks"
+          # A README-only commit touches neither Formula/** nor Casks/**, so it won't re-trigger
           # this workflow. Rebase-retry once in case a concurrent push landed.
           git push origin HEAD:main || {
             git pull --rebase --autostash origin main
