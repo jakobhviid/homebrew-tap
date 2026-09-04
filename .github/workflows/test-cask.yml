@@ -124,6 +124,35 @@ jobs:
           ! find "$caskroom" -name '*.AppImage' | grep -q .
           test -x "$caskroom/$(brew info --cask --json=v2 jakobhviid/tap/orca-linux | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')/squashfs-root/AppRun"
 
+      - name: Smoke-test the GUI under a virtual display
+        run: |
+          sudo apt-get install -y --no-install-recommends xvfb
+          set +e
+          xvfb-run -a --server-args="-screen 0 1280x1024x24" \
+            timeout 45 orca-ide >/tmp/gui.log 2>&1
+          status=$?
+          set -e
+          echo "orca-ide exit status: $status"
+          sed -n '1,150p' /tmp/gui.log
+          # 124 means timeout killed a still-running app, which is the success
+          # case here: it started and stayed up.
+          if [ "$status" -ne 124 ]; then
+            echo "::error::orca-ide exited with $status before the timeout"
+            exit 1
+          fi
+          # The classic extracted-Electron failure: chrome-sandbox loses its
+          # setuid bit during extraction, so if AppRun's user-namespace probe
+          # misjudges the host, Chromium aborts here instead of opening a window.
+          if grep -qiE "SUID sandbox|chrome-sandbox|Failed to move to new namespace|No usable sandbox" /tmp/gui.log; then
+            echo "::error::sandbox failure — see the log above"
+            exit 1
+          fi
+
+      - name: Report the data directories the app created
+        run: |
+          find "$HOME/.config" "$HOME/.cache" -maxdepth 1 -iname '*orca*' -printf '%p\n' 2>/dev/null || true
+          test -d "$HOME/.orca" && echo "HOME/.orca exists" || echo "HOME/.orca absent"
+
       - name: Uninstall with zap and verify nothing is left behind
         run: |
           set -x
