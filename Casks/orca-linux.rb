@@ -81,9 +81,6 @@ cask "orca-linux" do
     # than braces — `brew upgrade` is the update path either way.
     FileUtils.rm "#{staged_path}/squashfs-root/resources/app-update.yml"
 
-    FileUtils.mkdir_p "#{Dir.home}/.local/share/applications"
-    FileUtils.mkdir_p "#{Dir.home}/.local/share/icons/hicolor"
-
     desktop = "#{staged_path}/squashfs-root/orca-ide.desktop"
     content = File.read(desktop)
     # Why: `Exec=AppRun %U` only resolves inside a mounted AppImage. Point it at
@@ -125,8 +122,9 @@ cask "orca-linux" do
   ]
 
   caveats <<~EOS
-    Orca's in-app updater is disabled for this install — Homebrew owns the
-    version. Upgrade with:
+    Homebrew owns this install's version. Orca's own updater cannot replace it,
+    because an extracted AppImage leaves it nothing to write back to, but it can
+    still report a release it is unable to install. Upgrade with:
       brew upgrade --cask orca-linux
 
     Both `orca` and `orca-ide` are Electron, so they link against a desktop

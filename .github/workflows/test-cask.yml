@@ -59,8 +59,9 @@ jobs:
         run: |
           tap_dir="$(brew --repository)/Library/Taps/jakobhviid/homebrew-tap"
           mkdir -p "$(dirname "$tap_dir")"
-          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+          # README tells users to trust before tapping, so prove that order works.
           brew trust --tap jakobhviid/tap
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
           brew tap-info jakobhviid/tap
 
       - name: Audit
@@ -123,6 +124,21 @@ jobs:
           # The 193 MB image is redundant once extracted.
           ! find "$caskroom" -name '*.AppImage' | grep -q .
           test -x "$caskroom/$(brew info --cask --json=v2 jakobhviid/tap/orca-linux | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')/squashfs-root/AppRun"
+
+      - name: Reinstall to exercise the version-bump path
+        run: |
+          set -x
+          # A version bump uninstalls then installs, moving every artifact back
+          # into the Caskroom and re-running preflight against fresh staging.
+          # Reinstall walks that same path without needing two published versions,
+          # and Orca ships daily, so this path gets used a lot.
+          brew reinstall --cask jakobhviid/tap/orca-linux
+          desktop="$HOME/.local/share/applications/orca-ide.desktop"
+          test -f "$desktop"
+          grep -qx "Exec=$(brew --prefix)/bin/orca-ide %U" "$desktop"
+          test "$(find "$HOME/.local/share/icons/hicolor" -path '*/apps/orca-ide.png' | wc -l)" -eq 8
+          orca --version
+          ! find "$(brew --caskroom)/orca-linux" -name app-update.yml | grep -q .
 
       - name: Smoke-test the GUI under a virtual display
         timeout-minutes: 5
