@@ -60,21 +60,25 @@ cask "orca-linux" do
 
     # Why: the type-2 AppImage runtime unpacks itself with its own embedded
     # squashfs reader, so this needs neither FUSE nor an unsquashfs on PATH —
-    # which matters for a tap user who isn't on Fedora.
-    system "chmod", "+x", appimage
-    system appimage, "--appimage-extract", chdir: staged_path
+    # which matters for a tap user who isn't on Fedora. system_command raises on
+    # a non-zero exit, unlike Kernel#system, so a failed extraction aborts the
+    # install instead of leaving a half-filled squashfs-root for the artifacts.
+    system_command "chmod", args: ["+x", appimage]
+    system_command appimage, args: ["--appimage-extract"], chdir: staged_path
 
     # Why: the extracted tree is the install; keeping the 193 MB image too would
     # double the Caskroom footprint for no benefit.
     FileUtils.rm appimage
 
-    # Why: Orca ships app-update.yml, and resources/package-type reads
-    # "AppImage", which puts its electron-updater on the self-updating path.
-    # electron-updater's AppImageUpdater overwrites $APPIMAGE in place — and
-    # AppRun sets APPIMAGE to its own path when not run from an image, so a
-    # self-update would replace this extracted AppRun with a 193 MB binary and
-    # desync brew's version metadata. Dropping the manifest makes the check fail
-    # before anything is downloaded, leaving `brew upgrade` as the update path.
+    # Why: Orca ships an electron-updater manifest and marks
+    # resources/package-type as "AppImage", so the app treats itself as
+    # self-updating. It cannot actually damage this install: AppRun assigns
+    # APPIMAGE without exporting it, so AppImageUpdater finds no image to
+    # overwrite and its install step fails instead of replacing AppRun. Dropping
+    # the manifest removes the remaining reason for the app to fetch a release it
+    # cannot install, and keeps brew unambiguously in charge of the version.
+    # The app configures its feed programmatically, so treat this as belt rather
+    # than braces — `brew upgrade` is the update path either way.
     FileUtils.rm "#{staged_path}/squashfs-root/resources/app-update.yml"
 
     FileUtils.mkdir_p "#{Dir.home}/.local/share/applications"
@@ -109,11 +113,14 @@ cask "orca-linux" do
     system "gtk-update-icon-cache", "-f", "-t", "#{Dir.home}/.local/share/icons/hicolor"
   end
 
-  # Why: Orca keeps worktrees and agent state in ~/.orca (same as macOS) plus
-  # Electron's XDG userData dirs, so zap clears everything normal use creates.
+  # Why: Orca keeps worktrees and agent state in ~/.orca, as it does on macOS,
+  # plus Electron's userData directory. That directory is lowercase `orca`: the
+  # packaged app.asar declares `name: "orca"` with no productName and never calls
+  # setPath, and a real Linux install was observed creating ~/.config/orca. The
+  # capitalised macOS spelling would silently miss it on a case-sensitive volume.
   zap trash: [
-    "~/.cache/Orca",
-    "~/.config/Orca",
+    "~/.cache/orca",
+    "~/.config/orca",
     "~/.orca",
   ]
 
