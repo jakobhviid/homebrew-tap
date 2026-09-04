@@ -74,6 +74,16 @@ jobs:
 
       - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
 
+      - name: Restore the commit under test
+        run: |
+          # Why: setup-homebrew symlinks this checkout in as a tap and runs
+          # `brew update`, which hard-resets the working tree to origin/main.
+          # Push runs cannot notice — the pushed commit *is* main — but it means
+          # a caller-supplied ref is thrown away, so the bump pipeline validated
+          # main while reporting that it had validated the candidate.
+          git checkout --force "${{ inputs.ref || github.sha }}"
+          git log --oneline -1
+
       - name: Mount this checkout as the tap
         run: |
           set -x

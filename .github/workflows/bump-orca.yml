@@ -28,6 +28,7 @@ jobs:
     outputs:
       bump: ${{ steps.bump.outputs.bump }}
       version: ${{ steps.bump.outputs.version }}
+      sha: ${{ steps.push.outputs.sha }}
     steps:
       - uses: actions/checkout@v5
 
@@ -47,6 +48,7 @@ jobs:
           git diff -- Casks/orca-linux.rb
 
       - name: Push the candidate to a throwaway branch
+        id: push
         if: steps.bump.outputs.bump == 'true'
         run: |
           git config user.name "github-actions[bot]"
@@ -56,6 +58,9 @@ jobs:
           # Force-push: the branch is scratch space for this run only, and it is
           # branched from the current main so landing it stays a fast-forward.
           git push --force origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          # An immutable sha, so validation cannot pick up a different commit
+          # than the one that was measured here.
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   # Why reuse the suite rather than a smoke test: a version bump is exactly the
   # case where upstream can move the desktop file, the icon set, the CLI shim or
@@ -66,9 +71,7 @@ jobs:
     if: needs.propose.outputs.bump == 'true'
     uses: ./.github/workflows/test-cask.yml
     with:
-      # Literal, not env.CANDIDATE_BRANCH: the env context is not available to
-      # job-level `with`. Keep this in step with the env value above.
-      ref: auto/bump-orca-linux
+      ref: ${{ needs.propose.outputs.sha }}
 
   land:
     needs: [propose, validate]
@@ -79,11 +82,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ env.CANDIDATE_BRANCH }}
+          ref: ${{ needs.propose.outputs.sha }}
           fetch-depth: 0
       - name: Fast-forward main and drop the branch
         run: |
-          git push origin "HEAD:main"
+          # Push the validated sha itself, not a branch that could have moved.
+          git push origin "${{ needs.propose.outputs.sha }}:refs/heads/main"
           git push origin --delete "$CANDIDATE_BRANCH"
           echo "Landed orca-linux ${{ needs.propose.outputs.version }} on main."
 
