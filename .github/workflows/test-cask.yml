@@ -15,12 +15,23 @@ on:
       - "Casks/**"
       - ".github/workflows/test-cask.yml"
   workflow_dispatch:
+  # Why: the scheduled version bump calls this to validate a candidate commit on
+  # both architectures before it is allowed anywhere near main.
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit or branch to test. Defaults to the triggering ref."
+        type: string
+        required: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: test-cask-${{ github.ref }}
+  # Why github.workflow: when the bump pipeline calls this reusably, this
+  # resolves to the caller's name, so a validation run cannot be cancelled by an
+  # unrelated push to the same ref.
+  group: test-cask-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -36,6 +47,10 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          # An empty value keeps actions/checkout's default behaviour, so the
+          # push and workflow_dispatch triggers are unaffected.
+          ref: ${{ inputs.ref }}
 
       - name: Install desktop and Electron runtime dependencies
         run: |

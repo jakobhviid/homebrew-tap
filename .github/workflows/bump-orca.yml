@@ -1,0 +1,104 @@
+name: Bump orca-linux
+
+# Why: Orca publishes a release most days, so a hand-pinned cask is stale within
+# a day. This bumps it unattended — but only lands the commit on main after the
+# full Linux suite has passed on both architectures, so an upstream change that
+# breaks the cask leaves main untouched and shows up as a failed run instead.
+on:
+  schedule:
+    # Upstream's releases land between roughly 00:45 and 05:00 UTC.
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump-orca
+  cancel-in-progress: false
+
+env:
+  CANDIDATE_BRANCH: auto/bump-orca-linux
+
+jobs:
+  propose:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      bump: ${{ steps.bump.outputs.bump }}
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Rewrite the cask if upstream moved
+        id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/bump-cask.py Casks/orca-linux.rb
+          if git diff --quiet -- Casks/orca-linux.rb; then
+            echo "bump=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          version="$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/orca-linux.rb)"
+          echo "bump=true" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          git diff -- Casks/orca-linux.rb
+
+      - name: Push the candidate to a throwaway branch
+        if: steps.bump.outputs.bump == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/orca-linux.rb
+          git commit -m "orca-linux ${{ steps.bump.outputs.version }}"
+          # Force-push: the branch is scratch space for this run only, and it is
+          # branched from the current main so landing it stays a fast-forward.
+          git push --force origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+
+  # Why reuse the suite rather than a smoke test: a version bump is exactly the
+  # case where upstream can move the desktop file, the icon set, the CLI shim or
+  # the updater layout out from under the cask, and each of those has its own
+  # assertion in there.
+  validate:
+    needs: propose
+    if: needs.propose.outputs.bump == 'true'
+    uses: ./.github/workflows/test-cask.yml
+    with:
+      # Literal, not env.CANDIDATE_BRANCH: the env context is not available to
+      # job-level `with`. Keep this in step with the env value above.
+      ref: auto/bump-orca-linux
+
+  land:
+    needs: [propose, validate]
+    if: needs.propose.outputs.bump == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.CANDIDATE_BRANCH }}
+          fetch-depth: 0
+      - name: Fast-forward main and drop the branch
+        run: |
+          git push origin "HEAD:main"
+          git push origin --delete "$CANDIDATE_BRANCH"
+          echo "Landed orca-linux ${{ needs.propose.outputs.version }} on main."
+
+  # Why: without this the branch survives a failed validation and the next run's
+  # force-push would silently rebase a candidate nobody looked at.
+  cleanup:
+    needs: [propose, validate]
+    if: always() && needs.propose.outputs.bump == 'true' && needs.validate.result != 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Delete the rejected candidate
+        run: |
+          git push origin --delete "$CANDIDATE_BRANCH" || true
+          echo "::error::orca-linux ${{ needs.propose.outputs.version }} failed validation; main left at its previous version."
+          exit 1
