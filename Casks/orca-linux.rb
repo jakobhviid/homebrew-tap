@@ -121,5 +121,11 @@ cask "orca-linux" do
     Orca's in-app updater is disabled for this install — Homebrew owns the
     version. Upgrade with:
       brew upgrade --cask orca-linux
+
+    Both `orca` and `orca-ide` are Electron, so they link against a desktop
+    runtime (GTK 3, NSS, cups, ALSA) that Homebrew cannot supply. A desktop
+    install already has it. On a headless host, install your distribution's
+    Electron or Chromium dependencies before running `orca serve`, or the
+    binaries will fail at load time rather than on launch.
   EOS
 end
