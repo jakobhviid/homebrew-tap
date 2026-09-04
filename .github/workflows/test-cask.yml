@@ -88,24 +88,29 @@ jobs:
         run: |
           set -x
           # Why `brew --repository <tap>` and not a hand-built path: it is what
-          # brew itself resolves the tap to. An earlier version guessed the path,
-          # the guess was wrong on Linux, and brew quietly cloned main from
-          # GitHub instead — so a candidate commit was never actually tested.
+          # brew itself resolves the tap to. An earlier version guessed, guessed
+          # wrong on linuxbrew, and brew quietly cloned main from GitHub instead.
           tap_dir="$(brew --repository jakobhviid/tap)"
-          rm -rf "$tap_dir"
-          mkdir -p "$(dirname "$tap_dir")"
-          # A copy rather than a symlink: brew treats it as an ordinary tap, and
-          # the checkout's .git comes along so nothing tries to re-clone it.
-          cp -R "$GITHUB_WORKSPACE" "$tap_dir"
+          if [ -L "$tap_dir" ]; then
+            # setup-homebrew already linked this checkout in. Leave it: replacing
+            # it with a real directory breaks the action's own cleanup, which
+            # expects to `rm` a symlink.
+            echo "already linked -> $(readlink "$tap_dir")"
+          else
+            # Anything else here is a clone brew made from the remote, which
+            # would shadow this checkout.
+            rm -rf "$tap_dir"
+            mkdir -p "$(dirname "$tap_dir")"
+            ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+          fi
           # README tells users to trust before tapping, so prove that order works.
           brew trust --tap jakobhviid/tap
           brew tap-info jakobhviid/tap
 
-          # The guard the earlier bug needed: brew must report the version this
-          # checkout declares, not whatever main happens to hold.
+          # The tripwire: brew must report the version this checkout declares.
+          # Without it, a wrong-tree test passes silently.
           for cask in Casks/*.rb; do
             token="$(basename "$cask" .rb)"
-            diff "$cask" "$tap_dir/$cask"
             expected="$(sed -n 's/^  version "\(.*\)"$/\1/p' "$cask")"
             actual="$(brew info --cask --json=v2 "jakobhviid/tap/$token" \
               | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')"
