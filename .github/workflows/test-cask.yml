@@ -45,6 +45,10 @@ jobs:
           - runner: ubuntu-24.04-arm
             arch: arm64
     runs-on: ${{ matrix.runner }}
+    env:
+      # Why: an auto-update fetches and hard-resets the tap from GitHub, which
+      # would silently replace the commit under test with whatever is on main.
+      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       - uses: actions/checkout@v5
         with:
@@ -72,12 +76,32 @@ jobs:
 
       - name: Mount this checkout as the tap
         run: |
-          tap_dir="$(brew --repository)/Library/Taps/jakobhviid/homebrew-tap"
+          set -x
+          # Why `brew --repository <tap>` and not a hand-built path: it is what
+          # brew itself resolves the tap to. An earlier version guessed the path,
+          # the guess was wrong on Linux, and brew quietly cloned main from
+          # GitHub instead — so a candidate commit was never actually tested.
+          tap_dir="$(brew --repository jakobhviid/tap)"
+          rm -rf "$tap_dir"
           mkdir -p "$(dirname "$tap_dir")"
+          # A copy rather than a symlink: brew treats it as an ordinary tap, and
+          # the checkout's .git comes along so nothing tries to re-clone it.
+          cp -R "$GITHUB_WORKSPACE" "$tap_dir"
           # README tells users to trust before tapping, so prove that order works.
           brew trust --tap jakobhviid/tap
-          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
           brew tap-info jakobhviid/tap
+
+          # The guard the earlier bug needed: brew must report the version this
+          # checkout declares, not whatever main happens to hold.
+          for cask in Casks/*.rb; do
+            token="$(basename "$cask" .rb)"
+            diff "$cask" "$tap_dir/$cask"
+            expected="$(sed -n 's/^  version "\(.*\)"$/\1/p' "$cask")"
+            actual="$(brew info --cask --json=v2 "jakobhviid/tap/$token" \
+              | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')"
+            echo "$token: checkout=$expected brew=$actual"
+            test "$expected" = "$actual"
+          done
 
       - name: Audit
         run: |
@@ -98,10 +122,18 @@ jobs:
           command -v orca
           command -v orca-ide
           # The CLI runs Electron in Node mode (ELECTRON_RUN_AS_NODE), so it needs
-          # no display; DT_RPATH=$ORIGIN resolves the bundled libffmpeg.
-          orca --version | tee /tmp/orca-version
-          version="$(brew info --cask --json=v2 jakobhviid/tap/orca-linux | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')"
-          grep -q "$version" /tmp/orca-version
+          # no display; DT_RPATH=$ORIGIN resolves the bundled libffmpeg. Exiting
+          # cleanly is the assertion — the meaning of --version is upstream's to
+          # change, and an older build printed usage for it instead of a number.
+          orca --version
+          # Why compare against the asar's own package.json: it is what the app
+          # reports as its version, so this pins brew's version to the payload
+          # actually installed without depending on any CLI flag.
+          version="$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/orca-linux.rb)"
+          installed="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' \
+            "$(brew --caskroom)/orca-linux/$version/squashfs-root/resources/app.asar.unpacked/out/package.json")"
+          echo "cask=$version payload=$installed"
+          test "$version" = "$installed"
 
       - name: Verify desktop entry
         run: |
