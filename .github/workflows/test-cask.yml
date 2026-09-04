@@ -35,7 +35,7 @@ jobs:
             arch: arm64
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install desktop and Electron runtime dependencies
         run: |
@@ -53,7 +53,7 @@ jobs:
             fi
           done
 
-      - uses: Homebrew/actions/setup-homebrew@master
+      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
 
       - name: Mount this checkout as the tap
         run: |
