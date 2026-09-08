@@ -55,20 +55,21 @@ cask "orca-linux" do
   artifact "squashfs-root/usr/share/icons/hicolor/512x512/apps/orca-ide.png",
            target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/orca-ide.png"
 
-  preflight do
-    appimage = "#{staged_path}/orca-linux#{arch}.AppImage"
-
+  preflight_steps do
     # Why: the type-2 AppImage runtime unpacks itself with its own embedded
     # squashfs reader, so this needs neither FUSE nor an unsquashfs on PATH —
-    # which matters for a tap user who isn't on Fedora. system_command raises on
-    # a non-zero exit, unlike Kernel#system, so a failed extraction aborts the
-    # install instead of leaving a half-filled squashfs-root for the artifacts.
-    system_command "chmod", args: ["+x", appimage]
-    system_command appimage, args: ["--appimage-extract"], chdir: staged_path
+    # which matters for a tap user who isn't on Fedora. A `run` step raises on
+    # a non-zero exit, so a failed extraction aborts the install instead of
+    # leaving a half-filled squashfs-root for the artifacts.
+    set_permissions "orca-linux#{arch}.AppImage", "+x", recursive: false
+    run "orca-linux#{arch}.AppImage",
+        base:  :staged_path,
+        args:  ["--appimage-extract"],
+        chdir: "{{staged_path}}"
 
     # Why: the extracted tree is the install; keeping the 193 MB image too would
     # double the Caskroom footprint for no benefit.
-    FileUtils.rm appimage
+    remove "orca-linux#{arch}.AppImage"
 
     # Why: Orca ships an electron-updater manifest and marks
     # resources/package-type as "AppImage", so the app treats itself as
@@ -79,35 +80,53 @@ cask "orca-linux" do
     # cannot install, and keeps brew unambiguously in charge of the version.
     # The app configures its feed programmatically, so treat this as belt rather
     # than braces — `brew upgrade` is the update path either way.
-    FileUtils.rm "#{staged_path}/squashfs-root/resources/app-update.yml"
+    remove "squashfs-root/resources/app-update.yml"
 
-    desktop = "#{staged_path}/squashfs-root/orca-ide.desktop"
-    content = File.read(desktop)
     # Why: `Exec=AppRun %U` only resolves inside a mounted AppImage. Point it at
     # the Homebrew bin symlink so the entry survives version bumps, and keep %U
     # so the x-scheme-handler/orca and text/markdown handlers still get their arg.
-    content.gsub!(/^Exec=.*$/, "Exec=#{HOMEBREW_PREFIX}/bin/orca-ide %U")
+    inreplace "squashfs-root/orca-ide.desktop",
+              /^Exec=.*$/,
+              "Exec={{HOMEBREW_PREFIX}}/bin/orca-ide %U"
     # Why: an IDE under Utility lands in GNOME's "Utilities" folder.
-    content.gsub!(/^Categories=.*$/, "Categories=Development;IDE;")
+    inreplace "squashfs-root/orca-ide.desktop",
+              /^Categories=.*$/,
+              "Categories=Development;IDE;",
+              audit_result: false
     # Why: brew owns the version here, so an AppImage-provenance stamp would go
     # stale on the first upgrade and misreport what's installed.
-    content.gsub!(/^X-AppImage-Version=.*\n/, "")
-    File.write(desktop, content)
+    inreplace "squashfs-root/orca-ide.desktop",
+              /^X-AppImage-Version=.*\n/,
+              "",
+              audit_result: false
     # StartupWMClass=orca is left untouched: it's what lets the shell group
     # Orca's windows under this launcher icon.
   end
 
   # Why: without a database refresh the entry and its URL handler only appear
-  # after the next login. `system` returns nil rather than raising when the tool
-  # is absent, so this stays a no-op on desktops that don't ship it.
-  postflight do
-    system "update-desktop-database", "#{Dir.home}/.local/share/applications"
-    system "gtk-update-icon-cache", "-f", "-t", "#{Dir.home}/.local/share/icons/hicolor"
+  # after the next login. `must_succeed: false` keeps the step a no-op where the
+  # tool is not shipped, and the paths are reached through `chdir` because a
+  # step argument expands `{{...}}` tokens but not `~`.
+  postflight_steps do
+    run "update-desktop-database",
+        args:         ["."],
+        chdir:        "~/.local/share/applications",
+        must_succeed: false
+    run "gtk-update-icon-cache",
+        args:         ["-f", "-t", "."],
+        chdir:        "~/.local/share/icons/hicolor",
+        must_succeed: false
   end
 
-  uninstall_postflight do
-    system "update-desktop-database", "#{Dir.home}/.local/share/applications"
-    system "gtk-update-icon-cache", "-f", "-t", "#{Dir.home}/.local/share/icons/hicolor"
+  uninstall_postflight_steps do
+    run "update-desktop-database",
+        args:         ["."],
+        chdir:        "~/.local/share/applications",
+        must_succeed: false
+    run "gtk-update-icon-cache",
+        args:         ["-f", "-t", "."],
+        chdir:        "~/.local/share/icons/hicolor",
+        must_succeed: false
   end
 
   # Why: Orca keeps worktrees and agent state in ~/.orca, as it does on macOS,
