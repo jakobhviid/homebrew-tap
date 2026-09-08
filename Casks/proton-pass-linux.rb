@@ -75,27 +75,36 @@ cask "proton-pass-linux" do
 
   # Why: without a database refresh the launcher only appears after the next
   # login. `must_succeed: false` keeps the step a no-op where the tool is not
-  # shipped, and the paths are reached through `chdir` because a step argument
-  # expands `{{...}}` tokens but not `~`.
+  # shipped.
+  #
+  # The path is spelled out with `{{user}}` rather than `~`, and that is
+  # load-bearing. These steps run inside Homebrew's cask sandbox, which has its
+  # own empty $HOME, so `~` expands to a directory that does not exist — both
+  # refreshes then silently no-op and `must_succeed: false` hides it. There is
+  # no `{{home}}` token (the runner's token list is prefix/staged_path/appdir
+  # and friends, plus `{{user}}`), `chdir` resolves only against the step's
+  # default base, and interpolating #{Dir.home} is rejected by the style cop,
+  # which allows only step DSL calls and literal arguments inside a steps
+  # block. Hardcoding /home is safe here because the cask is Linux-only.
   postflight_steps do
     run "update-desktop-database",
         args:         ["."],
-        chdir:        "~/.local/share/applications",
+        chdir:        "/home/{{user}}/.local/share/applications",
         must_succeed: false
     run "gtk-update-icon-cache",
         args:         ["-f", "-t", "."],
-        chdir:        "~/.local/share/icons/hicolor",
+        chdir:        "/home/{{user}}/.local/share/icons/hicolor",
         must_succeed: false
   end
 
   uninstall_postflight_steps do
     run "update-desktop-database",
         args:         ["."],
-        chdir:        "~/.local/share/applications",
+        chdir:        "/home/{{user}}/.local/share/applications",
         must_succeed: false
     run "gtk-update-icon-cache",
         args:         ["-f", "-t", "."],
-        chdir:        "~/.local/share/icons/hicolor",
+        chdir:        "/home/{{user}}/.local/share/icons/hicolor",
         must_succeed: false
   end
 
