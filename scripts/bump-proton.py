@@ -58,9 +58,7 @@ APPS = {
 }
 
 VERSION_RE = re.compile(r'^(?P<pre>  version ")(?P<version>[^"]*)(?P<post>")$', re.MULTILINE)
-# Arch-keyed, matching the casks: the key is what tells gen-readme.py (and a
-# reader) that these are x86_64-only, so the rewriter has to expect it.
-SHA_RE = re.compile(r'^(?P<pre>  sha256 x86_64_linux: ")(?P<sha>[0-9a-f]{64})(?P<post>")$', re.MULTILINE)
+SHA_RE = re.compile(r'^(?P<pre>  sha256 ")(?P<sha>[0-9a-f]{64})(?P<post>")$', re.MULTILINE)
 
 
 def get(url: str) -> bytes:

@@ -100,6 +100,15 @@ def cask_platforms(src: str) -> str:
     for os_name, pattern in (("Linux", r"(?::linux\b|linux:)"), ("macOS", r"(?::macos\b|macos:)")):
         if gated(pattern):
             oses = {k: v for k, v in oses.items() if k == os_name} or {os_name: set()}
+            # A single-architecture cask carries ONE bare `sha256` — arch-keying
+            # it would leave `brew audit` on the other architecture with no hash
+            # at all — so the architecture is stated by `depends_on arch:` and
+            # that is where it has to be read from. Without this the row says
+            # just "Linux" for a cask that only runs on one of the two.
+            if not oses[os_name]:
+                for arch_pattern, arch in ((r":x86_64\b", "x86_64"), ((r":arm64\b"), "arm64")):
+                    if re.search(rf"^\s*depends_on\s+arch:\s+{arch_pattern}", src, re.MULTILINE):
+                        oses[os_name].add(arch)
             break
     else:
         # No gate and no arch keys means an unrestricted single-hash cask, which
