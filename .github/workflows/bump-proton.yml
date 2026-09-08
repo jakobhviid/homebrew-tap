@@ -1,0 +1,128 @@
+name: Bump Proton casks
+
+# Why: Proton ships the desktop apps only as a direct .rpm resolved through a
+# per-app version.json, so a hand-pinned cask goes stale silently — there is no
+# release feed anyone watches. This bumps them unattended, and lands the commit
+# on main only after the Linux suite has passed against that exact commit, so an
+# upstream change that breaks a cask leaves main alone and shows up as a failed
+# run instead.
+on:
+  schedule:
+    # Proton's releases do not land on a predictable schedule; once a day is
+    # enough for a desktop app and keeps the RPM downloads modest.
+    - cron: "30 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump-proton
+  cancel-in-progress: false
+
+env:
+  CANDIDATE_BRANCH: auto/bump-proton
+
+jobs:
+  propose:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      bump: ${{ steps.bump.outputs.bump }}
+      summary: ${{ steps.bump.outputs.summary }}
+      sha: ${{ steps.push.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v5
+
+      # Why all three in ONE commit and one candidate branch, unlike
+      # bump-orca.yml: a matrixed job's outputs are not addressable per entry, so
+      # the propose -> validate -> land handoff that pattern depends on needs a
+      # single propose job. The cost is coupling — a shape change in one app's
+      # feed fails the run and defers the others' bumps to the next day. That is
+      # acceptable because the script refuses to rewrite anything when a URL
+      # template stops matching its feed, so the failure is loud and main keeps
+      # working casks. If it ever becomes a real delay, split this into one
+      # workflow per cask rather than trying to matrix the handoff.
+      - name: Rewrite whichever casks upstream moved
+        id: bump
+        run: |
+          moved=()
+          for cask in Casks/proton-*-linux.rb; do
+            token="$(basename "$cask" .rb)"
+            echo "::group::$token"
+            python3 scripts/bump-proton.py "$cask"
+            echo "::endgroup::"
+            if ! git diff --quiet -- "$cask"; then
+              version="$(sed -n 's/^  version "\(.*\)"$/\1/p' "$cask")"
+              moved+=("$token $version")
+            fi
+          done
+          if [ ${#moved[@]} -eq 0 ]; then
+            echo "bump=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "bump=true" >> "$GITHUB_OUTPUT"
+          # A single line, so it survives a $GITHUB_OUTPUT round-trip and reads
+          # cleanly as a commit subject.
+          echo "summary=$(printf '%s, ' "${moved[@]}" | sed 's/, $//')" >> "$GITHUB_OUTPUT"
+          git diff -- Casks/
+
+      - name: Push the candidate to a throwaway branch
+        id: push
+        if: steps.bump.outputs.bump == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/proton-*-linux.rb
+          git commit -m "${{ steps.bump.outputs.summary }}"
+          # Force-push: the branch is scratch space for this run only, and it is
+          # branched from the current main so landing it stays a fast-forward.
+          git push --force origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          # An immutable sha, so validation cannot pick up a different commit
+          # than the one that was measured here.
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  # Why reuse the suite rather than a smoke test: a version bump is exactly when
+  # upstream moves the desktop file, the icon, the binary name inside the RPM or
+  # the sandbox posture, and each of those has its own assertion in there.
+  validate:
+    needs: propose
+    if: needs.propose.outputs.bump == 'true'
+    uses: ./.github/workflows/test-proton-casks.yml
+    with:
+      ref: ${{ needs.propose.outputs.sha }}
+
+  land:
+    needs: [propose, validate]
+    if: needs.propose.outputs.bump == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.propose.outputs.sha }}
+          fetch-depth: 0
+      - name: Fast-forward main and drop the branch
+        run: |
+          # Push the validated sha itself, not a branch that could have moved.
+          git push origin "${{ needs.propose.outputs.sha }}:refs/heads/main"
+          git push origin --delete "$CANDIDATE_BRANCH"
+          echo "Landed: ${{ needs.propose.outputs.summary }}"
+
+  # Why: without this the branch survives a failed validation and the next run's
+  # force-push would silently rebase a candidate nobody looked at.
+  cleanup:
+    needs: [propose, validate]
+    if: always() && needs.propose.outputs.bump == 'true' && needs.validate.result != 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Delete the rejected candidate
+        run: |
+          git push origin --delete "$CANDIDATE_BRANCH" || true
+          echo "::error::${{ needs.propose.outputs.summary }} failed validation; main left at its previous versions."
+          exit 1

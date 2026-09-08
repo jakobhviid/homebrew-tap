@@ -1,0 +1,219 @@
+name: Test Proton casks on Linux
+
+# Why a second workflow rather than more steps in test-cask.yml: that one's
+# matrix covers both architectures, and Proton publishes no arm64 Linux build —
+# these casks declare `depends_on arch: :x86_64`, so an arm64 job could only
+# assert that installing refuses. Its audit/style/version loops already cover
+# every cask in the tap, including these; what is here is the install and the
+# integration each Proton cask claims.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Casks/proton-*-linux.rb"
+      - ".github/workflows/test-proton-casks.yml"
+  pull_request:
+    paths:
+      - "Casks/proton-*-linux.rb"
+      - ".github/workflows/test-proton-casks.yml"
+  workflow_dispatch:
+  # Why: the scheduled bump calls this to validate a candidate commit before it
+  # is allowed anywhere near main.
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit or branch to test. Defaults to the triggering ref."
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-proton-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cask:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - token: proton-mail-linux
+            pkg: proton-mail
+            # Upstream ships this icon as /usr/share/pixmaps/<pkg>.png containing
+            # SVG data; the cask renames it on the way in, so assert the .svg.
+            icon: .local/share/icons/hicolor/scalable/apps/proton-mail.svg
+            userdata: Proton Mail
+          - token: proton-meet-linux
+            pkg: proton-meet
+            icon: .local/share/icons/hicolor/256x256/apps/proton-meet.png
+            userdata: Proton Meet
+          - token: proton-pass-linux
+            pkg: proton-pass
+            icon: .local/share/icons/hicolor/scalable/apps/proton-pass.svg
+            userdata: Proton Pass
+    runs-on: ubuntu-latest
+    env:
+      # Why: an auto-update fetches and hard-resets the tap from GitHub, which
+      # would silently replace the commit under test with whatever is on main.
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Install desktop and Electron runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends desktop-file-utils cpio
+          # Ubuntu's 64-bit-time_t transition renamed many of these, so try both
+          # spellings per library and skip whichever the release doesn't carry.
+          for pkg in libgtk-3-0t64 libgtk-3-0 libnss3 libasound2t64 libasound2 \
+                     libatk1.0-0t64 libatk1.0-0 libatk-bridge2.0-0t64 libatk-bridge2.0-0 \
+                     libatspi2.0-0t64 libatspi2.0-0 libcups2t64 libcups2 libgbm1 \
+                     libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+                     libxtst6 libxss1 libnotify4 libudev1 libsecret-1-0; do
+            if apt-cache show "$pkg" >/dev/null 2>&1; then
+              sudo apt-get install -y --no-install-recommends "$pkg" || true
+            fi
+          done
+
+      # Why rpm and cpio explicitly: the preflight extracts the payload with
+      # `rpm2cpio | cpio`, which is present on any rpm-based distro but not on
+      # an Ubuntu runner. Installing them here is what makes this test exercise
+      # the real extraction path rather than a substitute.
+      - name: Install rpm2cpio
+        run: sudo apt-get install -y --no-install-recommends rpm
+
+      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+
+      - name: Restore the commit under test
+        run: |
+          # Why: setup-homebrew symlinks this checkout in as a tap and runs
+          # `brew update`, which hard-resets the working tree to origin/main —
+          # throwing away a caller-supplied ref while still reporting success.
+          git checkout --force "${{ inputs.ref || github.sha }}"
+          git log --oneline -1
+
+      - name: Mount this checkout as the tap
+        run: |
+          set -x
+          # Why `brew --repository <tap>`: it is what brew itself resolves the
+          # tap to, which differs between macOS and linuxbrew layouts.
+          tap_dir="$(brew --repository jakobhviid/tap)"
+          if [ -L "$tap_dir" ]; then
+            echo "already linked -> $(readlink "$tap_dir")"
+          else
+            rm -rf "$tap_dir"
+            mkdir -p "$(dirname "$tap_dir")"
+            ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+          fi
+          brew trust --tap jakobhviid/tap
+
+          # The tripwire: brew must report the version this checkout declares,
+          # or a wrong-tree test passes silently.
+          expected="$(sed -n 's/^  version "\(.*\)"$/\1/p' "Casks/${{ matrix.token }}.rb")"
+          actual="$(brew info --cask --json=v2 "jakobhviid/tap/${{ matrix.token }}" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')"
+          echo "${{ matrix.token }}: checkout=$expected brew=$actual"
+          test "$expected" = "$actual"
+
+      - name: Install
+        run: brew install --cask "jakobhviid/tap/${{ matrix.token }}"
+
+      - name: Verify the launcher binary resolves through Homebrew
+        run: |
+          set -x
+          command -v "${{ matrix.pkg }}"
+          # The RPM's /usr/bin entry is a relative symlink into ../lib/<pkg>/,
+          # so brew's bin symlink has to resolve through it to a real ELF.
+          target="$(readlink -f "$(command -v "${{ matrix.pkg }}")")"
+          test -f "$target"
+          file "$target" | grep -q ELF
+
+      - name: Verify the desktop entry and its rewritten Exec
+        run: |
+          set -x
+          entry="$HOME/.local/share/applications/${{ matrix.pkg }}.desktop"
+          test -f "$entry"
+          desktop-file-validate "$entry"
+          # Upstream ships `Exec=<pkg> %U`, a bare command resolved through PATH
+          # — and GNOME's PATH excludes the Homebrew prefix, so an unrewritten
+          # entry produces a launcher that silently does nothing.
+          grep -qx "Exec=$(brew --prefix)/bin/${{ matrix.pkg }} %U" "$entry"
+
+      - name: Verify the icon is installed where the entry can find it
+        run: |
+          set -x
+          test -f "$HOME/${{ matrix.icon }}"
+          # Icon=<pkg> resolves by name through the user icon theme, so the
+          # basename has to match what the .desktop asks for.
+          grep -qx "Icon=${{ matrix.pkg }}" "$HOME/.local/share/applications/${{ matrix.pkg }}.desktop"
+
+      - name: Reinstall to exercise the version-bump path
+        run: |
+          set -x
+          brew reinstall --cask "jakobhviid/tap/${{ matrix.token }}"
+          grep -qx "Exec=$(brew --prefix)/bin/${{ matrix.pkg }} %U" \
+            "$HOME/.local/share/applications/${{ matrix.pkg }}.desktop"
+
+      - name: Smoke-test the GUI under a virtual display
+        timeout-minutes: 6
+        run: |
+          sudo apt-get install -y --no-install-recommends xvfb
+          # Why not xvfb-run: it waits on every process still holding the
+          # display, and Electron's zygote/gpu children outlive a SIGTERM to the
+          # parent. Own the server and do the killing.
+          Xvfb :99 -screen 0 1280x1024x24 >/tmp/xvfb.log 2>&1 &
+          xvfb_pid=$!
+          export DISPLAY=:99
+          sleep 3
+
+          setsid "${{ matrix.pkg }}" >/tmp/gui.log 2>&1 &
+          app_pid=$!
+          alive=1
+          for _ in $(seq 1 30); do
+            sleep 1
+            kill -0 "$app_pid" 2>/dev/null || { alive=0; break; }
+          done
+
+          pkill -9 -f "${{ matrix.pkg }}" 2>/dev/null || true
+          pkill -9 -f chrome_crashpad_handler 2>/dev/null || true
+          kill -9 "$xvfb_pid" 2>/dev/null || true
+
+          echo "=== ${{ matrix.pkg }} output ==="
+          sed -n '1,150p' /tmp/gui.log
+          if [ "$alive" -ne 1 ]; then
+            echo "::error::${{ matrix.pkg }} exited on its own instead of staying up"
+            exit 1
+          fi
+          # Why this check specifically: upstream's own RPM ships chrome-sandbox
+          # WITHOUT the setuid bit, so these apps depend on the unprivileged
+          # user-namespace sandbox. If a host misjudges that, Chromium aborts
+          # here rather than opening a window — and a cask cannot set setuid.
+          if grep -qiE "SUID sandbox|chrome-sandbox|Failed to move to new namespace|No usable sandbox" /tmp/gui.log; then
+            echo "::error::sandbox failure — see the log above"
+            exit 1
+          fi
+          echo "${{ matrix.pkg }} stayed up for 30s with no sandbox error"
+
+      - name: Verify the data directory the zap stanza targets
+        run: |
+          set -x
+          find "$HOME/.config" "$HOME/.cache" -maxdepth 1 -iname '*roton*' -printf '%p\n' 2>/dev/null || true
+          # Why pin this: Electron derives userData from productName, and the zap
+          # stanza depends on the exact spelling. Mail's was observed directly;
+          # Meet's and Pass's were inferred from the same convention, so this is
+          # where that inference is checked instead of trusted.
+          test -d "$HOME/.config/${{ matrix.userdata }}"
+
+      - name: Uninstall with zap and verify nothing is left behind
+        run: |
+          set -x
+          brew uninstall --cask --zap "jakobhviid/tap/${{ matrix.token }}"
+          ! test -e "$HOME/.local/share/applications/${{ matrix.pkg }}.desktop"
+          ! test -e "$HOME/${{ matrix.icon }}"
+          ! command -v "${{ matrix.pkg }}"
+          # The smoke test above created this, so zap has real data to clear.
+          ! test -e "$HOME/.config/${{ matrix.userdata }}"

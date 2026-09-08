@@ -30,6 +30,9 @@ launcher entry and icon included — and installs with the same command; run
 | [opencode-provider-manager](https://github.com/jakobhviid/opencode-provider-manager) | Install & manage the opencode-provider-manager plugin for opencode | macOS, Linux (x86_64, arm64) |
 | [orca-linux](https://onorca.dev/) | IDE for orchestrating AI coding agents across terminals and worktrees | Linux (x86_64, arm64) |
 | [proton-drive-cli](https://proton.me/drive) | Access Proton Drive end-to-end encrypted cloud storage from the terminal | macOS, Linux (x86_64, arm64) |
+| [proton-mail-linux](https://proton.me/mail) | Encrypted email client | Linux (x86_64) |
+| [proton-meet-linux](https://proton.me/meet) | End-to-end encrypted video conferencing | Linux (x86_64) |
+| [proton-pass-linux](https://proton.me/pass) | Password manager | Linux (x86_64) |
 | [pwtune](https://github.com/jakobhviid/pwtune) | Measure any speaker with any mic and build a PipeWire EQ profile | Linux (arm64) |
 | [temper](https://github.com/jakobhviid/temper) | Converge a machine to a declared spec kept in a folder of human-readable files | macOS, Linux (x86_64, arm64) |
 <!-- END TOOLS -->
