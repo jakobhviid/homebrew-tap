@@ -158,6 +158,26 @@ jobs:
           grep -qx "Exec=$(brew --prefix)/bin/${{ matrix.pkg }} %U" \
             "$HOME/.local/share/applications/${{ matrix.pkg }}.desktop"
 
+      # Why this is needed and is not cheating: these apps ship chrome-sandbox
+      # WITHOUT the setuid bit, exactly as upstream's own RPM does, so they rely
+      # on Chromium's unprivileged user-namespace sandbox. Ubuntu 24.04 runners
+      # restrict unprivileged userns through AppArmor, which pushes Chromium onto
+      # the SUID path instead — where it finds a non-setuid helper and aborts:
+      #
+      #   FATAL: The SUID sandbox helper binary was found, but is not configured
+      #   correctly … owned by root and has mode 4755
+      #
+      # A cask cannot set setuid, and neither does the vendor, so the fix is to
+      # give the runner the precondition a real desktop already has rather than
+      # to launch with --no-sandbox (which would test a configuration no user
+      # runs) or to chmod 4755 in CI (which would test a file no user gets).
+      # Verified on Bazzite, where user.max_user_namespaces is 125250 and the
+      # app starts with no sandbox error at all.
+      - name: Allow the unprivileged user-namespace sandbox
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          echo "max_user_namespaces=$(sysctl -n user.max_user_namespaces)"
+
       - name: Smoke-test the GUI under a virtual display
         timeout-minutes: 6
         run: |
