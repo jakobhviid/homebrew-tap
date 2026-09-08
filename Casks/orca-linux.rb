@@ -55,6 +55,26 @@ cask "orca-linux" do
   artifact "squashfs-root/usr/share/icons/hicolor/512x512/apps/orca-ide.png",
            target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/orca-ide.png"
 
+  # This cask deliberately still uses preflight/postflight rather than the newer
+  # *_steps form, and test-cask.yml skips Cask/InstallSteps for it. Migrating it
+  # makes the AppImage's own extraction fail:
+  #
+  #   `… orca-linux.AppImage --appimage-extract` exited with 1
+  #   fopen error: Is a directory
+  #
+  # A type-2 AppImage reopens its own file to read the embedded squashfs, and
+  # something about how a `run` step executes it stops that working. Three
+  # things were ruled out on real installs: the /usr/bin/env wrapper (routing
+  # through `/bin/sh -c` fails identically), the step sandbox's write
+  # permissions (`writable_paths: ["{{staged_path}}"]` changes nothing), and the
+  # cask itself (this form installs cleanly). The blocker is inside the step
+  # runner.
+  #
+  # The Proton casks in this tap ARE migrated and pass, because their payload is
+  # extracted by a separate tool (`rpm2cpio | cpio`) instead of by the payload
+  # executing itself. That is the distinction to keep if anyone retries this:
+  # extracting via unsquashfs, or `write_file`-ing a small extract script, are
+  # the two avenues left.
   preflight do
     appimage = "#{staged_path}/orca-linux#{arch}.AppImage"
 

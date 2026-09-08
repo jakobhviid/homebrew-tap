@@ -124,7 +124,20 @@ jobs:
             token="$(basename "$cask" .rb)"
             echo "::group::audit $token"
             brew audit --cask --strict "jakobhviid/tap/$token"
-            brew style --cask "jakobhviid/tap/$token"
+            # Why orca-linux is excepted from ONE cop rather than from style:
+            # Cask/InstallSteps wants preflight/postflight replaced by the
+            # *_steps form, and migrating orca-linux breaks the AppImage's own
+            # extraction — reproduced on real installs, details in the cask.
+            # Every other cask here is migrated and fully checked. A tap-level
+            # .rubocop.yml was tried first and is not honoured for cask style,
+            # and Homebrew's own config forbids inline disable directives, so
+            # the exception has to live here.
+            if [ "$token" = "orca-linux" ]; then
+              brew style --cask "jakobhviid/tap/$token" \
+                --except-cops Cask/InstallSteps
+            else
+              brew style --cask "jakobhviid/tap/$token"
+            fi
             echo "::endgroup::"
           done
 
