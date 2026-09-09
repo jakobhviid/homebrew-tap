@@ -56,6 +56,7 @@ jobs:
             # SVG data; the cask renames it on the way in, so assert the .svg.
             icon: .local/share/icons/hicolor/scalable/apps/proton-mail.svg
             userdata: Proton Mail
+            icon_px: ""
             launcher: symlink
             exec_arg: "%U"
             launcher_log: ""
@@ -64,6 +65,7 @@ jobs:
             pkg: proton-meet
             icon: .local/share/icons/hicolor/256x256/apps/proton-meet.png
             userdata: Proton Meet
+            icon_px: "256"
             launcher: symlink
             exec_arg: "%U"
             launcher_log: ""
@@ -72,13 +74,18 @@ jobs:
             pkg: proton-pass
             icon: .local/share/icons/hicolor/scalable/apps/proton-pass.svg
             userdata: Proton Pass
+            icon_px: ""
             launcher: symlink
             exec_arg: "%U"
             launcher_log: ""
             extra_zap: ""
           - token: claude-desktop-linux
             pkg: claude-desktop-unofficial
-            icon: .local/share/icons/hicolor/256x256/apps/claude-desktop-unofficial.png
+            # Not one of upstream's hicolor PNGs: those inset the artwork in a
+            # transparent border, so the cask installs the app's own borderless
+            # 512px Electron icon instead. `icon_px` pins that below.
+            icon: .local/share/icons/hicolor/512x512/apps/claude-desktop-unofficial.png
+            icon_px: "512"
             userdata: Claude
             launcher: script
             exec_arg: "%u"
@@ -218,6 +225,14 @@ jobs:
           # Icon=<pkg> resolves by name through the user icon theme, so the
           # basename has to match what the .desktop asks for.
           grep -qx "Icon=${{ matrix.pkg }}" "$HOME/.local/share/applications/${{ matrix.pkg }}.desktop"
+          # Where a size is pinned, the installed PNG must actually be that size:
+          # the icon this cask picks out of the payload is the one that fills its
+          # canvas, and upstream swapping in a smaller or re-padded file is
+          # exactly the regression that would restore the undersized launcher.
+          if [ -n "${{ matrix.icon_px }}" ]; then
+            python3 -c 'import struct,sys; d=open(sys.argv[1],"rb").read(16+8); w,h=struct.unpack(">II",d[16:24]); print(w,h); sys.exit(0 if w==h==int(sys.argv[2]) else 1)' \
+              "$HOME/${{ matrix.icon }}" "${{ matrix.icon_px }}"
+          fi
 
       - name: Reinstall to exercise the version-bump path
         run: |

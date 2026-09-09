@@ -47,20 +47,15 @@ cask "claude-desktop-linux" do
   binary "usr/bin/claude-desktop-unofficial"
   artifact "usr/share/applications/claude-desktop-unofficial.desktop",
            target: "#{Dir.home}/.local/share/applications/claude-desktop-unofficial.desktop"
-  # Why five sizes and not just the largest: GNOME picks an icon per context
-  # (16px in lists, 48px in the dash, 256px in the switcher) and downscaling one
-  # large PNG gives visibly soft launcher icons. These are real PNGs at every
-  # size and there is no scalable/SVG icon in the payload.
-  artifact "usr/share/icons/hicolor/16x16/apps/claude-desktop-unofficial.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/16x16/apps/claude-desktop-unofficial.png"
-  artifact "usr/share/icons/hicolor/32x32/apps/claude-desktop-unofficial.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/32x32/apps/claude-desktop-unofficial.png"
-  artifact "usr/share/icons/hicolor/48x48/apps/claude-desktop-unofficial.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/48x48/apps/claude-desktop-unofficial.png"
-  artifact "usr/share/icons/hicolor/128x128/apps/claude-desktop-unofficial.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/128x128/apps/claude-desktop-unofficial.png"
-  artifact "usr/share/icons/hicolor/256x256/apps/claude-desktop-unofficial.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/256x256/apps/claude-desktop-unofficial.png"
+  # Why one 512px icon instead of upstream's five hicolor PNGs: those are the
+  # same artwork inset in a transparent border — 212px of content on a 256px
+  # canvas, 83% — so the launcher draws noticeably smaller than every neighbour
+  # that fills its tile. The app's own Electron icon, resources/icon.png, is the
+  # same art at 512px with no border at all: the crop upstream's packaging never
+  # applied. hicolor declares 512x512 and GTK scales it per context, which is
+  # already how every icon shipped as a single large PNG behaves.
+  artifact "claude-desktop-unofficial-512.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/claude-desktop-unofficial.png"
 
   preflight_steps do
     # Why rpm2cpio and not bsdtar: bsdtar is NOT installed on Bazzite, so a
@@ -108,6 +103,14 @@ cask "claude-desktop-linux" do
     inreplace "usr/share/applications/claude-desktop-unofficial.desktop",
               /^Exec=.*$/,
               "Exec={{HOMEBREW_PREFIX}}/bin/claude-desktop-unofficial %u"
+
+    # Why a copy rather than an artifact pointed straight at resources/icon.png:
+    # `artifact` MOVES its source out of the payload, and the app reads that file
+    # at runtime — it is the BrowserWindow icon, loaded through
+    # nativeImage.createFromPath — so moving it would buy a correct launcher at
+    # the price of a window with no icon. This copy is what gets moved out.
+    copy "usr/lib/claude-desktop-unofficial/resources/icon.png",
+         "claude-desktop-unofficial-512.png"
 
     # Why: upstream's RPM ships chrome-sandbox setuid, which only means anything
     # on a root-owned file. A cask unpacks as you, so the bit survives extraction
