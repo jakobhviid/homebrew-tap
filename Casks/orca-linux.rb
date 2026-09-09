@@ -22,6 +22,10 @@ cask "orca-linux" do
   # `orca` cask name is taken by plotly's chart exporter. The AppImage is a Linux
   # ELF, so refuse to install anywhere else rather than staging a broken payload.
   depends_on linux: :any
+  # Why the squashfs formula: extraction reads the image's embedded filesystem
+  # with unsquashfs, so the tool has to be there on any host this installs on,
+  # not only on the distributions that ship squashfs-tools themselves.
+  depends_on formula: "squashfs"
 
   # Why: `orca` is the CLI, matching upstream's macOS cask and Orca's own Linux
   # CliInstaller, which symlinks ~/.local/bin/orca. The shim walks symlinks to
@@ -55,40 +59,43 @@ cask "orca-linux" do
   artifact "squashfs-root/usr/share/icons/hicolor/512x512/apps/orca-ide.png",
            target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/orca-ide.png"
 
-  # `preflight` deliberately stays in the pre-steps form — every other stanza
-  # here is migrated — and test-cask.yml skips Cask/InstallSteps for this one.
-  # Migrating it makes the AppImage's own extraction fail:
-  #
-  #   `… orca-linux.AppImage --appimage-extract` exited with 1
-  #   fopen error: Is a directory
-  #
-  # A type-2 AppImage reopens its own file to read the embedded squashfs, and
-  # something about how a `run` step executes it stops that working. Three
-  # things were ruled out on real installs: the /usr/bin/env wrapper (routing
-  # through `/bin/sh -c` fails identically), the step sandbox's write
-  # permissions (`writable_paths: ["{{staged_path}}"]` changes nothing), and the
-  # cask itself (this form installs cleanly). The blocker is inside the step
-  # runner.
-  #
-  # The Proton casks in this tap extract in a `preflight_steps` block and pass,
-  # because their payload is unpacked by a separate tool (`rpm2cpio | cpio`)
-  # instead of by the payload executing itself. That is the distinction to keep
-  # if anyone retries this: extracting via unsquashfs, or `write_file`-ing a
-  # small extract script, are the two avenues left.
-  preflight do
-    appimage = "#{staged_path}/orca-linux#{arch}.AppImage"
-
-    # Why: the type-2 AppImage runtime unpacks itself with its own embedded
-    # squashfs reader, so this needs neither FUSE nor an unsquashfs on PATH —
-    # which matters for a tap user who isn't on Fedora. system_command raises on
-    # a non-zero exit, unlike Kernel#system, so a failed extraction aborts the
-    # install instead of leaving a half-filled squashfs-root for the artifacts.
-    system_command "chmod", args: ["+x", appimage]
-    system_command appimage, args: ["--appimage-extract"], chdir: staged_path
+  preflight_steps do
+    # Why unsquashfs and not the image's own `--appimage-extract`: a type-2
+    # AppImage unpacks itself by reopening its own file, and that reopen fails
+    # inside a `run` step ("fopen error: Is a directory"). Unpacking with a
+    # separate tool is the same split the Proton casks use, and it needs no
+    # FUSE either.
+    #
+    # The offset comes out of the ELF header, so nothing has to execute: a
+    # type-2 AppImage is an ELF followed by a squashfs filesystem, and the
+    # boundary is the end of the section-header table — e_shoff (8 bytes at
+    # 0x28) plus e_shnum (2 bytes at 0x3c) times e_shentsize (2 bytes at 0x3a).
+    # `od` reads those three fields and is coreutils, so it costs no dependency
+    # where readelf would pull in binutils. It is computed from the staged file
+    # on every install because it moves with the bundled AppImage runtime.
+    #
+    # `-no-exit-code` is load-bearing: the step runs as the installing user, so
+    # unsquashfs cannot restore the image's root ownership and grades that a
+    # non-fatal error, which is exit 2 and would abort the install. It still
+    # exits 1 on a fatal error, and `-ignore-errors` is deliberately absent, so
+    # a file it cannot write is fatal rather than leaving a half-filled
+    # squashfs-root for the artifacts. `-f` lets it descend into the
+    # destination and `-n` drops the progress bar.
+    run "/bin/sh",
+        args:  ["-c", <<~'EXTRACT'],
+          set -e
+          image=./orca-linux{{arch}}.AppImage
+          shoff=$(od -An -tu8 -j40 -N8 --endian=little "$image" | tr -d ' ')
+          shentsize=$(od -An -tu2 -j58 -N2 --endian=little "$image" | tr -d ' ')
+          shnum=$(od -An -tu2 -j60 -N2 --endian=little "$image" | tr -d ' ')
+          {{HOMEBREW_PREFIX}}/bin/unsquashfs -no-exit-code -n -f \
+            -o "$((shoff + shnum * shentsize))" -d squashfs-root "$image"
+        EXTRACT
+        chdir: "{{staged_path}}"
 
     # Why: the extracted tree is the install; keeping the 193 MB image too would
     # double the Caskroom footprint for no benefit.
-    FileUtils.rm appimage
+    remove "orca-linux{{arch}}.AppImage"
 
     # Why: Orca ships an electron-updater manifest and marks
     # resources/package-type as "AppImage", so the app treats itself as
@@ -99,20 +106,29 @@ cask "orca-linux" do
     # cannot install, and keeps brew unambiguously in charge of the version.
     # The app configures its feed programmatically, so treat this as belt rather
     # than braces — `brew upgrade` is the update path either way.
-    FileUtils.rm "#{staged_path}/squashfs-root/resources/app-update.yml"
+    remove "squashfs-root/resources/app-update.yml"
 
-    desktop = "#{staged_path}/squashfs-root/orca-ide.desktop"
-    content = File.read(desktop)
     # Why: `Exec=AppRun %U` only resolves inside a mounted AppImage. Point it at
     # the Homebrew bin symlink so the entry survives version bumps, and keep %U
     # so the x-scheme-handler/orca and text/markdown handlers still get their arg.
-    content.gsub!(/^Exec=.*$/, "Exec=#{HOMEBREW_PREFIX}/bin/orca-ide %U")
-    # Why: an IDE under Utility lands in GNOME's "Utilities" folder.
-    content.gsub!(/^Categories=.*$/, "Categories=Development;IDE;")
+    # No `audit_result: false` here, unlike the two below: a .desktop with no
+    # Exec line is a broken payload and should fail the install loudly.
+    inreplace "squashfs-root/orca-ide.desktop",
+              /^Exec=.*$/,
+              "Exec={{HOMEBREW_PREFIX}}/bin/orca-ide %U"
+    # Why: an IDE under Utility lands in GNOME's "Utilities" folder. Both keys
+    # are optional in a .desktop file, so `audit_result: false` keeps a build
+    # that omits one installable — `inreplace` raises on an absent pattern.
+    inreplace "squashfs-root/orca-ide.desktop",
+              /^Categories=.*$/,
+              "Categories=Development;IDE;",
+              audit_result: false
     # Why: brew owns the version here, so an AppImage-provenance stamp would go
     # stale on the first upgrade and misreport what's installed.
-    content.gsub!(/^X-AppImage-Version=.*\n/, "")
-    File.write(desktop, content)
+    inreplace "squashfs-root/orca-ide.desktop",
+              /^X-AppImage-Version=.*\n/,
+              "",
+              audit_result: false
     # StartupWMClass=orca is left untouched: it's what lets the shell group
     # Orca's windows under this launcher icon.
   end
