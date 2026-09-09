@@ -43,15 +43,14 @@ cask "paseo-linux" do
   # with Icon=Paseo, so the icon basenames have to match it.
   artifact "squashfs-root/Paseo.desktop",
            target: "#{Dir.home}/.local/share/applications/Paseo.desktop"
-  # Why only three sizes: that is all upstream bundles (32, 64, 128). GNOME picks
-  # an icon per context, so installing each one beats letting it downscale the
-  # largest.
-  artifact "squashfs-root/usr/share/icons/hicolor/32x32/apps/Paseo.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/32x32/apps/Paseo.png"
-  artifact "squashfs-root/usr/share/icons/hicolor/64x64/apps/Paseo.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/64x64/apps/Paseo.png"
-  artifact "squashfs-root/usr/share/icons/hicolor/128x128/apps/Paseo.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/128x128/apps/Paseo.png"
+  # Why one 512px icon instead of the three upstream bundles: those stop at 128px
+  # and inset the artwork in a transparent border — 114px of content on a 128px
+  # canvas, 89% — so the launcher draws smaller than every neighbour that fills
+  # its tile, and soft anywhere the shell asks for more than 128px. The same mark
+  # ships at 512px with no border as the web UI's PWA icon, which is the size
+  # this installs; hicolor declares 512x512 and GTK scales it per context.
+  artifact "Paseo-512.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/Paseo.png"
 
   preflight_steps do
     # Why unsquashfs and not the image's own `--appimage-extract`: a type-2
@@ -133,6 +132,13 @@ cask "paseo-linux" do
               /^X-AppImage-Version=.*\n/,
               "",
               audit_result: false
+    # Why a copy rather than an artifact pointed straight at the PWA icon:
+    # `artifact` MOVES its source, and app-dist is the web UI itself — the daemon
+    # serves that directory to browsers and phones, and its manifest.json asks
+    # for /pwa-icon-512.png by name. Moving it would fix the launcher by putting
+    # a 404 in the web app. This copy is what gets moved out.
+    copy "squashfs-root/resources/app-dist/pwa-icon-512.png", "Paseo-512.png"
+
     # Categories=Development; and StartupWMClass=Paseo are left untouched: the
     # first already lands the entry where it belongs, and the second is what lets
     # the shell group Paseo's windows under this launcher icon.

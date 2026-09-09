@@ -170,13 +170,19 @@ jobs:
             exit 1
           fi
 
-      - name: Verify all three icon sizes
+      - name: Verify the icon is the borderless 512px one
         run: |
           set -x
-          test "$(find "$HOME/.local/share/icons/hicolor" -path '*/apps/Paseo.png' | wc -l)" -eq 3
-          for size in 32x32 64x64 128x128; do
-            test -f "$HOME/.local/share/icons/hicolor/$size/apps/Paseo.png"
-          done
+          icon="$HOME/.local/share/icons/hicolor/512x512/apps/Paseo.png"
+          test -f "$icon"
+          # Exactly one: upstream's own 32/64/128 icons inset the artwork in a
+          # transparent border, so installing any of them alongside this would put
+          # a smaller-looking icon back in whichever context asks for that size.
+          test "$(find "$HOME/.local/share/icons/hicolor" -path '*/apps/Paseo.png' | wc -l)" -eq 1
+          # And it really is 512px. The cask picks the one asset in the payload
+          # that fills its canvas; upstream shrinking or re-padding it is exactly
+          # the regression that would restore the undersized launcher.
+          python3 -c 'import struct,sys; d=open(sys.argv[1],"rb").read(24); w,h=struct.unpack(">II",d[16:24]); print(w,h); sys.exit(0 if w==h==512 else 1)' "$icon"
 
       - name: Verify the self-updater is disabled and the image is reclaimed
         run: |
@@ -205,7 +211,7 @@ jobs:
           brew reinstall --cask jakobhviid/tap/paseo-linux
           grep -qx "Exec=$(brew --prefix)/bin/paseo-desktop --no-sandbox %U" \
             "$HOME/.local/share/applications/Paseo.desktop"
-          test "$(find "$HOME/.local/share/icons/hicolor" -path '*/apps/Paseo.png' | wc -l)" -eq 3
+          test "$(find "$HOME/.local/share/icons/hicolor" -path '*/apps/Paseo.png' | wc -l)" -eq 1
           paseo --version
 
       - name: Smoke-test the GUI under a virtual display
