@@ -170,18 +170,28 @@ jobs:
               ;;
             script)
               # The RPM ships a launcher script instead: it sources its shared
-              # library and execs the Electron binary, both by absolute path. The
-              # cask rewrites those into the Caskroom, so a surviving /usr path is
-              # a launcher reaching for a file only the system package provides.
+              # library and execs the Electron binary, both by absolute path,
+              # which the cask rewrites into the Caskroom. A surviving /usr path
+              # is a launcher reaching for a file only the system package
+              # provides.
+              #
+              # The leading quote is what makes the match precise: the rewritten
+              # path ends in the very /usr path it replaced, so an unanchored
+              # grep flags a launcher that is in fact correct. Upstream quotes
+              # every one of these assignments, so the quote is the reliable
+              # marker of a path that is still bare.
+              #
               # Spelled out rather than as `! grep`, because bash exempts a
               # `!`-inverted command from errexit and a mid-script one would only
               # print.
-              for stale in "/usr/lib/${{ matrix.pkg }}" "/usr/bin/${{ matrix.pkg }}"; do
-                if grep -q "$stale" "$target"; then
-                  echo "::error::$target still names $stale"
-                  exit 1
-                fi
-              done
+              if grep -qE '"/usr/(lib|bin)/${{ matrix.pkg }}' "$target"; then
+                echo "::error::$target still names an unrewritten /usr path"
+                grep -nE '"/usr/(lib|bin)/${{ matrix.pkg }}' "$target"
+                exit 1
+              fi
+              # And the rewrite has to have gone somewhere: a launcher naming
+              # neither /usr nor the Caskroom would satisfy the check above.
+              grep -q "/Caskroom/${{ matrix.token }}/" "$target"
               # The script answers --version only after sourcing that library, so
               # this exits non-zero if the rewrite landed on a path that is not
               # there.
