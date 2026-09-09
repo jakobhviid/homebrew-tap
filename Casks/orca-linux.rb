@@ -55,9 +55,9 @@ cask "orca-linux" do
   artifact "squashfs-root/usr/share/icons/hicolor/512x512/apps/orca-ide.png",
            target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/orca-ide.png"
 
-  # This cask deliberately still uses preflight/postflight rather than the newer
-  # *_steps form, and test-cask.yml skips Cask/InstallSteps for it. Migrating it
-  # makes the AppImage's own extraction fail:
+  # `preflight` deliberately stays in the pre-steps form — every other stanza
+  # here is migrated — and test-cask.yml skips Cask/InstallSteps for this one.
+  # Migrating it makes the AppImage's own extraction fail:
   #
   #   `… orca-linux.AppImage --appimage-extract` exited with 1
   #   fopen error: Is a directory
@@ -70,11 +70,11 @@ cask "orca-linux" do
   # cask itself (this form installs cleanly). The blocker is inside the step
   # runner.
   #
-  # The Proton casks in this tap ARE migrated and pass, because their payload is
-  # extracted by a separate tool (`rpm2cpio | cpio`) instead of by the payload
-  # executing itself. That is the distinction to keep if anyone retries this:
-  # extracting via unsquashfs, or `write_file`-ing a small extract script, are
-  # the two avenues left.
+  # The Proton casks in this tap extract in a `preflight_steps` block and pass,
+  # because their payload is unpacked by a separate tool (`rpm2cpio | cpio`)
+  # instead of by the payload executing itself. That is the distinction to keep
+  # if anyone retries this: extracting via unsquashfs, or `write_file`-ing a
+  # small extract script, are the two avenues left.
   preflight do
     appimage = "#{staged_path}/orca-linux#{arch}.AppImage"
 
@@ -118,16 +118,54 @@ cask "orca-linux" do
   end
 
   # Why: without a database refresh the entry and its URL handler only appear
-  # after the next login. `system` returns nil rather than raising when the tool
-  # is absent, so this stays a no-op on desktops that don't ship it.
-  postflight do
-    system "update-desktop-database", "#{Dir.home}/.local/share/applications"
-    system "gtk-update-icon-cache", "-f", "-t", "#{Dir.home}/.local/share/icons/hicolor"
+  # after the next login. `must_succeed: false` keeps the step a no-op on
+  # desktops that don't ship the tool.
+  #
+  # The path is spelled out with `{{user}}` rather than `~`, and that is
+  # load-bearing. These steps run inside Homebrew's cask sandbox, which has its
+  # own empty $HOME, so `~` expands to a directory that does not exist — both
+  # refreshes then silently no-op and `must_succeed: false` hides it. There is
+  # no `{{home}}` token (the runner's token list is prefix/staged_path/appdir
+  # and friends, plus `{{user}}`), `chdir` resolves only against the step's
+  # default base, and interpolating #{Dir.home} is rejected by the style cop,
+  # which allows only step DSL calls and literal arguments inside a steps
+  # block. Hardcoding /home is safe here because the cask is Linux-only.
+  #
+  # `writable_paths` is load-bearing for the same reason: the sandbox grants a
+  # step write access to the Caskroom, the appdir and the linked prefix
+  # directories only, so without it update-desktop-database reports "The
+  # databases in [.] could not be updated" and gtk-update-icon-cache reports
+  # "Permission denied" on .icon-theme.cache — both swallowed by
+  # `must_succeed: false`. `writable_base: :home` resolves against the real
+  # home the runner is handed, not the sandbox's empty $HOME.
+  postflight_steps do
+    run "update-desktop-database",
+        args:           ["."],
+        chdir:          "/home/{{user}}/.local/share/applications",
+        writable_paths: [".local/share/applications"],
+        writable_base:  :home,
+        must_succeed:   false
+    run "gtk-update-icon-cache",
+        args:           ["-f", "-t", "."],
+        chdir:          "/home/{{user}}/.local/share/icons/hicolor",
+        writable_paths: [".local/share/icons/hicolor"],
+        writable_base:  :home,
+        must_succeed:   false
   end
 
-  uninstall_postflight do
-    system "update-desktop-database", "#{Dir.home}/.local/share/applications"
-    system "gtk-update-icon-cache", "-f", "-t", "#{Dir.home}/.local/share/icons/hicolor"
+  uninstall_postflight_steps do
+    run "update-desktop-database",
+        args:           ["."],
+        chdir:          "/home/{{user}}/.local/share/applications",
+        writable_paths: [".local/share/applications"],
+        writable_base:  :home,
+        must_succeed:   false
+    run "gtk-update-icon-cache",
+        args:           ["-f", "-t", "."],
+        chdir:          "/home/{{user}}/.local/share/icons/hicolor",
+        writable_paths: [".local/share/icons/hicolor"],
+        writable_base:  :home,
+        must_succeed:   false
   end
 
   # Why: Orca keeps worktrees and agent state in ~/.orca, as it does on macOS,
