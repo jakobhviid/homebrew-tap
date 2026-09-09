@@ -84,26 +84,42 @@ cask "proton-mail-linux" do
   # default base, and interpolating #{Dir.home} is rejected by the style cop,
   # which allows only step DSL calls and literal arguments inside a steps
   # block. Hardcoding /home is safe here because the cask is Linux-only.
+  #
+  # `writable_paths` is load-bearing for the same reason: the sandbox grants a
+  # step write access to the Caskroom, the appdir and the linked prefix
+  # directories only, so without it update-desktop-database reports "The
+  # databases in [.] could not be updated" and gtk-update-icon-cache reports
+  # "Permission denied" on .icon-theme.cache — both swallowed by
+  # `must_succeed: false`. `writable_base: :home` resolves against the real
+  # home the runner is handed, not the sandbox's empty $HOME.
   postflight_steps do
     run "update-desktop-database",
-        args:         ["."],
-        chdir:        "/home/{{user}}/.local/share/applications",
-        must_succeed: false
+        args:           ["."],
+        chdir:          "/home/{{user}}/.local/share/applications",
+        writable_paths: [".local/share/applications"],
+        writable_base:  :home,
+        must_succeed:   false
     run "gtk-update-icon-cache",
-        args:         ["-f", "-t", "."],
-        chdir:        "/home/{{user}}/.local/share/icons/hicolor",
-        must_succeed: false
+        args:           ["-f", "-t", "."],
+        chdir:          "/home/{{user}}/.local/share/icons/hicolor",
+        writable_paths: [".local/share/icons/hicolor"],
+        writable_base:  :home,
+        must_succeed:   false
   end
 
   uninstall_postflight_steps do
     run "update-desktop-database",
-        args:         ["."],
-        chdir:        "/home/{{user}}/.local/share/applications",
-        must_succeed: false
+        args:           ["."],
+        chdir:          "/home/{{user}}/.local/share/applications",
+        writable_paths: [".local/share/applications"],
+        writable_base:  :home,
+        must_succeed:   false
     run "gtk-update-icon-cache",
-        args:         ["-f", "-t", "."],
-        chdir:        "/home/{{user}}/.local/share/icons/hicolor",
-        must_succeed: false
+        args:           ["-f", "-t", "."],
+        chdir:          "/home/{{user}}/.local/share/icons/hicolor",
+        writable_paths: [".local/share/icons/hicolor"],
+        writable_base:  :home,
+        must_succeed:   false
   end
 
   # Why "Proton Mail" and NOT "protonmail": both directories exist on a machine
