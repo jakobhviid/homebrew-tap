@@ -23,6 +23,7 @@ launcher entry and icon included — and installs with the same command; run
 | Tool | What it does | Platforms |
 | --- | --- | --- |
 | [amdl](https://github.com/jakobhviid/amdl) | Maintain a uniform Opus music library: complete tags, cover art, and lyrics | macOS, Linux (x86_64, arm64) |
+| [claude-desktop-linux](https://github.com/aaddrick/claude-desktop-debian) | Unofficial Linux repackaging of Anthropic's Claude desktop client | Linux (x86_64) |
 | [crw](https://github.com/us/crw) | Turn URLs into clean markdown or JSON — scrape, crawl, search, MCP server | macOS, Linux (x86_64, arm64) |
 | [dotsync](https://github.com/jakobhviid/dotsync) | Sync user-level config between machines through a cloud folder, using symlinks | macOS, Linux (x86_64, arm64) |
 | [grove](https://github.com/jakobhviid/grove) | Portable git shortcuts plus a multi-repo overview & sync, for any shell | macOS, Linux (x86_64, arm64) |

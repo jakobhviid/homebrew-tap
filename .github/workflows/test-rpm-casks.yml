@@ -1,23 +1,25 @@
-name: Test Proton casks on Linux
+name: Test RPM-payload casks on Linux
 
 # Why a second workflow rather than more steps in test-cask.yml: that one's
-# matrix covers both architectures, and Proton publishes no arm64 Linux build —
-# these casks declare `depends_on arch: :x86_64`, so an arm64 job could only
-# assert that installing refuses. Its audit/style/version loops already cover
-# every cask in the tap, including these; what is here is the install and the
-# integration each Proton cask claims.
+# matrix covers both architectures, and none of these vendors publishes an arm64
+# Linux build these casks can use — they declare `depends_on arch: :x86_64`, so
+# an arm64 job could only assert that installing refuses. Its audit/style/version
+# loops already cover every cask in the tap, including these; what is here is the
+# install and the integration each RPM-payload cask claims.
 on:
   push:
     branches: [main]
     paths:
       - "Casks/proton-*-linux.rb"
-      - ".github/workflows/test-proton-casks.yml"
+      - "Casks/claude-desktop-linux.rb"
+      - ".github/workflows/test-rpm-casks.yml"
   pull_request:
     paths:
       - "Casks/proton-*-linux.rb"
-      - ".github/workflows/test-proton-casks.yml"
+      - "Casks/claude-desktop-linux.rb"
+      - ".github/workflows/test-rpm-casks.yml"
   workflow_dispatch:
-  # Why: the scheduled bump calls this to validate a candidate commit before it
+  # Why: the scheduled bumps call this to validate a candidate commit before it
   # is allowed anywhere near main.
   workflow_call:
     inputs:
@@ -30,7 +32,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: test-proton-${{ github.workflow }}-${{ github.ref }}
+  group: test-rpm-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -38,6 +40,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # `launcher` names the payload's /usr/bin shape, which is the real
+        # difference between these casks and drives the assertions below:
+        # `symlink` for a relative symlink into ../lib/<pkg>/, `script` for a
+        # launcher that hardcodes absolute /usr paths the cask has to rewrite.
+        #
+        # `exec_arg` is upstream's own field code and is deliberately not
+        # normalised: %U takes a list of URLs, %u a single one.
+        #
+        # `launcher_log` and `extra_zap` are empty for a cask that has neither.
         include:
           - token: proton-mail-linux
             pkg: proton-mail
@@ -45,14 +56,36 @@ jobs:
             # SVG data; the cask renames it on the way in, so assert the .svg.
             icon: .local/share/icons/hicolor/scalable/apps/proton-mail.svg
             userdata: Proton Mail
+            launcher: symlink
+            exec_arg: "%U"
+            launcher_log: ""
+            extra_zap: ""
           - token: proton-meet-linux
             pkg: proton-meet
             icon: .local/share/icons/hicolor/256x256/apps/proton-meet.png
             userdata: Proton Meet
+            launcher: symlink
+            exec_arg: "%U"
+            launcher_log: ""
+            extra_zap: ""
           - token: proton-pass-linux
             pkg: proton-pass
             icon: .local/share/icons/hicolor/scalable/apps/proton-pass.svg
             userdata: Proton Pass
+            launcher: symlink
+            exec_arg: "%U"
+            launcher_log: ""
+            extra_zap: ""
+          - token: claude-desktop-linux
+            pkg: claude-desktop-unofficial
+            icon: .local/share/icons/hicolor/256x256/apps/claude-desktop-unofficial.png
+            userdata: Claude
+            launcher: script
+            exec_arg: "%u"
+            # This launcher sends the app's own output to its log rather than to
+            # the terminal, so a sandbox failure is visible only there.
+            launcher_log: .cache/claude-desktop-debian/launcher.log
+            extra_zap: .cache/claude-desktop-debian
     runs-on: ubuntu-latest
     env:
       # Why: an auto-update fetches and hard-resets the tap from GitHub, which
@@ -126,11 +159,35 @@ jobs:
         run: |
           set -x
           command -v "${{ matrix.pkg }}"
-          # The RPM's /usr/bin entry is a relative symlink into ../lib/<pkg>/,
-          # so brew's bin symlink has to resolve through it to a real ELF.
           target="$(readlink -f "$(command -v "${{ matrix.pkg }}")")"
           test -f "$target"
-          file "$target" | grep -q ELF
+          file "$target"
+          case "${{ matrix.launcher }}" in
+            symlink)
+              # The RPM's /usr/bin entry is a relative symlink into ../lib/<pkg>/,
+              # so brew's bin symlink has to resolve through it to a real ELF.
+              file "$target" | grep -q ELF
+              ;;
+            script)
+              # The RPM ships a launcher script instead: it sources its shared
+              # library and execs the Electron binary, both by absolute path. The
+              # cask rewrites those into the Caskroom, so a surviving /usr path is
+              # a launcher reaching for a file only the system package provides.
+              # Spelled out rather than as `! grep`, because bash exempts a
+              # `!`-inverted command from errexit and a mid-script one would only
+              # print.
+              for stale in "/usr/lib/${{ matrix.pkg }}" "/usr/bin/${{ matrix.pkg }}"; do
+                if grep -q "$stale" "$target"; then
+                  echo "::error::$target still names $stale"
+                  exit 1
+                fi
+              done
+              # The script answers --version only after sourcing that library, so
+              # this exits non-zero if the rewrite landed on a path that is not
+              # there.
+              "${{ matrix.pkg }}" --version
+              ;;
+          esac
 
       - name: Verify the desktop entry and its rewritten Exec
         run: |
@@ -138,10 +195,11 @@ jobs:
           entry="$HOME/.local/share/applications/${{ matrix.pkg }}.desktop"
           test -f "$entry"
           desktop-file-validate "$entry"
-          # Upstream ships `Exec=<pkg> %U`, a bare command resolved through PATH
-          # — and GNOME's PATH excludes the Homebrew prefix, so an unrewritten
-          # entry produces a launcher that silently does nothing.
-          grep -qx "Exec=$(brew --prefix)/bin/${{ matrix.pkg }} %U" "$entry"
+          # Upstream's Exec names a bare command or a /usr path that only the
+          # system package provides — and GNOME's PATH excludes the Homebrew
+          # prefix, so an unrewritten entry produces a launcher that silently
+          # does nothing.
+          grep -qx "Exec=$(brew --prefix)/bin/${{ matrix.pkg }} ${{ matrix.exec_arg }}" "$entry"
 
       - name: Verify the icon is installed where the entry can find it
         run: |
@@ -155,24 +213,27 @@ jobs:
         run: |
           set -x
           brew reinstall --cask "jakobhviid/tap/${{ matrix.token }}"
-          grep -qx "Exec=$(brew --prefix)/bin/${{ matrix.pkg }} %U" \
+          grep -qx "Exec=$(brew --prefix)/bin/${{ matrix.pkg }} ${{ matrix.exec_arg }}" \
             "$HOME/.local/share/applications/${{ matrix.pkg }}.desktop"
 
-      # Why this is needed and is not cheating: these apps ship chrome-sandbox
-      # WITHOUT the setuid bit, exactly as upstream's own RPM does, so they rely
-      # on Chromium's unprivileged user-namespace sandbox. Ubuntu 24.04 runners
-      # restrict unprivileged userns through AppArmor, which pushes Chromium onto
-      # the SUID path instead — where it finds a non-setuid helper and aborts:
+      # Why this is needed and is not cheating: none of these installs ends up
+      # with a usable SUID helper. Proton's vendor ships chrome-sandbox 0755, and
+      # where a payload does carry the setuid bit a cask unpacks as the
+      # installing user — so the bit lands on a file that is not root-owned and
+      # the cask clears it. Either way they rely on Chromium's unprivileged
+      # user-namespace sandbox. Ubuntu 24.04 runners restrict unprivileged userns
+      # through AppArmor, which pushes Chromium onto the SUID path instead, where
+      # it finds a helper it cannot use and aborts:
       #
       #   FATAL: The SUID sandbox helper binary was found, but is not configured
       #   correctly … owned by root and has mode 4755
       #
-      # A cask cannot set setuid, and neither does the vendor, so the fix is to
-      # give the runner the precondition a real desktop already has rather than
-      # to launch with --no-sandbox (which would test a configuration no user
-      # runs) or to chmod 4755 in CI (which would test a file no user gets).
-      # Verified on Bazzite, where user.max_user_namespaces is 125250 and the
-      # app starts with no sandbox error at all.
+      # A cask cannot set setuid, so the fix is to give the runner the
+      # precondition a real desktop already has rather than to launch with
+      # --no-sandbox (which would test a configuration no user runs) or to chmod
+      # 4755 in CI (which would test a file no user gets). Verified on Bazzite,
+      # where user.max_user_namespaces is 125250 and the apps start with no
+      # sandbox error at all.
       - name: Allow the unprivileged user-namespace sandbox
         run: |
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
@@ -202,38 +263,66 @@ jobs:
           pkill -9 -f chrome_crashpad_handler 2>/dev/null || true
           kill -9 "$xvfb_pid" 2>/dev/null || true
 
+          # A launcher that owns the app's output leaves /tmp/gui.log nearly
+          # empty, so the sandbox check below has to read its log as well or it
+          # would pass blind.
+          if [ -n "${{ matrix.launcher_log }}" ]; then
+            cat "$HOME/${{ matrix.launcher_log }}" >>/tmp/gui.log 2>/dev/null || true
+          fi
+
           echo "=== ${{ matrix.pkg }} output ==="
           sed -n '1,150p' /tmp/gui.log
           if [ "$alive" -ne 1 ]; then
             echo "::error::${{ matrix.pkg }} exited on its own instead of staying up"
             exit 1
           fi
-          # Why this check specifically: upstream's own RPM ships chrome-sandbox
-          # WITHOUT the setuid bit, so these apps depend on the unprivileged
-          # user-namespace sandbox. If a host misjudges that, Chromium aborts
-          # here rather than opening a window — and a cask cannot set setuid.
+          # Why this check specifically: with no usable SUID helper these apps
+          # depend on the unprivileged user-namespace sandbox. If a host misjudges
+          # that, Chromium aborts here rather than opening a window — and a cask
+          # cannot set setuid.
           if grep -qiE "SUID sandbox|chrome-sandbox|Failed to move to new namespace|No usable sandbox" /tmp/gui.log; then
             echo "::error::sandbox failure — see the log above"
             exit 1
           fi
           echo "${{ matrix.pkg }} stayed up for 30s with no sandbox error"
 
-      - name: Verify the data directory the zap stanza targets
+      - name: Verify the data directories the zap stanza targets
         run: |
           set -x
-          find "$HOME/.config" "$HOME/.cache" -maxdepth 1 -iname '*roton*' -printf '%p\n' 2>/dev/null || true
+          find "$HOME/.config" "$HOME/.cache" -maxdepth 1 -iname "*${{ matrix.userdata }}*" -printf '%p\n' 2>/dev/null || true
           # Why pin this: Electron derives userData from productName, and the zap
-          # stanza depends on the exact spelling. Mail's was observed directly;
-          # Meet's and Pass's were inferred from the same convention, so this is
-          # where that inference is checked instead of trusted.
+          # stanza depends on the exact spelling. Mail's and Claude's were
+          # observed directly; Meet's and Pass's were inferred from the same
+          # convention, so this is where that inference is checked instead of
+          # trusted.
           test -d "$HOME/.config/${{ matrix.userdata }}"
+          # A launcher that keeps its log and config backups outside userData:
+          # the zap has to reach that directory too.
+          if [ -n "${{ matrix.extra_zap }}" ]; then
+            test -d "$HOME/${{ matrix.extra_zap }}"
+          fi
 
       - name: Uninstall with zap and verify nothing is left behind
         run: |
           set -x
           brew uninstall --cask --zap "jakobhviid/tap/${{ matrix.token }}"
-          ! test -e "$HOME/.local/share/applications/${{ matrix.pkg }}.desktop"
-          ! test -e "$HOME/${{ matrix.icon }}"
-          ! command -v "${{ matrix.pkg }}"
-          # The smoke test above created this, so zap has real data to clear.
-          ! test -e "$HOME/.config/${{ matrix.userdata }}"
+          # Why a helper and not `! test -e`: bash exempts a `!`-inverted command
+          # from errexit, so only the last such line in a step can fail it — and
+          # the last line here is conditional on a matrix field.
+          gone() {
+            if [ -e "$1" ]; then
+              echo "::error::zap left $1 behind"
+              exit 1
+            fi
+          }
+          gone "$HOME/.local/share/applications/${{ matrix.pkg }}.desktop"
+          gone "$HOME/${{ matrix.icon }}"
+          # The smoke test above created these, so zap has real data to clear.
+          gone "$HOME/.config/${{ matrix.userdata }}"
+          if [ -n "${{ matrix.extra_zap }}" ]; then
+            gone "$HOME/${{ matrix.extra_zap }}"
+          fi
+          if command -v "${{ matrix.pkg }}"; then
+            echo "::error::${{ matrix.pkg }} is still on PATH after uninstall"
+            exit 1
+          fi

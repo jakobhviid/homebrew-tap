@@ -89,7 +89,7 @@ jobs:
   validate:
     needs: propose
     if: needs.propose.outputs.bump == 'true'
-    uses: ./.github/workflows/test-proton-casks.yml
+    uses: ./.github/workflows/test-rpm-casks.yml
     with:
       ref: ${{ needs.propose.outputs.sha }}
 
