@@ -174,14 +174,21 @@ jobs:
           # brew owns the version, so the AppImage stamp must be gone.
           ! grep -q "X-AppImage-Version" "$desktop"
 
-      - name: Verify all eight icon sizes
+      - name: Verify the icon is the cropped 512px one
         run: |
           set -x
-          count="$(find "$HOME/.local/share/icons/hicolor" -path '*/apps/orca-ide.png' | wc -l)"
-          test "$count" -eq 8
-          for size in 16x16 24x24 32x32 48x48 64x64 128x128 256x256 512x512; do
-            test -f "$HOME/.local/share/icons/hicolor/$size/apps/orca-ide.png"
-          done
+          icon="$HOME/.local/share/icons/hicolor/512x512/apps/orca-ide.png"
+          test -f "$icon"
+          # Exactly one: every size upstream ships insets the artwork in a
+          # transparent border, so installing any of them alongside this would put
+          # a smaller-looking icon back in whichever context asks for that size.
+          test "$(find "$HOME/.local/share/icons/hicolor" -path '*/apps/orca-ide.png' | wc -l)" -eq 1
+          # And it is actually cropped. `%@` is the bounding box `-trim` would
+          # take: on the installed icon it must already be the whole canvas.
+          # Upstream's own 512 reports 446x446+33+37 here, so this is the
+          # assertion that the crop ran and still finds the border it removes.
+          # magick is on PATH because the cask depends on it.
+          test "$(magick identify -format '%wx%h %@' "$icon")" = "512x512 512x512+0+0"
 
       - name: Verify the self-updater is disabled and the image is reclaimed
         run: |
@@ -205,7 +212,7 @@ jobs:
           desktop="$HOME/.local/share/applications/orca-ide.desktop"
           test -f "$desktop"
           grep -qx "Exec=$(brew --prefix)/bin/orca-ide %U" "$desktop"
-          test "$(find "$HOME/.local/share/icons/hicolor" -path '*/apps/orca-ide.png' | wc -l)" -eq 8
+          test "$(find "$HOME/.local/share/icons/hicolor" -path '*/apps/orca-ide.png' | wc -l)" -eq 1
           orca --version
           ! find "$(brew --caskroom)/orca-linux" -name app-update.yml | grep -q .
 

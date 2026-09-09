@@ -26,6 +26,16 @@ cask "orca-linux" do
   # with unsquashfs, so the tool has to be there on any host this installs on,
   # not only on the distributions that ship squashfs-tools themselves.
   depends_on formula: "squashfs"
+  # Why imagemagick: every icon upstream ships is a macOS-style export — the
+  # squircle is 824px in a 1024px canvas, Apple's icon grid exactly — so on a
+  # Linux desktop the launcher draws about a sixth smaller than every neighbour
+  # that fills its tile. Unlike claude-desktop-linux and paseo-linux, whose
+  # payloads each carry a borderless copy of the same artwork to switch to, this
+  # one has the margin baked into every asset it ships, including the 1024px
+  # masters. That leaves cropping, and `magick -trim` is the one dependency that
+  # does it from the artwork itself rather than from a number pinned here that
+  # would silently mis-crop the first time upstream redraws the icon.
+  depends_on formula: "imagemagick"
 
   # Why: `orca` is the CLI, matching upstream's macOS cask and Orca's own Linux
   # CliInstaller, which symlinks ~/.local/bin/orca. The shim walks symlinks to
@@ -39,24 +49,12 @@ cask "orca-linux" do
   binary "squashfs-root/AppRun", target: "orca-ide"
   artifact "squashfs-root/orca-ide.desktop",
            target: "#{Dir.home}/.local/share/applications/orca-ide.desktop"
-  # Why: install all eight bundled sizes, not just 512x512. GNOME picks an icon
-  # per context (16px in lists, 48px in the dash, 256px in the switcher) and
-  # downscaling one large PNG gives visibly soft launcher icons.
-  artifact "squashfs-root/usr/share/icons/hicolor/16x16/apps/orca-ide.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/16x16/apps/orca-ide.png"
-  artifact "squashfs-root/usr/share/icons/hicolor/24x24/apps/orca-ide.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/24x24/apps/orca-ide.png"
-  artifact "squashfs-root/usr/share/icons/hicolor/32x32/apps/orca-ide.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/32x32/apps/orca-ide.png"
-  artifact "squashfs-root/usr/share/icons/hicolor/48x48/apps/orca-ide.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/48x48/apps/orca-ide.png"
-  artifact "squashfs-root/usr/share/icons/hicolor/64x64/apps/orca-ide.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/64x64/apps/orca-ide.png"
-  artifact "squashfs-root/usr/share/icons/hicolor/128x128/apps/orca-ide.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/128x128/apps/orca-ide.png"
-  artifact "squashfs-root/usr/share/icons/hicolor/256x256/apps/orca-ide.png",
-           target: "#{Dir.home}/.local/share/icons/hicolor/256x256/apps/orca-ide.png"
-  artifact "squashfs-root/usr/share/icons/hicolor/512x512/apps/orca-ide.png",
+  # Why one 512px icon and not the eight bundled sizes: all eight are the same
+  # inset artwork, so installing every one of them only reproduces the undersized
+  # launcher at every size the shell might ask for. The preflight crops the
+  # largest to its own edges instead; hicolor declares 512x512 and GTK scales
+  # that per context.
+  artifact "orca-ide-512.png",
            target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/orca-ide.png"
 
   preflight_steps do
@@ -129,6 +127,19 @@ cask "orca-linux" do
               /^X-AppImage-Version=.*\n/,
               "",
               audit_result: false
+    # Why trim and then resize back up: `-trim` removes only the fully
+    # transparent border, which leaves the drop shadow — part of the artwork —
+    # intact and lands the squircle at 92% of the canvas instead of 80.5%. The
+    # source is the 512px icon because it is the largest the default "classic"
+    # theme ships; resources/app-icons/orca-{blue,watercolor}.png are 1024px but
+    # are the app's *other* two icon themes, so using one would quietly change
+    # which icon this installs. `+repage` drops the offset `-trim` records, or
+    # the resize would reintroduce the margin it just removed.
+    run "{{HOMEBREW_PREFIX}}/bin/magick",
+        args:  ["squashfs-root/usr/share/icons/hicolor/512x512/apps/orca-ide.png",
+                "-trim", "+repage", "-resize", "512x512", "orca-ide-512.png"],
+        chdir: "{{staged_path}}"
+
     # StartupWMClass=orca is left untouched: it's what lets the shell group
     # Orca's windows under this launcher icon.
   end
