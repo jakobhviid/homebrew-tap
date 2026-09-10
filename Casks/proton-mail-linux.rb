@@ -1,6 +1,6 @@
 cask "proton-mail-linux" do
-  version "1.13.4"
-  sha256 "3a6d2cbee27e728d0ad5c7c367318178d6425e3002929832ed0a4b62ed709cae"
+  version "1.14.0"
+  sha256 "6c429e8d94ea57da24b83a49cbe98ce3f37f11d72b4dc0e314a473ce7d03c4b0"
 
   url "https://proton.me/download/mail/linux/#{version}/ProtonMail-desktop-beta.rpm"
   name "Proton Mail"
