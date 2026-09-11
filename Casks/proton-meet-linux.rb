@@ -22,8 +22,8 @@ cask "proton-meet-linux" do
 
   # Why: the payload is a glibc x86_64 RPM. Proton ships no arm64 Linux build,
   # so refuse to install rather than staging a payload that cannot run.
-  depends_on linux: :any
   depends_on arch: :x86_64
+  depends_on linux: :any
 
   # Why: the RPM's own /usr/bin entry is a RELATIVE symlink into
   # ../lib/proton-meet/, so it keeps resolving inside the Caskroom once staged and

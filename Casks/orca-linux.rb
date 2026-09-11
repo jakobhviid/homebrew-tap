@@ -18,14 +18,6 @@ cask "orca-linux" do
     strategy :github_latest
   end
 
-  # Why: upstream's cask covers macOS; this one exists only because the official
-  # `orca` cask name is taken by plotly's chart exporter. The AppImage is a Linux
-  # ELF, so refuse to install anywhere else rather than staging a broken payload.
-  depends_on linux: :any
-  # Why the squashfs formula: extraction reads the image's embedded filesystem
-  # with unsquashfs, so the tool has to be there on any host this installs on,
-  # not only on the distributions that ship squashfs-tools themselves.
-  depends_on formula: "squashfs"
   # Why imagemagick: every icon upstream ships is a macOS-style export — the
   # squircle is 824px in a 1024px canvas, Apple's icon grid exactly — so on a
   # Linux desktop the launcher draws about a sixth smaller than every neighbour
@@ -36,6 +28,14 @@ cask "orca-linux" do
   # does it from the artwork itself rather than from a number pinned here that
   # would silently mis-crop the first time upstream redraws the icon.
   depends_on formula: "imagemagick"
+  # Why the squashfs formula: extraction reads the image's embedded filesystem
+  # with unsquashfs, so the tool has to be there on any host this installs on,
+  # not only on the distributions that ship squashfs-tools themselves.
+  depends_on formula: "squashfs"
+  # Why: upstream's cask covers macOS; this one exists only because the official
+  # `orca` cask name is taken by plotly's chart exporter. The AppImage is a Linux
+  # ELF, so refuse to install anywhere else rather than staging a broken payload.
+  depends_on linux: :any
 
   # Why: `orca` is the CLI, matching upstream's macOS cask and Orca's own Linux
   # CliInstaller, which symlinks ~/.local/bin/orca. The shim walks symlinks to
