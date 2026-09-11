@@ -33,8 +33,8 @@ cask "claude-desktop-linux" do
   # every release too, so an arm64 machine is a version and a second cask entry
   # away — but the hash stays a single bare `sha256`, because arch-keying it
   # leaves `brew audit` on an arm64 runner with no hash to check at all.
-  depends_on linux: :any
   depends_on arch: :x86_64
+  depends_on linux: :any
 
   # Why the long name: it is upstream's, shared by the deb and the rpm, and it is
   # what the .desktop entry and the launcher's autostart healing both name.

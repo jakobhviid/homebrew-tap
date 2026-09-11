@@ -20,12 +20,12 @@ cask "paseo-linux" do
   # Linux asset in the release — so refuse to install anywhere else rather than
   # staging a payload that cannot run. The macOS builds are .dmg/.zip and are not
   # what this cask is for.
-  depends_on linux: :any
   depends_on arch: :x86_64
   # Why the squashfs formula: extraction reads the image's embedded filesystem
   # with unsquashfs, so the tool has to be there on any host this installs on,
   # not only on the distributions that ship squashfs-tools themselves.
   depends_on formula: "squashfs"
+  depends_on linux: :any
 
   # Why: `paseo` is upstream's own CLI name — the bundled resources/bin/paseo is
   # the same script the macOS bundle exposes. It walks its own symlink chain back
