@@ -1,6 +1,6 @@
 cask "proton-pass-linux" do
-  version "1.40.0"
-  sha256 "dfa698d4a724c2477248286df925148ce4c0b8f783073ee51d17dea4cab7dd4c"
+  version "1.40.2"
+  sha256 "19573d9c8b513c5df236a9712a24df788b3a42828d8b4f4786fb4278b07596bb"
 
   # Why the release suffix is literal: Proton's Pass URL carries an RPM release
   # number ("-1") that can move independently of the version, so it is not
