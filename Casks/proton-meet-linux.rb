@@ -1,6 +1,6 @@
 cask "proton-meet-linux" do
-  version "1.0.11"
-  sha256 "43ae50b5e3efa0f8a9002585c6f82f5f931cb97d9ef1aeb84b2d701e849dec8f"
+  version "1.0.12"
+  sha256 "2e989ba1097c2bfa1f7cb3ee3c5db7129dfb44c76a1a70bad81d72da323b6410"
 
   url "https://proton.me/download/meet/linux/#{version}/ProtonMeet-desktop.rpm"
   name "Proton Meet"
