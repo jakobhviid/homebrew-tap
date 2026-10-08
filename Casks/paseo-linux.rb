@@ -1,6 +1,6 @@
 cask "paseo-linux" do
-  version "0.11.0"
-  sha256 "bf4b801b3fd77e3b691efdfe9250bc2d76b1c77e165d5b0541dd7e0038dd64be"
+  version "0.11.1"
+  sha256 "699091c5bc010bc5548c05406d300cb7005c92d2bec2a2cb7c38240a4fb5634f"
 
   # Why the filename carries no version: upstream names the Linux AppImage after
   # the architecture only, so the release tag is the sole thing that moves. The
