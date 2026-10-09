@@ -1,0 +1,124 @@
+name: Bump Craft casks
+
+# Why: the ArtCraft apps release near-daily — VectorCraft shipped four versions
+# in two days — so twelve casks pinned by hand would always be behind. This
+# moves every pin to upstream's latest release in one pass, and lands the
+# commit on main only after the Craft suite has passed against that exact
+# commit on both architectures, so an upstream packaging change that breaks a
+# cask leaves main alone and shows up as a failed run instead.
+#
+# Why one batch rather than a run per app: the casks share a template and a
+# pins file, so per-app candidates would race each other onto main. The cost is
+# that one broken release holds back the rest until it is fixed or upstream
+# ships again — which, at this cadence, is rarely more than a day.
+on:
+  schedule:
+    # Upstream tags land at varied times. 08:15 UTC does not collide with the
+    # orca (06:00), Proton (06:30), claude (07:17) or paseo (07:45) bumps, which
+    # would otherwise contend for the same runners and API budget.
+    - cron: "15 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump-craft
+  cancel-in-progress: false
+
+env:
+  CANDIDATE_BRANCH: auto/bump-craft
+
+jobs:
+  propose:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      bump: ${{ steps.bump.outputs.bump }}
+      message: ${{ steps.bump.outputs.message }}
+      sha: ${{ steps.push.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Move the pins to upstream's latest releases
+        id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/gen-craft-casks.py --bump > /tmp/moved.txt
+          if git diff --quiet -- Casks scripts/craft-casks.json; then
+            echo "bump=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # The script prints `<token> <version>` per cask whose version moved,
+          # which keeps the tap's one-line `<token> <version>` commit style. A
+          # diff with no moved versions is a re-read manifest for the same
+          # release.
+          message="$(paste -sd, /tmp/moved.txt | sed 's/,/, /g')"
+          echo "bump=true" >> "$GITHUB_OUTPUT"
+          echo "message=${message:-Craft casks: refresh pinned manifests}" >> "$GITHUB_OUTPUT"
+          git diff --stat -- Casks scripts/craft-casks.json
+
+      - name: Push the candidate to a throwaway branch
+        id: push
+        if: steps.bump.outputs.bump == 'true'
+        env:
+          # Why through env, not `${{ }}` in the script: the message is built
+          # from upstream's tag names, and an expression is pasted into the
+          # shell verbatim — a crafted tag would run as code.
+          MESSAGE: ${{ steps.bump.outputs.message }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks scripts/craft-casks.json
+          git commit -m "$MESSAGE"
+          # Force-push: the branch is scratch space for this run only, and it is
+          # branched from the current main so landing it stays a fast-forward.
+          git push --force origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  validate:
+    needs: propose
+    if: needs.propose.outputs.bump == 'true'
+    uses: ./.github/workflows/test-craft-casks.yml
+    with:
+      ref: ${{ needs.propose.outputs.sha }}
+
+  land:
+    needs: [propose, validate]
+    if: needs.propose.outputs.bump == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.propose.outputs.sha }}
+          fetch-depth: 0
+      - name: Fast-forward main and drop the branch
+        env:
+          MESSAGE: ${{ needs.propose.outputs.message }}
+        run: |
+          # Push the validated sha itself, not a branch that could have moved.
+          git push origin "${{ needs.propose.outputs.sha }}:refs/heads/main"
+          git push origin --delete "$CANDIDATE_BRANCH"
+          echo "Landed: $MESSAGE"
+
+  # Why: without this the branch survives a failed validation and the next run's
+  # force-push would silently rebase a candidate nobody looked at.
+  cleanup:
+    needs: [propose, validate]
+    if: always() && needs.propose.outputs.bump == 'true' && needs.validate.result != 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Delete the rejected candidate
+        env:
+          MESSAGE: ${{ needs.propose.outputs.message }}
+        run: |
+          git push origin --delete "$CANDIDATE_BRANCH" || true
+          echo "::error::$MESSAGE failed validation; main left at its previous pins."
+          exit 1

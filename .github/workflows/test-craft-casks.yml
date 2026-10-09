@@ -1,0 +1,178 @@
+name: Test Craft casks on Linux
+
+# Why a workflow of its own: the twelve ArtCraft casks are rendered from one
+# template by scripts/gen-craft-casks.py, so they share every failure mode and
+# want the same assertions — a matrix over apps and architectures says that
+# once. test-cask.yml's audit/style/version loops already cover every cask in
+# the tap, these included; what is here is the generator's drift check and the
+# install and desktop integration each cask claims.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Casks/*craft-linux.rb"
+      - "scripts/gen-craft-casks.py"
+      - "scripts/craft-casks.json"
+      - ".github/workflows/test-craft-casks.yml"
+  pull_request:
+    paths:
+      - "Casks/*craft-linux.rb"
+      - "scripts/gen-craft-casks.py"
+      - "scripts/craft-casks.json"
+      - ".github/workflows/test-craft-casks.yml"
+  workflow_dispatch:
+  # Why: the scheduled version bump calls this to validate a candidate commit on
+  # both architectures before it is allowed anywhere near main.
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit or branch to test. Defaults to the triggering ref."
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  # Why github.workflow: when the bump pipeline calls this reusably, this
+  # resolves to the caller's name, so a validation run cannot be cancelled by an
+  # unrelated push to the same ref.
+  group: test-craft-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Why: the casks are generated files. A hand edit to one would be silently
+  # reverted by the next bump, so it fails here instead.
+  generated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Casks match the template and pins
+        run: python3 scripts/gen-craft-casks.py --check
+
+  cask:
+    needs: generated
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [photocraft, vectorcraft, pdfcraft, lightcraft, filmcraft, effectcraft,
+              designcraft, wordcraft, gridcraft, deckcraft, cadcraft, soundcraft]
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    env:
+      # Why: an auto-update fetches and hard-resets the tap from GitHub, which
+      # would silently replace the commit under test with whatever is on main.
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      APP: ${{ matrix.app }}
+      TOKEN: ${{ matrix.app }}-linux
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Install desktop tooling
+        run: |
+          sudo apt-get update
+          # desktop-file-validate for the assertions; shared-mime-info and
+          # gtk-update-icon-cache so the cask's refresh steps have real work to
+          # do rather than no-opping behind `must_succeed: false`.
+          sudo apt-get install -y --no-install-recommends \
+            desktop-file-utils shared-mime-info gtk-update-icon-cache
+
+      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+
+      - name: Restore the commit under test
+        run: |
+          # Why: setup-homebrew symlinks this checkout in as a tap and runs
+          # `brew update`, which hard-resets the working tree to origin/main —
+          # so a caller-supplied ref would otherwise be thrown away.
+          git checkout --force "${{ inputs.ref || github.sha }}"
+          git log --oneline -1
+
+      - name: Mount this checkout as the tap
+        run: |
+          set -x
+          # Same mounting as test-cask.yml; see there for why each step exists.
+          tap_dir="$(brew --repository jakobhviid/tap)"
+          if [ -L "$tap_dir" ]; then
+            echo "already linked -> $(readlink "$tap_dir")"
+          else
+            rm -rf "$tap_dir"
+            mkdir -p "$(dirname "$tap_dir")"
+            ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+          fi
+          brew trust --tap jakobhviid/tap
+          # The tripwire: brew must report the version this checkout declares.
+          expected="$(sed -n 's/^  version "\(.*\)"$/\1/p' "Casks/$TOKEN.rb")"
+          actual="$(brew info --cask --json=v2 "jakobhviid/tap/$TOKEN" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')"
+          echo "$TOKEN: checkout=$expected brew=$actual"
+          test "$expected" = "$actual"
+          echo "VERSION=$expected" >> "$GITHUB_ENV"
+
+      - name: Audit
+        run: |
+          brew audit --cask --strict "jakobhviid/tap/$TOKEN"
+          brew style --cask "jakobhviid/tap/$TOKEN"
+
+      - name: Install
+        run: brew install --cask "jakobhviid/tap/$TOKEN"
+
+      - name: Verify both binaries run and report the pinned version
+        run: |
+          set -x
+          # Both answer --version without a display: the GUI parses its
+          # arguments before it opens a window, so this proves the right ELF for
+          # this architecture is linked and loads — it links nothing but glibc.
+          "$APP-cli" --version | tee /tmp/cli.txt
+          grep -qF "$VERSION" /tmp/cli.txt
+          "$APP" --version | tee /tmp/gui.txt
+          grep -qF "$VERSION" /tmp/gui.txt
+
+      - name: Verify desktop entry, icons and MIME package
+        run: |
+          set -x
+          share="$HOME/.local/share"
+          desktop="$share/applications/ai.storyteller.$APP.desktop"
+          cat "$desktop"
+          desktop-file-validate "$desktop"
+          # Exec must be absolute and keep upstream's own arguments.
+          grep -qE "^Exec=$(brew --prefix)/bin/$APP( |$)" "$desktop"
+          # A TryExec, where upstream sets one, must resolve too, or the shell
+          # hides the entry.
+          if grep -q '^TryExec=' "$desktop"; then
+            grep -qx "TryExec=$(brew --prefix)/bin/$APP" "$desktop"
+          fi
+          # Every icon the pins list was installed, and nothing else.
+          expected="$(python3 -c 'import json,os; print(len(json.load(open("scripts/craft-casks.json"))[os.environ["APP"]]["manifest"]["icons"]))')"
+          test "$(find "$share/icons/hicolor" -name "ai.storyteller.$APP.*" | wc -l)" -eq "$expected"
+          test -f "$share/mime/packages/ai.storyteller.$APP.xml"
+          # The refresh steps really ran against the real home, not the
+          # sandbox's empty one: each leaves its cache behind.
+          test -f "$share/applications/mimeinfo.cache"
+          test -f "$share/icons/hicolor/icon-theme.cache"
+          test -f "$share/mime/mime.cache"
+
+      - name: Reinstall to exercise the version-bump path
+        run: |
+          set -x
+          # A bump uninstalls then installs, moving every artifact back into the
+          # Caskroom and re-running preflight against fresh staging. These apps
+          # release near-daily, so this path gets used a lot.
+          brew reinstall --cask "jakobhviid/tap/$TOKEN"
+          grep -qE "^Exec=$(brew --prefix)/bin/$APP( |$)" \
+            "$HOME/.local/share/applications/ai.storyteller.$APP.desktop"
+          "$APP-cli" --version
+
+      - name: Uninstall with zap and verify nothing is left behind
+        run: |
+          set -x
+          brew uninstall --cask --zap "jakobhviid/tap/$TOKEN"
+          share="$HOME/.local/share"
+          ! test -e "$share/applications/ai.storyteller.$APP.desktop"
+          ! find "$share/icons/hicolor" -name "ai.storyteller.$APP.*" | grep -q .
+          ! test -e "$share/mime/packages/ai.storyteller.$APP.xml"
+          ! command -v "$APP"
+          ! command -v "$APP-cli"
