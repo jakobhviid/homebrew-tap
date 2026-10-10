@@ -76,6 +76,9 @@ jobs:
     uses: ./.github/workflows/test-rpm-casks.yml
     with:
       ref: ${{ needs.propose.outputs.sha }}
+      # Only this cask: the suite also covers the Proton casks, and one of those
+      # breaking upstream must not hold back a claude release.
+      tokens: claude-desktop-linux
 
   land:
     needs: [propose, validate]
