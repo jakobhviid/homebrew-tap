@@ -3,9 +3,9 @@
 cask "cadcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.3.0"
-  sha256 arm64_linux:  "ee14c1c99e092b46f6efe7e809d4a9ea41a77a436d21ddd2f35ae3f154293563",
-         x86_64_linux: "4239b0545c0006c13f6419fe9bc20462d727096912cf3cb1eb2523934102bd78"
+  version "0.4.0"
+  sha256 arm64_linux:  "7058bdfa2c0266c499868bc60390cba24e916aa6fce66ed5821362c0530d8637",
+         x86_64_linux: "de5b5e61fb157f1ae54ae0a393b57e86cd1c354fea8b085292890faa210cf778"
 
   url "https://github.com/storytold/cadcraft/releases/download/v#{version}/cadcraft-#{version}-linux-#{arch}.tar.gz"
   name "CADCraft"
