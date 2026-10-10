@@ -31,6 +31,7 @@ jobs:
     outputs:
       bump: ${{ steps.bump.outputs.bump }}
       summary: ${{ steps.bump.outputs.summary }}
+      tokens: ${{ steps.bump.outputs.tokens }}
       sha: ${{ steps.push.outputs.sha }}
     steps:
       - uses: actions/checkout@v5
@@ -48,6 +49,7 @@ jobs:
         id: bump
         run: |
           moved=()
+          tokens=()
           for cask in Casks/proton-*-linux.rb; do
             token="$(basename "$cask" .rb)"
             echo "::group::$token"
@@ -56,6 +58,7 @@ jobs:
             if ! git diff --quiet -- "$cask"; then
               version="$(sed -n 's/^  version "\(.*\)"$/\1/p' "$cask")"
               moved+=("$token $version")
+              tokens+=("$token")
             fi
           done
           if [ ${#moved[@]} -eq 0 ]; then
@@ -66,6 +69,7 @@ jobs:
           # A single line, so it survives a $GITHUB_OUTPUT round-trip and reads
           # cleanly as a commit subject.
           echo "summary=$(printf '%s, ' "${moved[@]}" | sed 's/, $//')" >> "$GITHUB_OUTPUT"
+          echo "tokens=${tokens[*]}" >> "$GITHUB_OUTPUT"
           git diff -- Casks/
 
       - name: Push the candidate to a throwaway branch
@@ -92,6 +96,9 @@ jobs:
     uses: ./.github/workflows/test-rpm-casks.yml
     with:
       ref: ${{ needs.propose.outputs.sha }}
+      # Only the casks that moved: the suite also covers claude-desktop-linux,
+      # and an unchanged cask that upstream has broken must not hold these back.
+      tokens: ${{ needs.propose.outputs.tokens }}
 
   land:
     needs: [propose, validate]

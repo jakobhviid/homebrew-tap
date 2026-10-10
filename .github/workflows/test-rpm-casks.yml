@@ -3,8 +3,8 @@ name: Test RPM-payload casks on Linux
 # Why a second workflow rather than more steps in test-cask.yml: that one's
 # matrix covers both architectures, and none of these vendors publishes an arm64
 # Linux build these casks can use — they declare `depends_on arch: :x86_64`, so
-# an arm64 job could only assert that installing refuses. Its audit/style/version
-# loops already cover every cask in the tap, including these; what is here is the
+# an arm64 job could only assert that installing refuses. audit-casks.yml audits
+# and style-checks every cask in the tap, including these; what is here is the
 # install and the integration each RPM-payload cask claims.
 on:
   push:
@@ -19,12 +19,23 @@ on:
       - "Casks/claude-desktop-linux.rb"
       - ".github/workflows/test-rpm-casks.yml"
   workflow_dispatch:
+    inputs:
+      tokens:
+        description: "Space-separated cask tokens to test. Empty tests all of them."
+        type: string
+        required: false
   # Why: the scheduled bumps call this to validate a candidate commit before it
   # is allowed anywhere near main.
   workflow_call:
     inputs:
       ref:
         description: "Commit or branch to test. Defaults to the triggering ref."
+        type: string
+        required: false
+      # Why: a bump passes only the casks it moved, so a cask that upstream has
+      # broken holds back its own release and nobody else's.
+      tokens:
+        description: "Space-separated cask tokens to test. Empty tests all of them."
         type: string
         required: false
 
@@ -36,63 +47,112 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Why a job ahead of the matrix: a bump should test only the casks it moved,
+  # so one cask's upstream breaking cannot hold back another cask's release. A
+  # job-level `if:` cannot read the matrix, and an `include:` entry that matches
+  # no combination is added as a new one rather than dropped, so the only way to
+  # narrow the matrix is to build its include list here.
+  select:
+    runs-on: ubuntu-latest
+    outputs:
+      include: ${{ steps.select.outputs.include }}
+    steps:
+      - name: Pick the casks this run covers
+        id: select
+        env:
+          TOKENS: ${{ inputs.tokens }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+
+          # `launcher` names the payload's /usr/bin shape, which is the real
+          # difference between these casks and drives the assertions below:
+          # `symlink` for a relative symlink into ../lib/<pkg>/, `script` for a
+          # launcher that hardcodes absolute /usr paths the cask has to rewrite.
+          #
+          # `exec_arg` is upstream's own field code and is deliberately not
+          # normalised: %U takes a list of URLs, %u a single one.
+          #
+          # `launcher_log` and `extra_zap` are empty for a cask that has neither.
+          CASKS = [
+              {
+                  "token": "proton-mail-linux",
+                  "pkg": "proton-mail",
+                  # Upstream ships this icon as /usr/share/pixmaps/<pkg>.png
+                  # containing SVG data; the cask renames it on the way in, so
+                  # assert the .svg.
+                  "icon": ".local/share/icons/hicolor/scalable/apps/proton-mail.svg",
+                  "userdata": "Proton Mail",
+                  "icon_px": "",
+                  "launcher": "symlink",
+                  "exec_arg": "%U",
+                  "launcher_log": "",
+                  "extra_zap": "",
+              },
+              {
+                  "token": "proton-meet-linux",
+                  "pkg": "proton-meet",
+                  "icon": ".local/share/icons/hicolor/256x256/apps/proton-meet.png",
+                  "userdata": "Proton Meet",
+                  "icon_px": "256",
+                  "launcher": "symlink",
+                  "exec_arg": "%U",
+                  "launcher_log": "",
+                  "extra_zap": "",
+              },
+              {
+                  "token": "proton-pass-linux",
+                  "pkg": "proton-pass",
+                  "icon": ".local/share/icons/hicolor/scalable/apps/proton-pass.svg",
+                  "userdata": "Proton Pass",
+                  "icon_px": "",
+                  "launcher": "symlink",
+                  "exec_arg": "%U",
+                  "launcher_log": "",
+                  "extra_zap": "",
+              },
+              {
+                  "token": "claude-desktop-linux",
+                  "pkg": "claude-desktop-unofficial",
+                  # Not one of upstream's hicolor PNGs: those inset the artwork in
+                  # a transparent border, so the cask installs the app's own
+                  # borderless 512px Electron icon instead. `icon_px` pins that.
+                  "icon": ".local/share/icons/hicolor/512x512/apps/claude-desktop-unofficial.png",
+                  "icon_px": "512",
+                  "userdata": "Claude",
+                  "launcher": "script",
+                  "exec_arg": "%u",
+                  # This launcher sends the app's own output to its log rather
+                  # than to the terminal, so a sandbox failure is visible only
+                  # there.
+                  "launcher_log": ".cache/claude-desktop-debian/launcher.log",
+                  "extra_zap": ".cache/claude-desktop-debian",
+              },
+          ]
+
+          # No tokens means every cask: that is what a push or pull request
+          # wants. An unknown token is an error rather than a silently smaller
+          # matrix, so a caller's typo cannot pass validation by testing nothing.
+          wanted = os.environ["TOKENS"].split()
+          known = {c["token"] for c in CASKS}
+          unknown = sorted(set(wanted) - known)
+          if unknown:
+              print(f"::error::not an RPM-payload cask: {' '.join(unknown)}")
+              sys.exit(1)
+          include = [c for c in CASKS if not wanted or c["token"] in wanted]
+          print("testing:", " ".join(c["token"] for c in include))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"include={json.dumps(include)}\n")
+          PY
+
   cask:
+    needs: select
     strategy:
       fail-fast: false
       matrix:
-        # `launcher` names the payload's /usr/bin shape, which is the real
-        # difference between these casks and drives the assertions below:
-        # `symlink` for a relative symlink into ../lib/<pkg>/, `script` for a
-        # launcher that hardcodes absolute /usr paths the cask has to rewrite.
-        #
-        # `exec_arg` is upstream's own field code and is deliberately not
-        # normalised: %U takes a list of URLs, %u a single one.
-        #
-        # `launcher_log` and `extra_zap` are empty for a cask that has neither.
-        include:
-          - token: proton-mail-linux
-            pkg: proton-mail
-            # Upstream ships this icon as /usr/share/pixmaps/<pkg>.png containing
-            # SVG data; the cask renames it on the way in, so assert the .svg.
-            icon: .local/share/icons/hicolor/scalable/apps/proton-mail.svg
-            userdata: Proton Mail
-            icon_px: ""
-            launcher: symlink
-            exec_arg: "%U"
-            launcher_log: ""
-            extra_zap: ""
-          - token: proton-meet-linux
-            pkg: proton-meet
-            icon: .local/share/icons/hicolor/256x256/apps/proton-meet.png
-            userdata: Proton Meet
-            icon_px: "256"
-            launcher: symlink
-            exec_arg: "%U"
-            launcher_log: ""
-            extra_zap: ""
-          - token: proton-pass-linux
-            pkg: proton-pass
-            icon: .local/share/icons/hicolor/scalable/apps/proton-pass.svg
-            userdata: Proton Pass
-            icon_px: ""
-            launcher: symlink
-            exec_arg: "%U"
-            launcher_log: ""
-            extra_zap: ""
-          - token: claude-desktop-linux
-            pkg: claude-desktop-unofficial
-            # Not one of upstream's hicolor PNGs: those inset the artwork in a
-            # transparent border, so the cask installs the app's own borderless
-            # 512px Electron icon instead. `icon_px` pins that below.
-            icon: .local/share/icons/hicolor/512x512/apps/claude-desktop-unofficial.png
-            icon_px: "512"
-            userdata: Claude
-            launcher: script
-            exec_arg: "%u"
-            # This launcher sends the app's own output to its log rather than to
-            # the terminal, so a sandbox failure is visible only there.
-            launcher_log: .cache/claude-desktop-debian/launcher.log
-            extra_zap: .cache/claude-desktop-debian
+        include: ${{ fromJSON(needs.select.outputs.include) }}
     runs-on: ubuntu-latest
     env:
       # Why: an auto-update fetches and hard-resets the tap from GitHub, which
