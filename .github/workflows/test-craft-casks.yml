@@ -171,8 +171,25 @@ jobs:
           set -x
           brew uninstall --cask --zap "jakobhviid/tap/$TOKEN"
           share="$HOME/.local/share"
-          ! test -e "$share/applications/ai.storyteller.$APP.desktop"
-          ! find "$share/icons/hicolor" -name "ai.storyteller.$APP.*" | grep -q .
-          ! test -e "$share/mime/packages/ai.storyteller.$APP.xml"
-          ! command -v "$APP"
-          ! command -v "$APP-cli"
+          # Why helpers and not `! cmd`: bash exempts a `!`-negated command from
+          # errexit, so only the last such line in a step could ever fail it.
+          gone() {
+            if [ -e "$1" ]; then
+              echo "::error::zap left $1 behind"
+              exit 1
+            fi
+          }
+          off_path() {
+            if command -v "$1"; then
+              echo "::error::$1 is still on PATH after uninstall"
+              exit 1
+            fi
+          }
+          gone "$share/applications/ai.storyteller.$APP.desktop"
+          if find "$share/icons/hicolor" -name "ai.storyteller.$APP.*" | grep -q .; then
+            echo "::error::zap left ai.storyteller.$APP icons behind"
+            exit 1
+          fi
+          gone "$share/mime/packages/ai.storyteller.$APP.xml"
+          off_path "$APP"
+          off_path "$APP-cli"
