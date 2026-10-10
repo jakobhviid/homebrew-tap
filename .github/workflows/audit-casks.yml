@@ -1,0 +1,103 @@
+name: Audit casks
+
+# Why a workflow of its own: this used to run inside orca's install suite, so a
+# style cop that started flagging any cask in the tap failed orca's bump and held
+# back an orca release over a cask it does not touch. Here it still goes red, but
+# no bump waits on it. Each install suite audits only its own cask.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Casks/**"
+      - ".github/workflows/audit-casks.yml"
+  pull_request:
+    paths:
+      - "Casks/**"
+      - ".github/workflows/audit-casks.yml"
+  # Why a schedule: Homebrew adds and tightens cops on its own release cadence,
+  # so a cask nobody has touched can start failing. Weekly finds that before the
+  # next bump of that cask does.
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: audit-casks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    strategy:
+      fail-fast: false
+      matrix:
+        # Both architectures, because a cask's sha256 and arch stanzas are
+        # evaluated per architecture and audit can pass on one and fail on the
+        # other.
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    env:
+      # Why: an auto-update fetches and hard-resets the tap from GitHub, which
+      # would silently replace the commit under test with whatever is on main.
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+
+      - name: Restore the commit under test
+        run: |
+          # Why: setup-homebrew symlinks this checkout in as a tap and runs
+          # `brew update`, which hard-resets the working tree to origin/main.
+          git checkout --force "${{ github.sha }}"
+          git log --oneline -1
+
+      - name: Mount this checkout as the tap
+        run: |
+          set -x
+          # Why `brew --repository <tap>`: it is what brew itself resolves the
+          # tap to, which differs between macOS and linuxbrew layouts.
+          tap_dir="$(brew --repository jakobhviid/tap)"
+          if [ -L "$tap_dir" ]; then
+            echo "already linked -> $(readlink "$tap_dir")"
+          else
+            rm -rf "$tap_dir"
+            mkdir -p "$(dirname "$tap_dir")"
+            ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+          fi
+          brew trust --tap jakobhviid/tap
+          brew tap-info jakobhviid/tap
+
+      # Why one loop that keeps going: a failure in one cask must not hide the
+      # state of the rest, so every cask is checked and the step fails at the end
+      # naming each one that did not pass.
+      - name: Audit and style-check every cask
+        run: |
+          failed=()
+          for cask in Casks/*.rb; do
+            token="$(basename "$cask" .rb)"
+            echo "::group::$token"
+            ok=true
+            # The tripwire: brew must report the version this checkout
+            # declares, or a wrong-tree audit passes silently.
+            expected="$(sed -n 's/^  version "\(.*\)"$/\1/p' "$cask")"
+            actual="$(brew info --cask --json=v2 "jakobhviid/tap/$token" \
+              | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')" || ok=false
+            echo "$token: checkout=$expected brew=$actual"
+            [ "$expected" = "$actual" ] || ok=false
+            brew audit --cask --strict "jakobhviid/tap/$token" || ok=false
+            # Every cask here uses the *_steps install-step form, so the full
+            # cop set applies with no exceptions.
+            brew style --cask "jakobhviid/tap/$token" || ok=false
+            echo "::endgroup::"
+            if [ "$ok" = false ]; then
+              echo "::error::$token failed audit"
+              failed+=("$token")
+            fi
+          done
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "::error::failed: ${failed[*]}"
+            exit 1
+          fi

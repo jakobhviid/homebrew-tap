@@ -8,11 +8,11 @@ on:
   push:
     branches: [main]
     paths:
-      - "Casks/**"
+      - "Casks/orca-linux.rb"
       - ".github/workflows/test-cask.yml"
   pull_request:
     paths:
-      - "Casks/**"
+      - "Casks/orca-linux.rb"
       - ".github/workflows/test-cask.yml"
   workflow_dispatch:
   # Why: the scheduled version bump calls this to validate a candidate commit on
@@ -109,26 +109,18 @@ jobs:
 
           # The tripwire: brew must report the version this checkout declares.
           # Without it, a wrong-tree test passes silently.
-          for cask in Casks/*.rb; do
-            token="$(basename "$cask" .rb)"
-            expected="$(sed -n 's/^  version "\(.*\)"$/\1/p' "$cask")"
-            actual="$(brew info --cask --json=v2 "jakobhviid/tap/$token" \
-              | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')"
-            echo "$token: checkout=$expected brew=$actual"
-            test "$expected" = "$actual"
-          done
+          expected="$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/orca-linux.rb)"
+          actual="$(brew info --cask --json=v2 jakobhviid/tap/orca-linux \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')"
+          echo "orca-linux: checkout=$expected brew=$actual"
+          test "$expected" = "$actual"
 
+      # Only this cask, so a style cop that starts flagging some other cask
+      # cannot hold back an orca release. audit-casks.yml covers the whole tap.
       - name: Audit
         run: |
-          for cask in Casks/*.rb; do
-            token="$(basename "$cask" .rb)"
-            echo "::group::audit $token"
-            brew audit --cask --strict "jakobhviid/tap/$token"
-            # Every cask here uses the *_steps install-step form, so the full
-            # cop set applies with no exceptions.
-            brew style --cask "jakobhviid/tap/$token"
-            echo "::endgroup::"
-          done
+          brew audit --cask --strict jakobhviid/tap/orca-linux
+          brew style --cask jakobhviid/tap/orca-linux
 
       - name: Install
         run: brew install --cask jakobhviid/tap/orca-linux
@@ -194,11 +186,20 @@ jobs:
         run: |
           set -x
           caskroom="$(brew --caskroom)/orca-linux"
+          # Why `if` and not `! cmd`: bash exempts a `!`-negated command from
+          # errexit, so only the last such line in a step could ever fail it.
+          #
           # electron-updater cannot run without its manifest, so brew keeps
           # ownership of the version instead of the app overwriting AppRun.
-          ! find "$caskroom" -name app-update.yml | grep -q .
+          if find "$caskroom" -name app-update.yml | grep -q .; then
+            echo "::error::app-update.yml survived the preflight"
+            exit 1
+          fi
           # The 193 MB image is redundant once extracted.
-          ! find "$caskroom" -name '*.AppImage' | grep -q .
+          if find "$caskroom" -name '*.AppImage' | grep -q .; then
+            echo "::error::the AppImage was not removed after extraction"
+            exit 1
+          fi
           test -x "$caskroom/$(brew info --cask --json=v2 jakobhviid/tap/orca-linux | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')/squashfs-root/AppRun"
 
       - name: Reinstall to exercise the version-bump path
@@ -268,10 +269,27 @@ jobs:
         run: |
           set -x
           brew uninstall --cask --zap jakobhviid/tap/orca-linux
-          ! test -e "$HOME/.local/share/applications/orca-ide.desktop"
-          ! find "$HOME/.local/share/icons/hicolor" -path '*/apps/orca-ide.png' | grep -q .
-          ! command -v orca
-          ! command -v orca-ide
+          # Why helpers and not `! cmd`: bash exempts a `!`-negated command from
+          # errexit, so only the last such line in a step could ever fail it.
+          gone() {
+            if [ -e "$1" ]; then
+              echo "::error::zap left $1 behind"
+              exit 1
+            fi
+          }
+          off_path() {
+            if command -v "$1"; then
+              echo "::error::$1 is still on PATH after uninstall"
+              exit 1
+            fi
+          }
+          gone "$HOME/.local/share/applications/orca-ide.desktop"
+          if find "$HOME/.local/share/icons/hicolor" -path '*/apps/orca-ide.png' | grep -q .; then
+            echo "::error::zap left the orca-ide icon behind"
+            exit 1
+          fi
+          off_path orca
+          off_path orca-ide
           # The GUI smoke test above created these, so zap has real data to clear.
-          ! test -e "$HOME/.config/orca"
-          ! test -e "$HOME/.orca"
+          gone "$HOME/.config/orca"
+          gone "$HOME/.orca"
