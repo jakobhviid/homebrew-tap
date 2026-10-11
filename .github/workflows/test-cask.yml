@@ -263,7 +263,11 @@ jobs:
           # Electron derives userData from the asar's `name`, which is lowercase.
           # The zap stanza depends on this exact spelling, so pin it.
           test -d "$HOME/.config/orca"
-          test -d "$HOME/.orca"
+          # Not asserted: since 1.4.223 a bare launch no longer creates ~/.orca,
+          # which now appears only once there is worktree or agent state to keep.
+          # It stays in the zap stanza for the installs that have it, and the
+          # uninstall step still checks zap clears it whenever it is present.
+          ls -ld "$HOME/.orca" 2>/dev/null || echo "no .orca directory after a bare launch"
 
       - name: Uninstall with zap and verify nothing is left behind
         run: |
