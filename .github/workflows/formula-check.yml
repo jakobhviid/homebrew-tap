@@ -123,21 +123,28 @@ jobs:
               out.write(f"supported={'false' if ruled_out else 'true'}\n")
           PY
 
+      # Why not --strict, unlike the casks: these formulae are written by other
+      # repos' generators, and every one of them pins an explicit `version` that
+      # strict audit calls redundant with the URL. That is cosmetic, it is fixed
+      # in the generators rather than here, and strict mode would hold an issue
+      # open against every formula for it.
       - name: Audit
         if: steps.platform.outputs.supported == 'true'
-        run: brew audit --strict --formula "$FORMULA"
+        run: brew audit --formula "$FORMULA"
 
-      # Style is the same on every platform, so one job checks it.
+      # Style is the same on every platform, so one job checks it. This and the
+      # install run even after a failed audit, so one run shows every problem.
       - name: Style
-        if: steps.platform.outputs.supported == 'true' && matrix.runner == 'ubuntu-latest'
+        if: ${{ !cancelled() && steps.platform.outputs.supported == 'true' && matrix.runner == 'ubuntu-latest' }}
         run: brew style --formula "$FORMULA"
 
       - name: Install
-        if: steps.platform.outputs.supported == 'true'
+        id: install
+        if: ${{ !cancelled() && steps.platform.outputs.supported == 'true' }}
         run: brew install --formula "$FORMULA"
 
       - name: Test
-        if: steps.platform.outputs.supported == 'true'
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: brew test "$FORMULA"
 
   # Why: these runs follow pushes made by other repos' pipelines, with nobody
