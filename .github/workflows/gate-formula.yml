@@ -39,6 +39,12 @@ jobs:
   validate:
     needs: propose
     uses: ./.github/workflows/formula-check.yml
+    # What formula-check's own report job asks for. It is skipped here, but
+    # GitHub checks every called job's permissions before the run starts.
+    permissions:
+      contents: read
+      issues: write
+      actions: read
     with:
       ref: ${{ github.sha }}
       formulae: ${{ needs.propose.outputs.name }}
