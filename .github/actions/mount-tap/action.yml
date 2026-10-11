@@ -1,0 +1,85 @@
+name: Mount this checkout as the tap
+description: >
+  Set up Homebrew, put the commit under test back after setup-homebrew moves it,
+  and make brew read this checkout as jakobhviid/tap. Every workflow that runs
+  brew against the tap starts here, so a fix to any of these steps lands once.
+
+inputs:
+  ref:
+    description: "Commit to test. Empty means the triggering commit."
+    required: false
+    default: ""
+  verify:
+    description: >
+      Space-separated casks or formulae whose version brew must report exactly as
+      this checkout declares it. Empty skips the check.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+
+    # Why: setup-homebrew symlinks this checkout in as a tap and runs `brew
+    # update`, which hard-resets the working tree to origin/main. Push runs
+    # cannot notice — the pushed commit *is* main — but a caller-supplied ref
+    # would be thrown away, and a pipeline would validate main while reporting
+    # that it had validated its candidate.
+    - name: Restore the commit under test
+      shell: bash
+      env:
+        REF: ${{ inputs.ref || github.sha }}
+      run: |
+        git checkout --force "$REF"
+        git log --oneline -1
+
+    - name: Link the checkout in as the tap
+      shell: bash
+      run: |
+        set -x
+        # Why `brew --repository <tap>` and not a hand-built path: it is what
+        # brew itself resolves the tap to, which differs between macOS and
+        # linuxbrew. An earlier version guessed, guessed wrong on linuxbrew, and
+        # brew quietly cloned main from GitHub instead.
+        tap_dir="$(brew --repository jakobhviid/tap)"
+        if [ -L "$tap_dir" ]; then
+          # setup-homebrew already linked this checkout in. Leave it: replacing
+          # it with a real directory breaks the action's own cleanup, which
+          # expects to `rm` a symlink.
+          echo "already linked -> $(readlink "$tap_dir")"
+        else
+          # Anything else here is a clone brew made from the remote, which would
+          # shadow this checkout.
+          rm -rf "$tap_dir"
+          mkdir -p "$(dirname "$tap_dir")"
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+        fi
+        # README tells users to trust before tapping, so prove that order works.
+        brew trust --tap jakobhviid/tap
+        brew tap-info jakobhviid/tap
+
+    # The tripwire: brew must report the version this checkout declares. Without
+    # it, a test against the wrong tree passes silently.
+    - name: Check brew reads this checkout
+      if: inputs.verify != ''
+      shell: bash
+      env:
+        VERIFY: ${{ inputs.verify }}
+      run: |
+        for name in $VERIFY; do
+          if [ -f "Casks/$name.rb" ]; then
+            kind=cask file="Casks/$name.rb" query='["casks"][0]["version"]'
+          else
+            kind=formula file="Formula/$name.rb" query='["formulae"][0]["versions"]["stable"]'
+          fi
+          expected="$(sed -n 's/^  version "\(.*\)"$/\1/p' "$file")"
+          actual="$(brew info --"$kind" --json=v2 "jakobhviid/tap/$name" \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)$query)")"
+          echo "$name: checkout=${expected:-<from url>} brew=$actual"
+          # A formula may leave its version to be read from the URL, and then
+          # there is no stanza to compare; brew loading it is the check.
+          if [ -n "$expected" ]; then
+            test "$expected" = "$actual"
+          fi
+        done

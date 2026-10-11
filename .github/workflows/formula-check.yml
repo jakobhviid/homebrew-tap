@@ -12,10 +12,12 @@ on:
     paths:
       - "Formula/**"
       - ".github/workflows/formula-check.yml"
+      - ".github/actions/mount-tap/**"
   pull_request:
     paths:
       - "Formula/**"
       - ".github/workflows/formula-check.yml"
+      - ".github/actions/mount-tap/**"
   # Why a schedule: a formula nobody touched can break when Homebrew tightens an
   # audit, a dependency moves, or a runner image changes. Weekly checks them all.
   schedule:
@@ -81,29 +83,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
-
-      - name: Restore the commit under test
-        run: |
-          # Why: setup-homebrew symlinks this checkout in as a tap and runs
-          # `brew update`, which hard-resets the working tree to origin/main.
-          git checkout --force "${{ github.sha }}"
-          git log --oneline -1
-
-      - name: Mount this checkout as the tap
-        run: |
-          set -x
-          # Why `brew --repository <tap>`: it is what brew itself resolves the
-          # tap to, which differs between macOS and linuxbrew layouts.
-          tap_dir="$(brew --repository jakobhviid/tap)"
-          if [ -L "$tap_dir" ]; then
-            echo "already linked -> $(readlink "$tap_dir")"
-          else
-            rm -rf "$tap_dir"
-            mkdir -p "$(dirname "$tap_dir")"
-            ln -s "$GITHUB_WORKSPACE" "$tap_dir"
-          fi
-          brew trust --tap jakobhviid/tap
+      - uses: ./.github/actions/mount-tap
+        with:
+          verify: ${{ matrix.formula }}
 
       # Why from brew's own reading of the formula: `depends_on :linux` and
       # `depends_on :macos` are what decide where a formula installs, so a job on

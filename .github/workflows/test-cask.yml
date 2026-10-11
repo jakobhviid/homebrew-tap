@@ -10,10 +10,12 @@ on:
     paths:
       - "Casks/orca-linux.rb"
       - ".github/workflows/test-cask.yml"
+      - ".github/actions/mount-tap/**"
   pull_request:
     paths:
       - "Casks/orca-linux.rb"
       - ".github/workflows/test-cask.yml"
+      - ".github/actions/mount-tap/**"
   workflow_dispatch:
   # Why: the scheduled version bump calls this to validate a candidate commit on
   # both architectures before it is allowed anywhere near main.
@@ -72,48 +74,10 @@ jobs:
             fi
           done
 
-      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
-
-      - name: Restore the commit under test
-        run: |
-          # Why: setup-homebrew symlinks this checkout in as a tap and runs
-          # `brew update`, which hard-resets the working tree to origin/main.
-          # Push runs cannot notice — the pushed commit *is* main — but it means
-          # a caller-supplied ref is thrown away, so the bump pipeline validated
-          # main while reporting that it had validated the candidate.
-          git checkout --force "${{ inputs.ref || github.sha }}"
-          git log --oneline -1
-
-      - name: Mount this checkout as the tap
-        run: |
-          set -x
-          # Why `brew --repository <tap>` and not a hand-built path: it is what
-          # brew itself resolves the tap to. An earlier version guessed, guessed
-          # wrong on linuxbrew, and brew quietly cloned main from GitHub instead.
-          tap_dir="$(brew --repository jakobhviid/tap)"
-          if [ -L "$tap_dir" ]; then
-            # setup-homebrew already linked this checkout in. Leave it: replacing
-            # it with a real directory breaks the action's own cleanup, which
-            # expects to `rm` a symlink.
-            echo "already linked -> $(readlink "$tap_dir")"
-          else
-            # Anything else here is a clone brew made from the remote, which
-            # would shadow this checkout.
-            rm -rf "$tap_dir"
-            mkdir -p "$(dirname "$tap_dir")"
-            ln -s "$GITHUB_WORKSPACE" "$tap_dir"
-          fi
-          # README tells users to trust before tapping, so prove that order works.
-          brew trust --tap jakobhviid/tap
-          brew tap-info jakobhviid/tap
-
-          # The tripwire: brew must report the version this checkout declares.
-          # Without it, a wrong-tree test passes silently.
-          expected="$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/orca-linux.rb)"
-          actual="$(brew info --cask --json=v2 jakobhviid/tap/orca-linux \
-            | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')"
-          echo "orca-linux: checkout=$expected brew=$actual"
-          test "$expected" = "$actual"
+      - uses: ./.github/actions/mount-tap
+        with:
+          ref: ${{ inputs.ref }}
+          verify: orca-linux
 
       # Only this cask, so a style cop that starts flagging some other cask
       # cannot hold back an orca release. audit-casks.yml covers the whole tap.

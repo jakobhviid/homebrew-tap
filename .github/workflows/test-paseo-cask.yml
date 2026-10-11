@@ -12,10 +12,12 @@ on:
     paths:
       - "Casks/paseo-linux.rb"
       - ".github/workflows/test-paseo-cask.yml"
+      - ".github/actions/mount-tap/**"
   pull_request:
     paths:
       - "Casks/paseo-linux.rb"
       - ".github/workflows/test-paseo-cask.yml"
+      - ".github/actions/mount-tap/**"
   workflow_dispatch:
   # Why: the scheduled version bump calls this to validate a candidate commit
   # before it is allowed anywhere near main.
@@ -66,38 +68,10 @@ jobs:
             fi
           done
 
-      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
-
-      - name: Restore the commit under test
-        run: |
-          # Why: setup-homebrew symlinks this checkout in as a tap and runs
-          # `brew update`, which hard-resets the working tree to origin/main —
-          # throwing away a caller-supplied ref while still reporting success.
-          git checkout --force "${{ inputs.ref || github.sha }}"
-          git log --oneline -1
-
-      - name: Mount this checkout as the tap
-        run: |
-          set -x
-          # Why `brew --repository <tap>`: it is what brew itself resolves the
-          # tap to, which differs between macOS and linuxbrew layouts.
-          tap_dir="$(brew --repository jakobhviid/tap)"
-          if [ -L "$tap_dir" ]; then
-            echo "already linked -> $(readlink "$tap_dir")"
-          else
-            rm -rf "$tap_dir"
-            mkdir -p "$(dirname "$tap_dir")"
-            ln -s "$GITHUB_WORKSPACE" "$tap_dir"
-          fi
-          brew trust --tap jakobhviid/tap
-
-          # The tripwire: brew must report the version this checkout declares,
-          # or a wrong-tree test passes silently.
-          expected="$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/paseo-linux.rb)"
-          actual="$(brew info --cask --json=v2 jakobhviid/tap/paseo-linux \
-            | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')"
-          echo "paseo-linux: checkout=$expected brew=$actual"
-          test "$expected" = "$actual"
+      - uses: ./.github/actions/mount-tap
+        with:
+          ref: ${{ inputs.ref }}
+          verify: paseo-linux
 
       # Why audit here as well as in test-cask.yml: that workflow runs on any
       # Casks/** push, but the bump pipeline validates a candidate commit through
