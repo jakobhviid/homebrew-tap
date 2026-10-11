@@ -1,0 +1,163 @@
+name: Check formulae
+
+# Why: the formulae here are written by other repos' release pipelines and
+# pushed straight to main, so nothing in this repo ever installed one before a
+# user did. This audits, installs and tests each formula a push changes, on
+# every platform it claims, and reports a failure as an issue against that
+# formula through scripts/report-ci.py. It cannot stop a bad formula landing —
+# it is already on main by the time this runs — but it is how you hear first.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Formula/**"
+      - ".github/workflows/formula-check.yml"
+  pull_request:
+    paths:
+      - "Formula/**"
+      - ".github/workflows/formula-check.yml"
+  # Why a schedule: a formula nobody touched can break when Homebrew tightens an
+  # audit, a dependency moves, or a runner image changes. Weekly checks them all.
+  schedule:
+    - cron: "30 5 * * 1"
+  workflow_dispatch:
+
+# No concurrency group: GitHub keeps only one pending run per group and cancels
+# the rest, so formula pushes landing back to back would go untested.
+
+permissions:
+  contents: read
+
+jobs:
+  # Why: a push tests only the formulae it changed, so one tool's broken release
+  # cannot fail the check for another's. Everything else tests them all.
+  select:
+    runs-on: ubuntu-latest
+    outputs:
+      formulae: ${{ steps.pick.outputs.formulae }}
+      list: ${{ steps.pick.outputs.list }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Pick the formulae this run covers
+        id: pick
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          picked="$(find Formula -maxdepth 1 -name '*.rb' -exec basename {} .rb \; | sort)"
+          # A push that changed formulae narrows to those still present. One that
+          # changed none (this workflow, a deletion) or whose `before` is not in
+          # the history (a new branch, a force-push) tests everything.
+          if [ "$GITHUB_EVENT_NAME" = push ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            changed="$(git diff --name-only "$BEFORE" "$GITHUB_SHA" -- 'Formula/*.rb' \
+              | while read -r path; do [ -f "$path" ] && basename "$path" .rb; done | sort)"
+            if [ -n "$changed" ]; then picked="$changed"; fi
+          fi
+          echo "testing: $(echo "$picked" | paste -sd' ')"
+          echo "list=$(echo "$picked" | paste -sd' ')" >> "$GITHUB_OUTPUT"
+          echo "formulae=$(echo "$picked" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().split()))')" >> "$GITHUB_OUTPUT"
+
+  formula:
+    needs: select
+    # The report job pins each failure on its formula by this name, so the
+    # formula has to stay the first value in it.
+    name: formula (${{ matrix.formula }}, ${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        formula: ${{ fromJSON(needs.select.outputs.formulae) }}
+        # Linux on both architectures, and Apple silicon macOS. The formulae
+        # also cover Intel macOS, but GitHub's Intel macOS runners are being
+        # retired, and the url+install path they would take is the same one
+        # the arm64 Linux job exercises wherever there is no bottle.
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+    runs-on: ${{ matrix.runner }}
+    env:
+      # Why: an auto-update fetches and hard-resets the tap from GitHub, which
+      # would silently replace the commit under test with whatever is on main.
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      FORMULA: jakobhviid/tap/${{ matrix.formula }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+
+      - name: Restore the commit under test
+        run: |
+          # Why: setup-homebrew symlinks this checkout in as a tap and runs
+          # `brew update`, which hard-resets the working tree to origin/main.
+          git checkout --force "${{ github.sha }}"
+          git log --oneline -1
+
+      - name: Mount this checkout as the tap
+        run: |
+          set -x
+          # Why `brew --repository <tap>`: it is what brew itself resolves the
+          # tap to, which differs between macOS and linuxbrew layouts.
+          tap_dir="$(brew --repository jakobhviid/tap)"
+          if [ -L "$tap_dir" ]; then
+            echo "already linked -> $(readlink "$tap_dir")"
+          else
+            rm -rf "$tap_dir"
+            mkdir -p "$(dirname "$tap_dir")"
+            ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+          fi
+          brew trust --tap jakobhviid/tap
+
+      # Why from brew's own reading of the formula: `depends_on :linux` and
+      # `depends_on :macos` are what decide where a formula installs, so a job on
+      # a platform it rules out passes as skipped rather than failing. A formula
+      # that will not even load here fails this step, which is a real failure.
+      - name: Skip a platform the formula rules out
+        id: platform
+        run: |
+          brew info --json=v2 "$FORMULA" > info.json
+          python3 - <<'PY'
+          import json, os, sys
+          reqs = {r["name"] for r in json.load(open("info.json"))["formulae"][0]["requirements"]}
+          here = "linux" if sys.platform.startswith("linux") else "macos"
+          ruled_out = {"linux", "macos"} & reqs and here not in reqs
+          print(f"requirements: {sorted(reqs) or '-'}; {'skipping' if ruled_out else 'testing'} on {here}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"supported={'false' if ruled_out else 'true'}\n")
+          PY
+
+      - name: Audit
+        if: steps.platform.outputs.supported == 'true'
+        run: brew audit --strict --formula "$FORMULA"
+
+      # Style is the same on every platform, so one job checks it.
+      - name: Style
+        if: steps.platform.outputs.supported == 'true' && matrix.runner == 'ubuntu-latest'
+        run: brew style --formula "$FORMULA"
+
+      - name: Install
+        if: steps.platform.outputs.supported == 'true'
+        run: brew install --formula "$FORMULA"
+
+      - name: Test
+        if: steps.platform.outputs.supported == 'true'
+        run: brew test "$FORMULA"
+
+  # Why: these runs follow pushes made by other repos' pipelines, with nobody
+  # watching here, so a failing formula gets an issue that closes itself once
+  # it passes. Pull requests are left out: their checks are already in front of
+  # whoever opened them.
+  report:
+    needs: [select, formula]
+    if: always() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      # Lists this run's jobs, to pin a failed job on its formula.
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Open, update or close the failure issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEEDS: ${{ toJSON(needs) }}
+          TESTED: ${{ needs.select.outputs.list }}
+        run: python3 scripts/report-ci.py formula --pipeline Formulae --tokens "$TESTED"
