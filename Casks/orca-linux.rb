@@ -4,9 +4,9 @@ cask "orca-linux" do
   # x86_64 `arch` is nil and interpolates away.
   arch arm: "-arm64"
 
-  version "1.4.222"
-  sha256 arm64_linux:  "fc36305c09c6942adb7fbf42ba01cee58fed17de9c618db42d76f3fa02110444",
-         x86_64_linux: "3ffbc27329bb427d6ddcb7e408cf7c2d5c888602d4b0f4b98acfd74dd5ba5eb5"
+  version "1.4.224"
+  sha256 arm64_linux:  "287c34e64bda1348cd46445194bd06d0e0ea6f35d775f7405c0a61147147b34d",
+         x86_64_linux: "b1fe9102d987d35d97eb6d9c274a93d9e951aadbe864fc2251a315023f60c746"
 
   url "https://github.com/stablyai/orca/releases/download/v#{version}/orca-linux#{arch}.AppImage"
   name "Orca"
