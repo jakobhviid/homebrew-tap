@@ -133,3 +133,25 @@ jobs:
           git push origin --delete "$CANDIDATE_BRANCH" || true
           echo "::error::${{ needs.propose.outputs.summary }} failed validation; main left at its previous versions."
           exit 1
+
+  # Why: nobody watches these runs, so their outcome becomes one issue per broken
+  # cask — opened on the first failure, rewritten quietly on each repeat, closed
+  # by the next run that passes. See scripts/report-ci.py.
+  report:
+    needs: [propose, validate, land, cleanup]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      # Lists this run's jobs, to pin a failed test job on its cask.
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Open, update or close the failure issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          python3 scripts/report-ci.py bump --pipeline "Proton casks" \
+            --tokens "proton-mail-linux proton-meet-linux proton-pass-linux"
