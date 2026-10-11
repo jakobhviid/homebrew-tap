@@ -97,7 +97,45 @@ jobs:
               failed+=("$token")
             fi
           done
+          # Written even when empty: a missing file is how the report job tells
+          # a leg that passed every cask from one that never got this far.
+          mkdir -p audit-results
+          printf '%s\n' "${failed[@]}" > audit-results/failed.txt
           if [ ${#failed[@]} -gt 0 ]; then
             echo "::error::failed: ${failed[*]}"
             exit 1
           fi
+
+      - name: Keep this architecture's result for the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-${{ matrix.runner }}
+          path: audit-results/
+          if-no-files-found: ignore
+          retention-days: 1
+
+  # Why: the weekly run has nobody watching, so a cask that starts failing
+  # gets an issue that closes itself once it passes. Pull requests are left out:
+  # their checks are already in front of whoever opened them.
+  report:
+    needs: audit
+    if: always() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+      # Why continue-on-error: with no leg's result to fetch, this would fail
+      # and skip the report — the one case where reporting matters most. The
+      # script reads fewer results than legs as a failure of the whole audit.
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: audit-*
+          path: audit-results
+      - name: Open, update or close the failure issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/report-ci.py audit --pipeline tap --results-dir audit-results --legs 2

@@ -37,6 +37,7 @@ jobs:
     outputs:
       bump: ${{ steps.bump.outputs.bump }}
       message: ${{ steps.bump.outputs.message }}
+      tokens: ${{ steps.bump.outputs.tokens }}
       sha: ${{ steps.push.outputs.sha }}
     steps:
       - uses: actions/checkout@v5
@@ -58,6 +59,8 @@ jobs:
           message="$(paste -sd, /tmp/moved.txt | sed 's/,/, /g')"
           echo "bump=true" >> "$GITHUB_OUTPUT"
           echo "message=${message:-Craft casks: refresh pinned manifests}" >> "$GITHUB_OUTPUT"
+          # Which casks moved, so a failed validation is reported against them.
+          echo "tokens=$(cut -d' ' -f1 /tmp/moved.txt | paste -sd' ')" >> "$GITHUB_OUTPUT"
           git diff --stat -- Casks scripts/craft-casks.json
 
       - name: Push the candidate to a throwaway branch
@@ -122,3 +125,25 @@ jobs:
           git push origin --delete "$CANDIDATE_BRANCH" || true
           echo "::error::$MESSAGE failed validation; main left at its previous pins."
           exit 1
+
+  # Why: nobody watches these runs, so their outcome becomes one issue per broken
+  # cask — opened on the first failure, rewritten quietly on each repeat, closed
+  # by the next run that passes. See scripts/report-ci.py.
+  report:
+    needs: [propose, validate, land, cleanup]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      # Lists this run's jobs, to pin a failed test job on its cask.
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Open, update or close the failure issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          python3 scripts/report-ci.py bump --pipeline "Craft casks" \
+            --tokens "$(jq -r 'keys[] + "-linux"' scripts/craft-casks.json)"
