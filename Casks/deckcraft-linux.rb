@@ -3,9 +3,9 @@
 cask "deckcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.4.0"
-  sha256 arm64_linux:  "687127af937cef35b22c808486e53202ef80bef88dd793ef48af2da72547d3e2",
-         x86_64_linux: "d60770f0d6da887fed5c76983f4900046d87dd7fbd69654a32204917894b22ce"
+  version "0.5.0"
+  sha256 arm64_linux:  "9fb43aedb9b223cf62f34d2b50900c6337a7cd5cb3178b9b530bb93a213c402d",
+         x86_64_linux: "c2648c6071f631ecc6639ce6b7d60f68eed83ddeaba6b1559b07c5046863117c"
 
   url "https://github.com/storytold/deckcraft/releases/download/v#{version}/deckcraft-#{version}-linux-#{arch}.tar.gz"
   name "DeckCraft"
@@ -48,6 +48,8 @@ cask "deckcraft-linux" do
            target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/ai.storyteller.deckcraft.png"
   artifact "deckcraft-#{version}-linux-#{arch}/share/icons/hicolor/64x64/apps/ai.storyteller.deckcraft.png",
            target: "#{Dir.home}/.local/share/icons/hicolor/64x64/apps/ai.storyteller.deckcraft.png"
+  artifact "deckcraft-#{version}-linux-#{arch}/share/icons/hicolor/scalable/apps/ai.storyteller.deckcraft.svg",
+           target: "#{Dir.home}/.local/share/icons/hicolor/scalable/apps/ai.storyteller.deckcraft.svg"
   artifact "deckcraft-#{version}-linux-#{arch}/share/mime/packages/ai.storyteller.deckcraft.xml",
            target: "#{Dir.home}/.local/share/mime/packages/ai.storyteller.deckcraft.xml"
 
