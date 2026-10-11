@@ -1,0 +1,103 @@
+name: Check packages keep up with upstream
+
+# Why: every other check here watches a pipeline that ran. This one watches for
+# a pipeline that did not — a bump script that decided nothing moved, a
+# disabled schedule, or one of the tool repos that push formulae here losing
+# its token. None of those turns a run red; each just leaves a package behind
+# upstream. So this asks upstream directly, with `brew livecheck`, and reports
+# any package still behind on two runs in a row through scripts/report-ci.py.
+on:
+  schedule:
+    # Daily, after every bump has run (the last, Craft, starts at 08:15), so a
+    # package behind here was missed rather than not yet reached.
+    - cron: "0 12 * * *"
+  pull_request:
+    paths:
+      - ".github/workflows/freshness.yml"
+      - "scripts/report-ci.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: freshness-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    env:
+      # Why: an auto-update fetches and hard-resets the tap from GitHub, which
+      # would silently replace the commit under test with whatever is on main.
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      # Pull requests show what this would report, but open no issues and keep
+      # no state, so a branch cannot disturb what main has recorded.
+      REPORT: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+
+      - name: Restore the commit under test
+        run: |
+          # Why: setup-homebrew symlinks this checkout in as a tap and runs
+          # `brew update`, which hard-resets the working tree to origin/main.
+          git checkout --force "${{ github.sha }}"
+          git log --oneline -1
+
+      - name: Mount this checkout as the tap
+        run: |
+          set -x
+          # Why `brew --repository <tap>`: it is what brew itself resolves the
+          # tap to, which differs between macOS and linuxbrew layouts.
+          tap_dir="$(brew --repository jakobhviid/tap)"
+          if [ -L "$tap_dir" ]; then
+            echo "already linked -> $(readlink "$tap_dir")"
+          else
+            rm -rf "$tap_dir"
+            mkdir -p "$(dirname "$tap_dir")"
+            ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+          fi
+          brew trust --tap jakobhviid/tap
+
+      - name: Ask upstream for every package's latest version
+        run: |
+          # Not `set -e` on livecheck's exit status: it is non-zero whenever any
+          # one package cannot be checked, and those are listed as uncheckable
+          # rather than allowed to hide the rest. Output that is not JSON at all
+          # fails the report step below.
+          brew livecheck --tap jakobhviid/tap --json > livecheck.json || true
+          python3 -m json.tool livecheck.json | head -c 4000
+
+      # The previous run's list of packages that were behind: what turns
+      # "behind once" into "behind twice running". A run with none to restore
+      # (the first, or after the cache expires) records and reports nothing.
+      - name: Restore what the previous run found behind
+        if: env.REPORT == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: freshness-state.json
+          key: freshness-state-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: freshness-state-
+
+      - name: Open, update or close the behind-upstream issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The state file is read before it is rewritten, so one path serves as
+          # both the previous run's list and this run's.
+          extra=()
+          [ "$REPORT" = true ] || extra+=(--dry-run)
+          python3 scripts/report-ci.py freshness --livecheck livecheck.json \
+            --state-in freshness-state.json --state-out freshness-state.json "${extra[@]}"
+
+      - name: Keep this run's list for the next
+        if: env.REPORT == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: freshness-state.json
+          key: freshness-state-${{ github.run_id }}-${{ github.run_attempt }}
