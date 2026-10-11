@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Keep one GitHub issue open per package that an unattended run finds broken.
 
-The bumps, the weekly audit and the daily freshness check run with nobody
-watching, and a red run is easy to miss — or, failing daily, easy to stop
-seeing. This turns their outcome into issues instead: the first failure opens
-one (`<key>: bump failing`, `<key>: audit failing`, `<key>: behind upstream`),
+The bumps, the audit, the formula check and the freshness check run with
+nobody watching, and a red run is easy to miss — or, failing daily, easy to
+stop seeing. This turns their outcome into issues instead: the first failure
+opens one (`<key>: bump failing`, `<key>: behind upstream`, and so on),
 each later failure rewrites that issue's body (an edit notifies nobody, so a
 package broken for a week costs one notification, not seven), and the next run
 that finds the package healthy closes it. The open issues with the
@@ -19,13 +19,15 @@ Usage (from a workflow job that `needs:` the jobs it reports on):
     scripts/report-ci.py bump  --pipeline orca-linux --tokens orca-linux
     scripts/report-ci.py bump  --pipeline "Proton casks" --tokens "proton-mail-linux ..."
     scripts/report-ci.py audit --pipeline tap --results-dir audit-results --legs 2
+    scripts/report-ci.py formula --pipeline Formulae --tokens "temper grove"
     scripts/report-ci.py freshness --livecheck livecheck.json \
         --state-in previous.json --state-out current.json [--dry-run]
 
-`bump` reads the `needs` context from $NEEDS (`toJSON(needs)`); `audit` reads
-the per-architecture failure lists the audit legs uploaded; `freshness` reads
-`brew livecheck --json` output plus the list the previous run left behind. All
-talk to GitHub through the `gh` CLI with $GH_TOKEN, except under --dry-run.
+`bump` and `formula` read the `needs` context from $NEEDS (`toJSON(needs)`)
+and this run's job list; `audit` reads the per-architecture failure lists the
+audit legs uploaded; `freshness` reads `brew livecheck --json` output plus the
+state the previous run left behind. All talk to GitHub through the `gh` CLI
+with $GH_TOKEN, except under --dry-run.
 """
 
 from __future__ import annotations
@@ -54,6 +56,7 @@ SOURCES = {
     "bump": ("bump failing", "bump"),
     "audit": ("audit failing", "audit"),
     "freshness": ("behind upstream", "freshness check"),
+    "formula": ("formula check failing", "formula check"),
 }
 
 
@@ -68,6 +71,21 @@ def run_url() -> str:
     )
 
 
+def run_jobs() -> list[dict]:
+    """This run's jobs so far, with their names and conclusions."""
+    path = (
+        f"repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+        f"/attempts/{os.environ.get('GITHUB_RUN_ATTEMPT', '1')}/jobs?per_page=100"
+    )
+    return json.loads(gh("api", path))["jobs"]
+
+
+def job_subject(name: str) -> str:
+    """The first matrix value in a job name: `cask (pdfcraft, ...)` -> pdfcraft."""
+    m = re.search(r"\(([^,)]+)", name)
+    return m.group(1).strip() if m else ""
+
+
 def failed_validate_tokens(tokens: list[str]) -> list[str] | None:
     """Pin a validation failure on the casks whose test jobs failed.
 
@@ -77,16 +95,10 @@ def failed_validate_tokens(tokens: list[str]) -> list[str] | None:
     (a template check, the select job, orca's per-arch jobs), because then the
     caller cannot tell which of the casks it moved is at fault.
     """
-    path = (
-        f"repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
-        f"/attempts/{os.environ.get('GITHUB_RUN_ATTEMPT', '1')}/jobs?per_page=100"
-    )
-    jobs = json.loads(gh("api", path))["jobs"]
-    failed = [j["name"] for j in jobs if j["name"].startswith("validate /") and j["conclusion"] == "failure"]
+    failed = [j["name"] for j in run_jobs() if j["name"].startswith("validate /") and j["conclusion"] == "failure"]
     found = []
     for name in failed:
-        m = re.search(r"\(([^,)]+)", name)
-        field = m.group(1).strip() if m else ""
+        field = job_subject(name)
         token = next((t for t in tokens if field in (t, t.removesuffix("-linux"))), None)
         if token is None:
             return None
@@ -125,6 +137,24 @@ def judge_bump(pipeline: str, tokens: list[str], needs: dict) -> tuple[list[str]
         # Validated but could not land, e.g. main moved under the candidate.
         bad = moved
     return (bad or [pipeline]), healthy
+
+
+def judge_formula(pipeline: str, tested: list[str], needs: dict) -> tuple[list[str], list[str]]:
+    """Return (failed, healthy) keys from this run's per-formula test jobs.
+
+    The jobs are named `formula (<name>, <runner>)`, so each failure belongs to
+    one formula. A formula counts as healthy only when every platform's job for
+    it finished cleanly; a cancelled one vouches for nothing.
+    """
+    if needs["select"]["result"] != "success":
+        return ([pipeline] if needs["select"]["result"] == "failure" else []), []
+    jobs = [j for j in run_jobs() if j["name"].startswith("formula (")]
+    failed = sorted({job_subject(j["name"]) for j in jobs if j["conclusion"] == "failure"})
+    unfinished = {job_subject(j["name"]) for j in jobs if j["conclusion"] not in ("success", "failure")}
+    if any(f not in tested for f in failed):
+        # A failed job this run did not mean to test: the matrix itself broke.
+        return [pipeline, *(f for f in failed if f in tested)], []
+    return failed, [pipeline, *(f for f in tested if f not in failed and f not in unfinished)]
 
 
 def judge_audit(pipeline: str, results_dir: Path, legs: int) -> tuple[list[str], list[str]]:
@@ -284,7 +314,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("source", choices=list(SOURCES))
     parser.add_argument("--pipeline", help="bump/audit: key for failures no single cask owns")
-    parser.add_argument("--tokens", default="", help="space-separated casks this bump covers")
+    parser.add_argument("--tokens", default="", help="space-separated casks or formulae this run covers")
     parser.add_argument("--results-dir", type=Path, default=Path("audit-results"))
     parser.add_argument("--legs", type=int, default=1, help="audit jobs expected to report")
     parser.add_argument("--livecheck", type=Path, help="`brew livecheck --json` output")
@@ -293,7 +323,7 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="judge only; touch no issues")
     args = parser.parse_args()
 
-    if args.source in ("bump", "audit") and not args.pipeline:
+    if args.source in ("bump", "audit", "formula") and not args.pipeline:
         parser.error(f"{args.source} needs --pipeline")
 
     details: dict[str, str] = {}
@@ -305,6 +335,8 @@ def main() -> None:
             covers[args.pipeline] = tokens
     elif args.source == "audit":
         failed, healthy = judge_audit(args.pipeline, args.results_dir, args.legs)
+    elif args.source == "formula":
+        failed, healthy = judge_formula(args.pipeline, args.tokens.split(), json.loads(os.environ["NEEDS"]))
     else:
         if not (args.livecheck and args.state_in and args.state_out):
             parser.error("freshness needs --livecheck, --state-in and --state-out")
