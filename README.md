@@ -95,7 +95,13 @@ brew untap jakobhviid/tap         # remove the tap entirely
   renders the twelve casks from a single template plus the pins in
   `scripts/craft-casks.json`. Edit those, not the casks — CI fails on drift.
   The daily bump moves each app's pin on its own and lands each app that
-  installs cleanly on both architectures. These are
-  Linux only. On macOS, use the official homebrew/cask cask of the same name
-  where one exists — PhotoCraft, VectorCraft, LightCraft and FilmCraft so far
-  (`brew install --cask photocraft`).
+  installs cleanly on both architectures.
+- **The `*craft-linux` casks are not the official ones.** homebrew/cask carries
+  all twelve apps under their plain names (`brew install --cask photocraft`),
+  for macOS and, since October 2026, Linux too. On Linux those install
+  upstream's AppImage as it is, into `~/Applications`. These unpack upstream's
+  tarball into a regular install instead: launcher, icons and file
+  associations from the cask, the GUI and its CLI on `PATH`, no FUSE needed,
+  and all of it removed on uninstall. Use the official casks on macOS, and pick
+  one or the other on Linux, not both — the AppImage registers its own
+  launcher the first time it runs, and the `-linux` cask will not overwrite it.

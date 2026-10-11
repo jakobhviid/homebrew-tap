@@ -18,8 +18,10 @@ cask "designcraft-linux" do
   end
 
   # Why: upstream's macOS build is a separate .dmg, which belongs in the
-  # official homebrew/cask cask of the same name, not here. This tarball is
-  # Linux ELF, so refuse to install anywhere else.
+  # official homebrew/cask cask of the same name, not here. That cask also
+  # covers Linux, with the AppImage as it ships; this one is the integrated
+  # install from the tarball. The tarball is Linux ELF, so refuse to install
+  # anywhere else.
   depends_on linux: :any
 
   # Why both: the first is the GUI and the second is upstream's headless
@@ -136,9 +138,10 @@ cask "designcraft-linux" do
     graphics stack at run time — Wayland or X11, libxkbcommon, and Vulkan or
     EGL — which any desktop session already has and Homebrew cannot supply.
 
-    If you have run upstream's AppImage, it registered its own launcher and
-    icons under ~/.local/share/applications and ~/.local/share/icons, and this
-    install will refuse to overwrite them. Reinstall with --force to take them
-    over.
+    If you have run upstream's AppImage — which is what the official `designcraft`
+    cask installs on Linux — it registered its own launcher and icons under
+    ~/.local/share/applications and ~/.local/share/icons, and this install
+    will refuse to overwrite them. Use one of the two, not both; reinstall this
+    one with --force to take them over.
   EOS
 end
