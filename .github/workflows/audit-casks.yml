@@ -31,6 +31,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Landing regenerates the README's catalog, so an unattended change never
+  # leaves it stale. A change made by hand has to carry it too.
+  readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: README lists every formula and cask
+        run: python3 scripts/gen-readme.py --check
+
   audit:
     strategy:
       fail-fast: false

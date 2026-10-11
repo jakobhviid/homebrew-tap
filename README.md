@@ -86,9 +86,9 @@ brew untap jakobhviid/tap         # remove the tap entirely
   upstream, in case whatever should have moved it has quietly stopped.
 - **The tool list above is generated too.** `scripts/gen-readme.py` reads every
   `Formula/*.rb` and `Casks/*.rb` and rewrites the table between the
-  `BEGIN TOOLS` / `END TOOLS` markers. Landing a package runs it, and so does
-  any other push that touches `Formula/` or `Casks/`, so the catalog can't
-  drift — nothing here is a hand-kept list.
+  `BEGIN TOOLS` / `END TOOLS` markers. Landing a package runs it, and CI fails
+  any other change to `Formula/` or `Casks/` that leaves the table behind, so
+  the catalog can't drift — nothing here is a hand-kept list.
   To refresh it locally: `python3 scripts/gen-readme.py` (or `--check` in CI).
 - **The `*craft-linux` casks share one template.** ArtCraft's Crafting Apps all
   come out of the same release pipeline, so `scripts/gen-craft-casks.py`
