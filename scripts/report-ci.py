@@ -144,13 +144,17 @@ def judge_freshness(
 ) -> tuple[list[str], list[str], dict[str, str], dict[str, str]]:
     """Return (failed, healthy, details, unchecked) from one livecheck pass.
 
-    A package counts as failed only when it was also behind on the previous
-    run. Behind once is normal: upstream can ship between a package's bump and
-    this check, and the next bump picks it up. Behind twice running means
-    whatever should have moved it did not. The first run has no previous list
-    and reports nothing, only records.
+    A package counts as failed only when it was behind on the previous run too
+    *and* its version here has not moved since. Behind once is normal: upstream
+    can ship between a bump and this check, and scheduled runs fire hours late,
+    so a bump can land after this check rather than before it. And a package
+    that releases daily can be behind on every run while its pipeline works,
+    moving one version each day. What marks a stuck pipeline is a package left
+    behind on the same version. The first run has no previous state and only
+    records.
     """
     behind, healthy, details, unchecked = [], [], {}, {}
+    current: dict[str, str] = {}
     for entry in json.loads(livecheck.read_text(encoding="utf-8")):
         name = (entry.get("formula") or entry.get("cask") or "?").split("/")[-1]
         version = entry.get("version")
@@ -158,24 +162,34 @@ def judge_freshness(
             unchecked[name] = "; ".join(entry.get("messages") or []) or entry.get("status", "no version")
         elif version.get("outdated"):
             behind.append(name)
+            current[name] = str(version["current"])
             details[name] = f"The tap has {version['current']}; upstream is at {version['latest']}."
         else:
             healthy.append(name)
 
-    previous = json.loads(state_in.read_text(encoding="utf-8")) if state_in.exists() else None
-    state_out.write_text(json.dumps(sorted(behind)) + "\n", encoding="utf-8")
-    failed = [n for n in behind if previous is not None and n in previous]
+    # The state is each behind package's version here, keyed by package.
+    previous = json.loads(state_in.read_text(encoding="utf-8")) if state_in.exists() else {}
+    state_out.write_text(json.dumps(current, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    failed = [n for n in behind if previous.get(n) == current[n]]
     return failed, healthy, details, unchecked
 
 
-def summarize(failed: list[str], behind: list[str], unchecked: dict[str, str], details: dict[str, str]) -> None:
+def summarize(
+    failed: list[str], healthy: list[str], behind: list[str],
+    unchecked: dict[str, str], details: dict[str, str],
+) -> None:
     """Write the freshness picture to the run's summary page."""
-    lines = ["## Freshness", ""]
+    total = len(healthy) + len(behind) + len(unchecked)
+    lines = [
+        "## Freshness", "",
+        f"{total} packages: {len(healthy)} at upstream's latest, {len(behind)} behind, "
+        f"{len(unchecked)} not checkable.", "",
+    ]
     for name in behind:
-        state = "behind twice running — reported" if name in failed else "behind once — waiting a run"
+        state = "stuck since the last run — reported" if name in failed else "waiting a run"
         lines.append(f"- **{name}**: {details[name]} ({state})")
-    if not behind:
-        lines.append("Every checkable package is at upstream's latest.")
+    if healthy:
+        lines += ["", f"At upstream's latest: {', '.join(sorted(healthy))}"]
     if unchecked:
         lines += ["", "Not checkable (no issue is opened for these):", ""]
         lines += [f"- **{name}**: {why}" for name, why in sorted(unchecked.items())]
@@ -295,7 +309,7 @@ def main() -> None:
         if not (args.livecheck and args.state_in and args.state_out):
             parser.error("freshness needs --livecheck, --state-in and --state-out")
         failed, healthy, details, unchecked = judge_freshness(args.livecheck, args.state_in, args.state_out)
-        summarize(failed, sorted(details), unchecked, details)
+        summarize(failed, healthy, sorted(details), unchecked, details)
     print(f"failed: {' '.join(failed) or '-'}")
     if not args.dry_run:
         report(args.source, failed, healthy, details, covers)
