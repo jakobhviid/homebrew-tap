@@ -15,16 +15,15 @@ cannot — Craft's and Proton's bump scripts stop at the first feed they cannot
 read, before saying which — the key is the pipeline's own name, so the failure
 is still reported once rather than not at all.
 
-Usage (from a workflow job that `needs:` the jobs it reports on):
-    scripts/report-ci.py bump  --pipeline orca-linux --tokens orca-linux
-    scripts/report-ci.py bump  --pipeline "Proton casks" --tokens "proton-mail-linux ..."
+Usage (from a workflow job that `needs:` the jobs it reports on; the bumps and
+the formula gate report through scripts/finish.py, which imports this):
     scripts/report-ci.py audit --pipeline tap --results-dir audit-results --legs 2
     scripts/report-ci.py formula --pipeline Formulae --tokens "temper grove"
     scripts/report-ci.py freshness --livecheck livecheck.json \
         --state-in previous.json --state-out current.json [--dry-run]
 
-`bump` and `formula` read the `needs` context from $NEEDS (`toJSON(needs)`)
-and this run's job list; `audit` reads the per-architecture failure lists the
+`formula` reads the `needs` context from $NEEDS (`toJSON(needs)`) and this
+run's job list; `audit` reads the per-architecture failure lists the
 audit legs uploaded; `freshness` reads `brew livecheck --json` output plus the
 state the previous run left behind. All talk to GitHub through the `gh` CLI
 with $GH_TOKEN, except under --dry-run.
@@ -84,59 +83,6 @@ def job_subject(name: str) -> str:
     """The first matrix value in a job name: `cask (pdfcraft, ...)` -> pdfcraft."""
     m = re.search(r"\(([^,)]+)", name)
     return m.group(1).strip() if m else ""
-
-
-def failed_validate_tokens(tokens: list[str]) -> list[str] | None:
-    """Pin a validation failure on the casks whose test jobs failed.
-
-    Each install suite names its matrix jobs after the cask first — `cask
-    (photocraft, ubuntu-latest)`, `cask (proton-mail-linux, ...)` — so a failed
-    job maps back to its cask. Returns None when some failed job maps to no cask
-    (a template check, the select job, orca's per-arch jobs), because then the
-    caller cannot tell which of the casks it moved is at fault.
-    """
-    failed = [j["name"] for j in run_jobs() if j["name"].startswith("validate /") and j["conclusion"] == "failure"]
-    found = []
-    for name in failed:
-        field = job_subject(name)
-        token = next((t for t in tokens if field in (t, t.removesuffix("-linux"))), None)
-        if token is None:
-            return None
-        found.append(token)
-    return sorted(set(found)) or None
-
-
-def judge_bump(pipeline: str, tokens: list[str], needs: dict) -> tuple[list[str], list[str]]:
-    """Return (failed, healthy) keys for one run of a propose/validate/land bump."""
-    propose = needs["propose"]
-    if propose["result"] != "success":
-        # The bump script itself failed, or was cancelled; a cancelled run says
-        # nothing either way.
-        return ([pipeline] if propose["result"] == "failure" else []), []
-
-    outputs = propose.get("outputs", {})
-    if outputs.get("bump") != "true":
-        # Nothing moved, so main already holds upstream's latest — which is only
-        # true once whatever broke an earlier candidate has been fixed.
-        return [], [pipeline, *tokens]
-
-    # A pipeline that bumps several casks says which moved; one that bumps a
-    # single cask moved that cask.
-    moved = outputs["tokens"].split() if "tokens" in outputs else tokens
-    validate, land = needs["validate"]["result"], needs["land"]["result"]
-    if validate == "success" and land == "success":
-        return [], [pipeline, *tokens]
-    if "cancelled" in (validate, land):
-        return [], []
-
-    # Casks that did not move are at upstream's latest on main regardless.
-    healthy = [pipeline, *(t for t in tokens if t not in moved)]
-    if validate == "failure":
-        bad = failed_validate_tokens(moved) or moved
-    else:
-        # Validated but could not land, e.g. main moved under the candidate.
-        bad = moved
-    return (bad or [pipeline]), healthy
 
 
 def judge_formula(pipeline: str, tested: list[str], needs: dict) -> tuple[list[str], list[str]]:
@@ -269,11 +215,11 @@ def report(
     suffix = SOURCES[source][0]
 
     if source == "freshness":
-        # A cask whose bump is already reported failing is behind for that
-        # reason; a second issue would say the same thing twice.
+        # A package whose bump or formula check is already reported failing is
+        # behind for that reason; a second issue would say the same thing twice.
         reported = set()
         for title, issue in existing.items():
-            if title.endswith(f": {SOURCES['bump'][0]}"):
+            if title.endswith((f": {SOURCES['bump'][0]}", f": {SOURCES['formula'][0]}")):
                 reported.add(title.rsplit(": ", 1)[0])
                 m = MARKER.search(issue["body"] or "")
                 if m and m.group(3):
@@ -312,7 +258,8 @@ def report(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("source", choices=list(SOURCES))
+    # `bump` issues are reported by scripts/finish.py, which imports this.
+    parser.add_argument("source", choices=["audit", "formula", "freshness"])
     parser.add_argument("--pipeline", help="bump/audit: key for failures no single cask owns")
     parser.add_argument("--tokens", default="", help="space-separated casks or formulae this run covers")
     parser.add_argument("--results-dir", type=Path, default=Path("audit-results"))
@@ -323,17 +270,12 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="judge only; touch no issues")
     args = parser.parse_args()
 
-    if args.source in ("bump", "audit", "formula") and not args.pipeline:
+    if args.source in ("audit", "formula") and not args.pipeline:
         parser.error(f"{args.source} needs --pipeline")
 
     details: dict[str, str] = {}
     covers: dict[str, list[str]] = {}
-    if args.source == "bump":
-        tokens = args.tokens.split()
-        failed, healthy = judge_bump(args.pipeline, tokens, json.loads(os.environ["NEEDS"]))
-        if args.pipeline not in tokens:
-            covers[args.pipeline] = tokens
-    elif args.source == "audit":
+    if args.source == "audit":
         failed, healthy = judge_audit(args.pipeline, args.results_dir, args.legs)
     elif args.source == "formula":
         failed, healthy = judge_formula(args.pipeline, args.tokens.split(), json.loads(os.environ["NEEDS"]))

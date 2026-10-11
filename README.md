@@ -69,22 +69,33 @@ brew untap jakobhviid/tap         # remove the tap entirely
 
 ## How this tap is maintained
 
+- **Nothing reaches `main` untested.** Every change made unattended goes
+  through the same three steps: propose it on a scratch branch, install and
+  test it on every platform it claims, and land each package that passed —
+  which is why version bumps land as commits like `temper 1.26.0`. One broken
+  package holds back only itself, and gets one GitHub issue (label
+  `ci-failure`) that closes itself once it passes again. No open issues means
+  everything is current.
 - **Formulae are generated, not hand-written.** Each tool's own release CI
-  regenerates its formula and commits it here, which is why version bumps land
-  as commits like `temper 1.26.0`. Bottles are built in CI, attached to that
-  tool's GitHub release, and pinned by `sha256` in the formula.
+  renders its formula and pushes it to `auto/formula-<name>` here, and the gate
+  workflow lands it once it installs and passes `brew test`. Bottles are built
+  in CI, attached to that tool's GitHub release, and pinned by `sha256` in the
+  formula.
+- **Casks are bumped daily** from upstream's releases, through the same steps.
+  A daily freshness check (`brew livecheck`) also flags any package left behind
+  upstream, in case whatever should have moved it has quietly stopped.
 - **The tool list above is generated too.** `scripts/gen-readme.py` reads every
   `Formula/*.rb` and `Casks/*.rb` and rewrites the table between the
-  `BEGIN TOOLS` / `END TOOLS` markers. A GitHub Actions workflow runs it on any
-  push that touches `Formula/` or `Casks/`, so the catalog can't drift —
-  nothing here is a hand-kept list.
+  `BEGIN TOOLS` / `END TOOLS` markers. Landing a package runs it, and so does
+  any other push that touches `Formula/` or `Casks/`, so the catalog can't
+  drift — nothing here is a hand-kept list.
   To refresh it locally: `python3 scripts/gen-readme.py` (or `--check` in CI).
 - **The `*craft-linux` casks share one template.** ArtCraft's Crafting Apps all
   come out of the same release pipeline, so `scripts/gen-craft-casks.py`
   renders the twelve casks from a single template plus the pins in
-  `scripts/craft-casks.json`. Edit those, not the casks — CI fails on drift. A
-  daily workflow runs `scripts/gen-craft-casks.py --bump` and lands the new pins
-  only after every Craft cask installs cleanly on both architectures. These are
+  `scripts/craft-casks.json`. Edit those, not the casks — CI fails on drift.
+  The daily bump moves each app's pin on its own and lands each app that
+  installs cleanly on both architectures. These are
   Linux only. On macOS, use the official homebrew/cask cask of the same name
   where one exists — PhotoCraft, VectorCraft, LightCraft and FilmCraft so far
   (`brew install --cask photocraft`).
