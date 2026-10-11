@@ -14,12 +14,14 @@ on:
       - "scripts/gen-craft-casks.py"
       - "scripts/craft-casks.json"
       - ".github/workflows/test-craft-casks.yml"
+      - ".github/actions/mount-tap/**"
   pull_request:
     paths:
       - "Casks/*craft-linux.rb"
       - "scripts/gen-craft-casks.py"
       - "scripts/craft-casks.json"
       - ".github/workflows/test-craft-casks.yml"
+      - ".github/actions/mount-tap/**"
   workflow_dispatch:
   # Why: the scheduled version bump calls this to validate a candidate commit on
   # both architectures before it is allowed anywhere near main.
@@ -81,36 +83,14 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             desktop-file-utils shared-mime-info gtk-update-icon-cache
 
-      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+      - uses: ./.github/actions/mount-tap
+        with:
+          ref: ${{ inputs.ref }}
+          verify: ${{ matrix.app }}-linux
 
-      - name: Restore the commit under test
-        run: |
-          # Why: setup-homebrew symlinks this checkout in as a tap and runs
-          # `brew update`, which hard-resets the working tree to origin/main —
-          # so a caller-supplied ref would otherwise be thrown away.
-          git checkout --force "${{ inputs.ref || github.sha }}"
-          git log --oneline -1
-
-      - name: Mount this checkout as the tap
-        run: |
-          set -x
-          # Same mounting as test-cask.yml; see there for why each step exists.
-          tap_dir="$(brew --repository jakobhviid/tap)"
-          if [ -L "$tap_dir" ]; then
-            echo "already linked -> $(readlink "$tap_dir")"
-          else
-            rm -rf "$tap_dir"
-            mkdir -p "$(dirname "$tap_dir")"
-            ln -s "$GITHUB_WORKSPACE" "$tap_dir"
-          fi
-          brew trust --tap jakobhviid/tap
-          # The tripwire: brew must report the version this checkout declares.
-          expected="$(sed -n 's/^  version "\(.*\)"$/\1/p' "Casks/$TOKEN.rb")"
-          actual="$(brew info --cask --json=v2 "jakobhviid/tap/$TOKEN" \
-            | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')"
-          echo "$TOKEN: checkout=$expected brew=$actual"
-          test "$expected" = "$actual"
-          echo "VERSION=$expected" >> "$GITHUB_ENV"
+      # The version the binaries must report, as the cask declares it.
+      - name: Read the pinned version
+        run: echo "VERSION=$(sed -n 's/^  version "\(.*\)"$/\1/p' "Casks/$TOKEN.rb")" >> "$GITHUB_ENV"
 
       - name: Audit
         run: |

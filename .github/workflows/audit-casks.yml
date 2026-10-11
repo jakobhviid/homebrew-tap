@@ -10,10 +10,12 @@ on:
     paths:
       - "Casks/**"
       - ".github/workflows/audit-casks.yml"
+      - ".github/actions/mount-tap/**"
   pull_request:
     paths:
       - "Casks/**"
       - ".github/workflows/audit-casks.yml"
+      - ".github/actions/mount-tap/**"
   # Why a schedule: Homebrew adds and tightens cops on its own release cadence,
   # so a cask nobody has touched can start failing. Weekly finds that before the
   # next bump of that cask does.
@@ -45,30 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
-
-      - name: Restore the commit under test
-        run: |
-          # Why: setup-homebrew symlinks this checkout in as a tap and runs
-          # `brew update`, which hard-resets the working tree to origin/main.
-          git checkout --force "${{ github.sha }}"
-          git log --oneline -1
-
-      - name: Mount this checkout as the tap
-        run: |
-          set -x
-          # Why `brew --repository <tap>`: it is what brew itself resolves the
-          # tap to, which differs between macOS and linuxbrew layouts.
-          tap_dir="$(brew --repository jakobhviid/tap)"
-          if [ -L "$tap_dir" ]; then
-            echo "already linked -> $(readlink "$tap_dir")"
-          else
-            rm -rf "$tap_dir"
-            mkdir -p "$(dirname "$tap_dir")"
-            ln -s "$GITHUB_WORKSPACE" "$tap_dir"
-          fi
-          brew trust --tap jakobhviid/tap
-          brew tap-info jakobhviid/tap
+      - uses: ./.github/actions/mount-tap
 
       # Why one loop that keeps going: a failure in one cask must not hide the
       # state of the rest, so every cask is checked and the step fails at the end
