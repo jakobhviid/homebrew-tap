@@ -1,0 +1,70 @@
+name: Land what passed
+
+# The last stage of every pipeline that changes the tap unattended — the cask
+# bumps and the formula gate. scripts/finish.py lands each package that passed
+# its tests onto the current main, reports each that did not as an issue, and
+# deletes the candidate branch. Callers run it with `if: always()` and pass in
+# how their propose and validate stages ended.
+on:
+  workflow_call:
+    inputs:
+      pipeline:
+        description: "Issue key for failures no single package owns."
+        type: string
+        required: true
+      tokens:
+        description: "Space-separated packages this pipeline covers."
+        type: string
+        required: true
+      source:
+        description: "Issue kind: bump, or formula for the formula gate."
+        type: string
+        default: bump
+      candidate:
+        description: "Scratch branch holding the candidate commit."
+        type: string
+        default: ""
+      sha:
+        type: string
+        default: ""
+      moved:
+        type: string
+        default: ""
+      broken:
+        type: string
+        default: ""
+      propose-result:
+        type: string
+        required: true
+      validate-result:
+        type: string
+        default: skipped
+
+jobs:
+  finish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      # Lists this run's jobs, to pin a failed test job on its package.
+      actions: read
+    steps:
+      # The scripts as of the commit this run started from. Landing does not use
+      # this tree: finish.py builds each commit on a fresh checkout of main.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Land what passed and report the rest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PIPELINE: ${{ inputs.pipeline }}
+          TOKENS: ${{ inputs.tokens }}
+          SOURCE: ${{ inputs.source }}
+          CANDIDATE: ${{ inputs.candidate }}
+          SHA: ${{ inputs.sha }}
+          MOVED: ${{ inputs.moved }}
+          BROKEN: ${{ inputs.broken }}
+          PROPOSE_RESULT: ${{ inputs.propose-result }}
+          VALIDATE_RESULT: ${{ inputs.validate-result }}
+        run: python3 scripts/finish.py

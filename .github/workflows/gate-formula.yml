@@ -1,0 +1,63 @@
+name: Land a formula
+
+# Why: the tool repos' release pipelines write their formulae, and used to push
+# them straight to main — so a formula reached users before anything here had
+# installed it. They now push to a candidate branch, auto/formula-<name>, and
+# this tests it on every platform it claims and lands it only if it passes,
+# the same propose -> test -> land a cask bump goes through. A failure leaves
+# main on the last good formula and opens `<name>: formula check failing`; the
+# tool's own release is unaffected either way.
+on:
+  push:
+    branches: ["auto/formula-*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  # A newer push to the same candidate branch supersedes the one in flight.
+  group: gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  propose:
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.name.outputs.name }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Read which formula this candidate carries
+        id: name
+        run: |
+          name="${GITHUB_REF_NAME#auto/formula-}"
+          if [ ! -f "Formula/$name.rb" ]; then
+            echo "::error::$GITHUB_REF_NAME carries no Formula/$name.rb"
+            exit 1
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+  validate:
+    needs: propose
+    uses: ./.github/workflows/formula-check.yml
+    with:
+      ref: ${{ github.sha }}
+      formulae: ${{ needs.propose.outputs.name }}
+
+  finish:
+    needs: [propose, validate]
+    if: always()
+    uses: ./.github/workflows/_finish.yml
+    permissions:
+      contents: write
+      issues: write
+      actions: read
+    with:
+      # A branch that names no formula fails in propose, before there is a name.
+      pipeline: ${{ needs.propose.outputs.name || github.ref_name }}
+      tokens: ${{ needs.propose.outputs.name }}
+      source: formula
+      candidate: ${{ github.ref_name }}
+      sha: ${{ github.sha }}
+      moved: ${{ needs.propose.outputs.name }}
+      propose-result: ${{ needs.propose.result }}
+      validate-result: ${{ needs.validate.result }}

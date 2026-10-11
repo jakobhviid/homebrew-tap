@@ -23,6 +23,18 @@ on:
   schedule:
     - cron: "30 5 * * 1"
   workflow_dispatch:
+  # Why: the formula gate calls this to test a formula a tool repo proposed,
+  # before it is allowed onto main. The gate reports the outcome itself.
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit to test."
+        type: string
+        required: true
+      formulae:
+        description: "Space-separated formulae to test."
+        type: string
+        required: true
 
 # No concurrency group: GitHub keeps only one pending run per group and cancels
 # the rest, so formula pushes landing back to back would go untested.
@@ -41,17 +53,25 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
       - name: Pick the formulae this run covers
         id: pick
         env:
           BEFORE: ${{ github.event.before }}
+          ASKED: ${{ inputs.formulae }}
         run: |
           picked="$(find Formula -maxdepth 1 -name '*.rb' -exec basename {} .rb \; | sort)"
+          if [ -n "$ASKED" ]; then
+            for name in $ASKED; do
+              [ -f "Formula/$name.rb" ] || { echo "::error::no Formula/$name.rb at this commit"; exit 1; }
+            done
+            picked="$(echo "$ASKED" | tr ' ' '\n')"
+          fi
           # A push that changed formulae narrows to those still present. One that
           # changed none (this workflow, a deletion) or whose `before` is not in
           # the history (a new branch, a force-push) tests everything.
-          if [ "$GITHUB_EVENT_NAME" = push ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+          if [ -z "$ASKED" ] && [ "$GITHUB_EVENT_NAME" = push ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
             changed="$(git diff --name-only "$BEFORE" "$GITHUB_SHA" -- 'Formula/*.rb' \
               | while read -r path; do [ -f "$path" ] && basename "$path" .rb; done | sort)"
             if [ -n "$changed" ]; then picked="$changed"; fi
@@ -82,9 +102,12 @@ jobs:
       FORMULA: jakobhviid/tap/${{ matrix.formula }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
 
       - uses: ./.github/actions/mount-tap
         with:
+          ref: ${{ inputs.ref }}
           verify: ${{ matrix.formula }}
 
       # Why from brew's own reading of the formula: `depends_on :linux` and
@@ -138,7 +161,9 @@ jobs:
   # whoever opened them.
   report:
     needs: [select, formula]
-    if: always() && github.event_name != 'pull_request'
+    # The gate runs on its candidate branches (auto/formula-*) and reports
+    # through _finish instead.
+    if: always() && github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/heads/auto/')
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -23,12 +23,24 @@ on:
       - ".github/workflows/test-craft-casks.yml"
       - ".github/actions/mount-tap/**"
   workflow_dispatch:
+    inputs:
+      tokens:
+        description: "Space-separated cask tokens to test. Empty tests every app."
+        type: string
+        required: false
   # Why: the scheduled version bump calls this to validate a candidate commit on
   # both architectures before it is allowed anywhere near main.
   workflow_call:
     inputs:
       ref:
         description: "Commit or branch to test. Defaults to the triggering ref."
+        type: string
+        required: false
+      # Why: a bump passes only the apps it moved. The others are already on
+      # main as they are, so testing them again only adds failures that hold
+      # nothing back.
+      tokens:
+        description: "Space-separated cask tokens to test. Empty tests every app."
         type: string
         required: false
 
@@ -45,22 +57,43 @@ concurrency:
 jobs:
   # Why: the casks are generated files. A hand edit to one would be silently
   # reverted by the next bump, so it fails here instead.
+  # It also picks the apps the matrix covers.
   generated:
     runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.pick.outputs.apps }}
     steps:
       - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref }}
       - name: Casks match the template and pins
         run: python3 scripts/gen-craft-casks.py --check
+      - name: Pick the apps this run covers
+        id: pick
+        env:
+          TOKENS: ${{ inputs.tokens }}
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+          known = list(json.load(open("scripts/craft-casks.json")))
+          wanted = [t.removesuffix("-linux") for t in os.environ["TOKENS"].split()]
+          unknown = sorted(set(wanted) - set(known))
+          if unknown:
+              # An error rather than a smaller matrix, so a typo cannot pass by
+              # testing nothing.
+              sys.exit(f"::error::not a Craft app: {' '.join(unknown)}")
+          apps = [a for a in known if not wanted or a in wanted]
+          print("testing:", " ".join(apps))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"apps={json.dumps(apps)}\n")
+          PY
 
   cask:
     needs: generated
     strategy:
       fail-fast: false
       matrix:
-        app: [photocraft, vectorcraft, pdfcraft, lightcraft, filmcraft, effectcraft,
-              designcraft, wordcraft, gridcraft, deckcraft, cadcraft, soundcraft]
+        app: ${{ fromJSON(needs.generated.outputs.apps) }}
         runner: [ubuntu-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
     env:

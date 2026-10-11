@@ -1,0 +1,70 @@
+name: Propose a bump
+
+# The first stage of every cask bump: move each cask to upstream's latest on
+# its own (scripts/propose.py), and push whatever moved to a scratch branch for
+# the caller's test suite. A cask whose feed cannot be read is reported broken
+# and the rest carry on. The caller then tests the candidate and hands it to
+# _finish.yml, which lands what passed.
+on:
+  workflow_call:
+    inputs:
+      kind:
+        description: "Which bump script: github, claude, proton or craft."
+        type: string
+        required: true
+      tokens:
+        description: "Space-separated casks this pipeline bumps."
+        type: string
+        required: true
+      candidate:
+        description: "Scratch branch the candidate commit is pushed to."
+        type: string
+        required: true
+    outputs:
+      sha:
+        description: "The candidate commit, or empty when nothing moved."
+        value: ${{ jobs.propose.outputs.sha }}
+      moved:
+        value: ${{ jobs.propose.outputs.moved }}
+      broken:
+        value: ${{ jobs.propose.outputs.broken }}
+
+jobs:
+  propose:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.push.outputs.sha }}
+      moved: ${{ steps.bump.outputs.moved }}
+      broken: ${{ steps.bump.outputs.broken }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Move each cask to upstream's latest
+        id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/propose.py ${{ inputs.kind }} ${{ inputs.tokens }}
+
+      - name: Push the candidate to a scratch branch
+        id: push
+        if: steps.bump.outputs.moved != ''
+        env:
+          # Why through env, not `${{ }}` in the script: the message is built
+          # from upstream's version strings, and an expression is pasted into
+          # the shell verbatim — a crafted tag would run as code.
+          MESSAGE: ${{ steps.bump.outputs.message }}
+          CANDIDATE: ${{ inputs.candidate }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A Casks scripts/craft-casks.json
+          git commit -m "$MESSAGE"
+          # Force-push: the branch is scratch space for this run only. _finish
+          # lands the tested files onto whatever main is by then, so it does not
+          # matter if main moves after this.
+          git push --force origin "HEAD:refs/heads/$CANDIDATE"
+          # An immutable sha, so validation cannot pick up a different commit
+          # than the one proposed here.
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"

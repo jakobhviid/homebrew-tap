@@ -17,112 +17,42 @@ concurrency:
   group: bump-orca
   cancel-in-progress: false
 
-env:
-  CANDIDATE_BRANCH: auto/bump-orca-linux
-
+# The shape every bump shares: _propose moves each cask on its own and pushes
+# what moved to a scratch branch; the suite below tests that commit; _finish
+# lands each cask that passed onto main and keeps one issue per broken cask.
 jobs:
   propose:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/_propose.yml
     permissions:
       contents: write
-    outputs:
-      bump: ${{ steps.bump.outputs.bump }}
-      version: ${{ steps.bump.outputs.version }}
-      sha: ${{ steps.push.outputs.sha }}
-    steps:
-      - uses: actions/checkout@v5
+    with:
+      kind: github
+      tokens: >-
+        orca-linux
+      candidate: auto/bump-orca-linux
 
-      - name: Rewrite the cask if upstream moved
-        id: bump
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          python3 scripts/bump-cask.py Casks/orca-linux.rb
-          if git diff --quiet -- Casks/orca-linux.rb; then
-            echo "bump=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          version="$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/orca-linux.rb)"
-          echo "bump=true" >> "$GITHUB_OUTPUT"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          git diff -- Casks/orca-linux.rb
-
-      - name: Push the candidate to a throwaway branch
-        id: push
-        if: steps.bump.outputs.bump == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Casks/orca-linux.rb
-          git commit -m "orca-linux ${{ steps.bump.outputs.version }}"
-          # Force-push: the branch is scratch space for this run only, and it is
-          # branched from the current main so landing it stays a fast-forward.
-          git push --force origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
-          # An immutable sha, so validation cannot pick up a different commit
-          # than the one that was measured here.
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-  # Why reuse the suite rather than a smoke test: a version bump is exactly the
-  # case where upstream can move the desktop file, the icon set, the CLI shim or
-  # the updater layout out from under the cask, and each of those has its own
-  # assertion in there.
   validate:
     needs: propose
-    if: needs.propose.outputs.bump == 'true'
+    if: needs.propose.outputs.moved != ''
     uses: ./.github/workflows/test-cask.yml
     with:
       ref: ${{ needs.propose.outputs.sha }}
 
-  land:
+  finish:
     needs: [propose, validate]
-    if: needs.propose.outputs.bump == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ needs.propose.outputs.sha }}
-          fetch-depth: 0
-      - name: Fast-forward main and drop the branch
-        run: |
-          # Push the validated sha itself, not a branch that could have moved.
-          git push origin "${{ needs.propose.outputs.sha }}:refs/heads/main"
-          git push origin --delete "$CANDIDATE_BRANCH"
-          echo "Landed orca-linux ${{ needs.propose.outputs.version }} on main."
-
-  # Why: without this the branch survives a failed validation and the next run's
-  # force-push would silently rebase a candidate nobody looked at.
-  cleanup:
-    needs: [propose, validate]
-    if: always() && needs.propose.outputs.bump == 'true' && needs.validate.result != 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v5
-      - name: Delete the rejected candidate
-        run: |
-          git push origin --delete "$CANDIDATE_BRANCH" || true
-          echo "::error::orca-linux ${{ needs.propose.outputs.version }} failed validation; main left at its previous version."
-          exit 1
-
-  # Why: nobody watches these runs, so their outcome becomes one issue per broken
-  # cask — opened on the first failure, rewritten quietly on each repeat, closed
-  # by the next run that passes. See scripts/report-ci.py.
-  report:
-    needs: [propose, validate, land, cleanup]
     if: always()
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/_finish.yml
     permissions:
-      contents: read
+      contents: write
       issues: write
-      # Lists this run's jobs, to pin a failed test job on its cask.
       actions: read
-    steps:
-      - uses: actions/checkout@v5
-      - name: Open, update or close the failure issue
-        env:
-          GH_TOKEN: ${{ github.token }}
-          NEEDS: ${{ toJSON(needs) }}
-        run: python3 scripts/report-ci.py bump --pipeline orca-linux --tokens orca-linux
+    with:
+      pipeline: orca-linux
+      tokens: >-
+        orca-linux
+      candidate: auto/bump-orca-linux
+      sha: ${{ needs.propose.outputs.sha }}
+      moved: ${{ needs.propose.outputs.moved }}
+      broken: ${{ needs.propose.outputs.broken }}
+      propose-result: ${{ needs.propose.result }}
+      validate-result: ${{ needs.validate.result }}
