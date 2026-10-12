@@ -15,6 +15,7 @@ on:
       - "scripts/craft-casks.json"
       - ".github/workflows/test-craft-casks.yml"
       - ".github/actions/mount-tap/**"
+      - ".github/actions/fetch/**"
   pull_request:
     paths:
       - "Casks/*craft-linux.rb"
@@ -22,6 +23,7 @@ on:
       - "scripts/craft-casks.json"
       - ".github/workflows/test-craft-casks.yml"
       - ".github/actions/mount-tap/**"
+      - ".github/actions/fetch/**"
   workflow_dispatch:
     inputs:
       tokens:
@@ -129,6 +131,11 @@ jobs:
         run: |
           brew audit --cask --strict "jakobhviid/tap/$TOKEN"
           brew style --cask "jakobhviid/tap/$TOKEN"
+
+      - uses: ./.github/actions/fetch
+        with:
+          package: jakobhviid/tap/${{ env.TOKEN }}
+          kind: cask
 
       - name: Install
         run: brew install --cask "jakobhviid/tap/$TOKEN"

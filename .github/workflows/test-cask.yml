@@ -11,11 +11,13 @@ on:
       - "Casks/orca-linux.rb"
       - ".github/workflows/test-cask.yml"
       - ".github/actions/mount-tap/**"
+      - ".github/actions/fetch/**"
   pull_request:
     paths:
       - "Casks/orca-linux.rb"
       - ".github/workflows/test-cask.yml"
       - ".github/actions/mount-tap/**"
+      - ".github/actions/fetch/**"
   workflow_dispatch:
   # Why: the scheduled version bump calls this to validate a candidate commit on
   # both architectures before it is allowed anywhere near main.
@@ -85,6 +87,11 @@ jobs:
         run: |
           brew audit --cask --strict jakobhviid/tap/orca-linux
           brew style --cask jakobhviid/tap/orca-linux
+
+      - uses: ./.github/actions/fetch
+        with:
+          package: jakobhviid/tap/orca-linux
+          kind: cask
 
       - name: Install
         run: brew install --cask jakobhviid/tap/orca-linux
