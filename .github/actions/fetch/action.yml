@@ -1,0 +1,38 @@
+name: Download with retries
+description: >
+  Download a formula or cask (and a formula's dependencies) into brew's cache,
+  trying up to three times, so the install step after it reads from the cache.
+  Only the download is retried: a package that downloads but will not install
+  still fails once, at the install step.
+
+inputs:
+  package:
+    description: "Fully qualified name, e.g. jakobhviid/tap/grove."
+    required: true
+  kind:
+    description: "formula or cask."
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # Why: GitHub's release downloads now and then answer with a 500 that is
+    # gone a minute later. One of those failed grove's scheduled check and
+    # opened an issue for a formula that had nothing wrong with it.
+    - name: Download ${{ inputs.package }}
+      shell: bash
+      env:
+        PACKAGE: ${{ inputs.package }}
+        KIND: ${{ inputs.kind }}
+      run: |
+        args=(--"$KIND")
+        if [ "$KIND" = formula ]; then args+=(--deps); fi
+        for attempt in 1 2 3; do
+          brew fetch "${args[@]}" "$PACKAGE" && exit 0
+          if [ "$attempt" -lt 3 ]; then
+            echo "::warning::Download of $PACKAGE failed (attempt $attempt of 3); retrying in 10s"
+            sleep 10
+          fi
+        done
+        echo "::error::Download of $PACKAGE failed 3 times"
+        exit 1

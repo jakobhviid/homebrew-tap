@@ -13,11 +13,13 @@ on:
       - "Casks/paseo-linux.rb"
       - ".github/workflows/test-paseo-cask.yml"
       - ".github/actions/mount-tap/**"
+      - ".github/actions/fetch/**"
   pull_request:
     paths:
       - "Casks/paseo-linux.rb"
       - ".github/workflows/test-paseo-cask.yml"
       - ".github/actions/mount-tap/**"
+      - ".github/actions/fetch/**"
   workflow_dispatch:
   # Why: the scheduled version bump calls this to validate a candidate commit
   # before it is allowed anywhere near main.
@@ -80,6 +82,11 @@ jobs:
         run: |
           brew audit --cask --strict jakobhviid/tap/paseo-linux
           brew style --cask jakobhviid/tap/paseo-linux
+
+      - uses: ./.github/actions/fetch
+        with:
+          package: jakobhviid/tap/paseo-linux
+          kind: cask
 
       - name: Install
         run: brew install --cask jakobhviid/tap/paseo-linux

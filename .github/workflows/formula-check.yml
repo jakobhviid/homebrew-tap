@@ -13,11 +13,13 @@ on:
       - "Formula/**"
       - ".github/workflows/formula-check.yml"
       - ".github/actions/mount-tap/**"
+      - ".github/actions/fetch/**"
   pull_request:
     paths:
       - "Formula/**"
       - ".github/workflows/formula-check.yml"
       - ".github/actions/mount-tap/**"
+      - ".github/actions/fetch/**"
   # Why a schedule: a formula nobody touched can break when Homebrew tightens an
   # audit, a dependency moves, or a runner image changes. Weekly checks them all.
   schedule:
@@ -152,6 +154,12 @@ jobs:
         if: steps.platform.outputs.supported == 'true' && matrix.runner == 'ubuntu-latest'
         continue-on-error: true
         run: brew style --formula "$FORMULA"
+
+      - uses: ./.github/actions/fetch
+        if: steps.platform.outputs.supported == 'true'
+        with:
+          package: ${{ env.FORMULA }}
+          kind: formula
 
       - name: Install
         id: install

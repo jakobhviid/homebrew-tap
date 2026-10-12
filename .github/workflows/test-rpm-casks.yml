@@ -14,12 +14,14 @@ on:
       - "Casks/claude-desktop-linux.rb"
       - ".github/workflows/test-rpm-casks.yml"
       - ".github/actions/mount-tap/**"
+      - ".github/actions/fetch/**"
   pull_request:
     paths:
       - "Casks/proton-*-linux.rb"
       - "Casks/claude-desktop-linux.rb"
       - ".github/workflows/test-rpm-casks.yml"
       - ".github/actions/mount-tap/**"
+      - ".github/actions/fetch/**"
   workflow_dispatch:
     inputs:
       tokens:
@@ -192,6 +194,11 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
           verify: ${{ matrix.token }}
+
+      - uses: ./.github/actions/fetch
+        with:
+          package: jakobhviid/tap/${{ matrix.token }}
+          kind: cask
 
       - name: Install
         run: brew install --cask "jakobhviid/tap/${{ matrix.token }}"
