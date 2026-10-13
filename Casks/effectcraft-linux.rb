@@ -3,9 +3,9 @@
 cask "effectcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.8.0"
-  sha256 arm64_linux:  "67783fe65532879e13aeba440a8b0f260b0fbdc9b36e991181720bda67aeb27e",
-         x86_64_linux: "725c88cf379122d70f941dd3edacb54479d63ff1e2a00fae318eaee02ad762c4"
+  version "0.9.2"
+  sha256 arm64_linux:  "3efab284d4f06380a0f36d9e8d21cafc9a05e505607cdacb8beb6d37b932d160",
+         x86_64_linux: "916d35d7dc0fd5650b57f576e6556256d05dedf93e83a9740c1892319bb4ac1c"
 
   url "https://github.com/storytold/effectcraft/releases/download/v#{version}/effectcraft-#{version}-linux-#{arch}.tar.gz"
   name "EffectCraft"
