@@ -3,9 +3,9 @@
 cask "filmcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.7.2"
-  sha256 arm64_linux:  "4af56f649a6fb19dcae386abd59921ec6c9190b725014517075fa4d81123c68a",
-         x86_64_linux: "4171c4bf5f57fd29475655f8a6df4719feda8c8f3ed95b2475d8dc112ad3be86"
+  version "0.8.0"
+  sha256 arm64_linux:  "1afe2ac3c6013b7c36eedd1bfbdeafc173ce5d470a35f1ddfe7e1faac503c0e6",
+         x86_64_linux: "b166877905ae8a1b5505066d6dde60d7ce05831cfb309bacd5d7970f4bb017e1"
 
   url "https://github.com/storytold/filmcraft/releases/download/v#{version}/filmcraft-#{version}-linux-#{arch}.tar.gz"
   name "FilmCraft"
