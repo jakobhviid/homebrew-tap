@@ -2,15 +2,18 @@
 """Generate the ArtCraft "Crafting Apps" Linux casks from one template.
 
 ArtCraft (github.com/storytold) ships a family of clean-room desktop apps —
-PhotoCraft, PdfCraft, GridCraft and so on — that all come out of the same
+PhotoCraft, PdfCraft, GridCraft, FigCraft and so on — that all come out of the same
 release pipeline: identical asset names, an identical tarball layout, the same
-desktop-integration files. Hand-keeping a dozen casks that differ only by name
+desktop-integration files. Hand-keeping thirteen casks that differ only by name
 would let them drift, so they are rendered from the template below instead.
+ArtCraft Launcher, which installs and updates the apps itself, comes out of the
+same pipeline and is rendered here too, with the few differences APPS records.
 
 Two inputs, split by who writes them:
 
-  * APPS, below — the hand-edited part: display name, desc, homepage and the
-    per-app data directories `zap` clears.
+  * APPS, below — the hand-edited part: display name, desc, homepage, the
+    per-app data directories `zap` clears, and where an app departs from the
+    family's shape.
   * scripts/craft-casks.json — the machine-written part: the pinned version,
     both architectures' sha256, and the file manifest read out of that version's
     tarball (binaries, desktop entry, icons, MIME packages). Artifacts are
@@ -63,11 +66,16 @@ ARCHES = {"arm64_linux": "aarch64", "x86_64_linux": "x86_64"}
 # `zap` lists only directories the app creates for itself, read out of each
 # app's source: they disagree on config vs data dir (PdfCraft and FilmCraft keep
 # everything under ~/.local/share, eframe-style), and the Linux spelling is
-# lowercase even where macOS uses "Photocraft". Shared locations an app merely
+# lowercase even where macOS uses "Photocraft" — except FigCraft, whose
+# ~/.config/FigCraft keeps macOS's capitals. Shared locations an app merely
 # reads or defaults user content into — ~/.local/share/fonts, ~/.clap,
 # ~/Pictures/LightCraft Library, ~/Documents/EffectCraft — are deliberately
 # absent: zapping one would delete the user's own files. CADCraft writes no
 # per-user state at all, so its cask has no zap stanza.
+#
+# Two optional keys cover the launcher, the one entry that is not itself a
+# Crafting App: `repo`, when the GitHub repository is not named after the
+# assets, and `launcher`, which swaps the GUI-plus-CLI notes for its own.
 APPS: dict[str, dict] = {
     "photocraft": {
         "name": "PhotoCraft",
@@ -114,32 +122,57 @@ APPS: dict[str, dict] = {
     "wordcraft": {
         "name": "WordCraft",
         "desc": "Microsoft Word-style word processor",
-        "homepage": "https://github.com/storytold/wordcraft",
+        "homepage": "https://getartcraft.com/apps/wordcraft",
         "zap": ["~/.config/wordcraft"],
     },
     "gridcraft": {
         "name": "GridCraft",
         "desc": "Microsoft Excel-style spreadsheet",
-        "homepage": "https://github.com/storytold/gridcraft",
+        "homepage": "https://getartcraft.com/apps/gridcraft",
         "zap": ["~/.config/gridcraft"],
     },
     "deckcraft": {
         "name": "DeckCraft",
         "desc": "Microsoft PowerPoint-style presentation app",
-        "homepage": "https://github.com/storytold/deckcraft",
+        "homepage": "https://getartcraft.com/apps/deckcraft",
         "zap": ["~/.config/deckcraft", "~/.local/share/deckcraft"],
     },
     "cadcraft": {
         "name": "CADCraft",
         "desc": "AutoCAD-style 2D drafting and design app",
-        "homepage": "https://github.com/storytold/cadcraft",
+        "homepage": "https://getartcraft.com/apps/cadcraft",
         "zap": [],
     },
     "soundcraft": {
         "name": "SoundCraft",
         "desc": "Pro Tools-style digital audio workstation",
-        "homepage": "https://github.com/storytold/soundcraft",
+        "homepage": "https://getartcraft.com/apps/soundcraft",
         "zap": ["~/.config/soundcraft"],
+    },
+    "figcraft": {
+        "name": "FigCraft",
+        "desc": "Figma-style interface design and prototyping app",
+        "homepage": "https://getartcraft.com/apps/figcraft",
+        "zap": ["~/.config/FigCraft"],
+    },
+    # The repository is craft-launcher, but the assets, binary and desktop
+    # entry are all artcraft-launcher. It ships no CLI and registers no file
+    # types. `zap` clears its install records and logs, its settings (eframe's
+    # app.ron, under the app id), its cache, and the login entry it writes when
+    # "Start at login" is on. Apps it installed are left alone: they live in
+    # ~/Applications or the system's package manager, not in its folders.
+    "artcraft-launcher": {
+        "name": "ArtCraft Launcher",
+        "desc": "Installer and updater for the ArtCraft Crafting Apps",
+        "homepage": "https://github.com/storytold/craft-launcher",
+        "repo": "craft-launcher",
+        "launcher": True,
+        "zap": [
+            "~/.cache/artcraft-launcher",
+            "~/.config/autostart/ai.storyteller.artcraft-launcher.desktop",
+            "~/.local/share/ai.storyteller.artcraft-launcher",
+            "~/.local/share/artcraft-launcher",
+        ],
     },
 }
 
@@ -153,7 +186,7 @@ cask "{token}" do
   sha256 arm64_linux:  "{sha_arm64}",
          x86_64_linux: "{sha_x86_64}"
 
-  url "https://github.com/{owner}/{app}/releases/download/v#{{version}}/{app}-#{{version}}-linux-#{{arch}}.tar.gz"
+  url "https://github.com/{owner}/{repo}/releases/download/v#{{version}}/{app}-#{{version}}-linux-#{{arch}}.tar.gz"
   name "{name}"
   desc "{desc}"
   homepage "{homepage}"
@@ -163,16 +196,9 @@ cask "{token}" do
     strategy :github_latest
   end
 
-  # Why: upstream's macOS build is a separate .dmg, which belongs in the
-  # official homebrew/cask cask of the same name, not here. That cask also
-  # covers Linux, with the AppImage as it ships; this one is the integrated
-  # install from the tarball. The tarball is Linux ELF, so refuse to install
-  # anywhere else.
+{platform_note}
   depends_on linux: :any
 
-  # Why both: the first is the GUI and the second is upstream's headless
-  # command-line and MCP front end to the same engine, under the names the .deb
-  # and .rpm install to /usr/bin.
 {binaries}
   # Why upstream's reverse-DNS file names are kept: on Wayland the compositor
   # finds a window's launcher, and so its dock icon, by matching the window's
@@ -185,13 +211,13 @@ cask "{token}" do
     # login shells that source brew's shellenv have it. Pointing Exec at the bin symlink keeps the
     # entry working across upgrades and keeps upstream's own arguments (%F).
     # No `audit_result: false`: an entry with no Exec line is a broken payload.
-    inreplace "{root_step}/share/applications/{desktop_id}.desktop",
+    inreplace {desktop_path},
               /^Exec=\\S+/,
               "Exec={{{{HOMEBREW_PREFIX}}}}/bin/{app}"
     # Why TryExec too: a TryExec the shell cannot resolve hides the entry
     # outright, so leaving it bare would undo the Exec fix above. Not every app
     # sets one, hence `audit_result: false`.
-    inreplace "{root_step}/share/applications/{desktop_id}.desktop",
+    inreplace {desktop_path},
               /^TryExec=.*$/,
               "TryExec={{{{HOMEBREW_PREFIX}}}}/bin/{app}",
               audit_result: false
@@ -218,6 +244,30 @@ cask "{token}" do
     Homebrew owns this install's version. Upgrade with:
       brew upgrade --cask {token}
 
+{caveats}
+  EOS
+end
+'''
+
+# The parts of the cask that differ between a Crafting App and the launcher.
+APP_PLATFORM_NOTE = '''\
+  # Why: upstream's macOS build is a separate .dmg, which belongs in the
+  # official homebrew/cask cask of the same name, not here. That cask also
+  # covers Linux, with the AppImage as it ships; this one is the integrated
+  # install from the tarball. The tarball is Linux ELF, so refuse to install
+  # anywhere else.'''
+
+LAUNCHER_PLATFORM_NOTE = '''\
+  # Why: the tarball is Linux ELF, so refuse to install anywhere else. Upstream's
+  # macOS build is a separate .dmg, which would belong in homebrew/cask.'''
+
+APP_BINARY_NOTE = '''\
+  # Why both: the first is the GUI and the second is upstream's headless
+  # command-line and MCP front end to the same engine, under the names the .deb
+  # and .rpm install to /usr/bin.
+'''
+
+APP_CAVEATS = '''\
     `{app}` is the GUI and `{app}-cli` its command-line and MCP front end.
     The CLI needs nothing beyond glibc. The GUI loads its windowing and
     graphics stack at run time — Wayland or X11, libxkbcommon, and Vulkan or
@@ -227,10 +277,29 @@ cask "{token}" do
     cask installs on Linux — it registered its own launcher and icons under
     ~/.local/share/applications and ~/.local/share/icons, and this install
     will refuse to overwrite them. Use one of the two, not both; reinstall this
-    one with --force to take them over.
-  EOS
-end
-'''
+    one with --force to take them over.'''
+
+# Why these three paragraphs, all read out of the launcher's source: it cannot
+# replace a copy it did not install, so its update notice only links to the
+# release page; it sees apps on PATH, the *craft-linux casks' included, and
+# leaves those to whatever installed them; and "Start at login" writes the
+# resolved path of the running binary, which under brew is versioned.
+LAUNCHER_CAVEATS = '''\
+    Apps you install from the launcher are not managed by Homebrew. It
+    installs them in the system's own formats — a .deb or .rpm system-wide;
+    on rpm-ostree systems such as Fedora Atomic, a Flatpak, or else an
+    AppImage in ~/Applications — and updates and removes them itself. Apps
+    installed with this tap's *craft-linux casks show up in the launcher,
+    which opens them but leaves updating them to Homebrew. Install each app
+    one way or the other, not both.
+
+    "Start at login" records the path of this version of the launcher, which
+    the next `brew upgrade` removes. After upgrading, turn it off and on again
+    in the launcher's settings.
+
+    The launcher loads its windowing and graphics stack at run time — Wayland
+    or X11, libxkbcommon, and Vulkan or EGL — which any desktop session
+    already has and Homebrew cannot supply.'''
 
 REFRESH = '''\
     run "update-desktop-database",
@@ -257,13 +326,20 @@ def token(app: str) -> str:
     return f"{app}-linux"
 
 
+def repo(app: str) -> str:
+    return APPS[app].get("repo", app)
+
+
 def render(app: str, pin: dict) -> str:
     meta = APPS[app]
     root = f"{app}-#{{version}}-linux-#{{arch}}"
     root_step = f"{app}-{{{{version}}}}-linux-{{{{arch}}}}"
     manifest = pin["manifest"]
 
+    launcher = meta.get("launcher", False)
     binaries = "\n".join(f'  binary "{root}/bin/{b}"' for b in manifest["bin"])
+    if not launcher:
+        binaries = APP_BINARY_NOTE + binaries
 
     def artifact(rel: str) -> str:
         return f'  artifact "{root}/share/{rel}",\n           target: "#{{Dir.home}}/.local/share/{rel}"'
@@ -272,6 +348,12 @@ def render(app: str, pin: dict) -> str:
     shared += [f"icons/hicolor/{i}" for i in manifest["icons"]]
     shared += [f"mime/packages/{m}" for m in manifest["mime"]]
     artifacts = "\n".join(artifact(rel) for rel in shared)
+
+    # Why the split: brew style caps lines at 118 columns, which the launcher's
+    # long name overruns. The shorter names stay on one line.
+    desktop_path = f'"{root_step}/share/applications/{manifest['desktop']}"'
+    if len(f"    inreplace {desktop_path},") > 118:
+        desktop_path = f'"{root_step}/share/applications/" \\\n              "{manifest['desktop']}"'
 
     zap_paths = meta["zap"]
     if not zap_paths:
@@ -285,16 +367,19 @@ def render(app: str, pin: dict) -> str:
         token=token(app),
         app=app,
         owner=REPO_OWNER,
+        repo=repo(app),
+        platform_note=LAUNCHER_PLATFORM_NOTE if launcher else APP_PLATFORM_NOTE,
+        caveats=LAUNCHER_CAVEATS if launcher else APP_CAVEATS.format(app=app),
         name=meta["name"],
         desc=meta["desc"],
         homepage=meta["homepage"],
         version=pin["version"],
         sha_arm64=pin["sha256"]["arm64_linux"],
         sha_x86_64=pin["sha256"]["x86_64_linux"],
-        desktop_id=manifest["desktop"].removesuffix(".desktop"),
         binaries=binaries,
         artifacts=artifacts,
         root_step=root_step,
+        desktop_path=desktop_path,
         refresh=REFRESH,
         zap=zap,
     )
@@ -347,7 +432,7 @@ class HashingReader(io.RawIOBase):
 def read_manifest(app: str, version: str, expected_sha: str) -> dict:
     """List the x86_64 tarball's payload without writing it to disk."""
     root = f"{app}-{version}-linux-x86_64"
-    url = f"https://github.com/{REPO_OWNER}/{app}/releases/download/v{version}/{root}.tar.gz"
+    url = f"https://github.com/{REPO_OWNER}/{repo(app)}/releases/download/v{version}/{root}.tar.gz"
     files: list[str] = []
     with get(url, timeout=600) as response:
         reader = HashingReader(response)
@@ -378,10 +463,12 @@ def read_manifest(app: str, version: str, expected_sha: str) -> dict:
         "icons": under("share/icons/hicolor/", (".png", ".svg")),
         "mime": under("share/mime/packages/", (".xml",)),
     }
-    # The template assumes upstream's shape: the two binaries it documents and
-    # exactly one launcher. Anything else is a packaging change a human should
-    # look at, so fail the bump rather than render a guess.
-    if manifest["bin"] != [app, f"{app}-cli"]:
+    # The template assumes upstream's shape: the binaries it documents (GUI and
+    # CLI; the launcher has only the GUI) and exactly one desktop entry. Anything
+    # else is a packaging change a human should look at, so fail the bump rather
+    # than render a guess.
+    expected = [app] if APPS[app].get("launcher") else [app, f"{app}-cli"]
+    if manifest["bin"] != expected:
         sys.exit(f"error: {app} {version}: unexpected binaries {manifest['bin']}")
     if manifest["desktop"] != [f"ai.storyteller.{app}.desktop"]:
         sys.exit(f"error: {app} {version}: unexpected desktop entries {manifest['desktop']}")
@@ -392,14 +479,14 @@ def read_manifest(app: str, version: str, expected_sha: str) -> dict:
 
 
 def latest_pin(app: str) -> dict:
-    api = f"https://api.github.com/repos/{REPO_OWNER}/{app}/releases/latest"
+    api = f"https://api.github.com/repos/{REPO_OWNER}/{repo(app)}/releases/latest"
     release = json.loads(retrying(lambda: get(api).read()))
     version = release["tag_name"].removeprefix("v")
     # The version is pasted into Ruby, file names and a commit message, so
     # refuse anything that is not a plain version string.
     if not re.fullmatch(r"[0-9][0-9A-Za-z.+-]*", version):
         sys.exit(f"error: {app}: refusing unexpected release tag {release['tag_name']!r}")
-    sums_url = f"https://github.com/{REPO_OWNER}/{app}/releases/download/v{version}/SHA256SUMS.txt"
+    sums_url = f"https://github.com/{REPO_OWNER}/{repo(app)}/releases/download/v{version}/SHA256SUMS.txt"
     sums = {}
     for line in retrying(lambda: get(sums_url).read()).decode().splitlines():
         if line.strip():

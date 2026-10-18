@@ -10,7 +10,7 @@ cask "gridcraft-linux" do
   url "https://github.com/storytold/gridcraft/releases/download/v#{version}/gridcraft-#{version}-linux-#{arch}.tar.gz"
   name "GridCraft"
   desc "Microsoft Excel-style spreadsheet"
-  homepage "https://github.com/storytold/gridcraft"
+  homepage "https://getartcraft.com/apps/gridcraft"
 
   livecheck do
     url :url

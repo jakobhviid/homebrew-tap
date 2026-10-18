@@ -1,13 +1,13 @@
 name: Bump Craft casks
 
 # Why: the ArtCraft apps release near-daily — VectorCraft shipped four versions
-# in two days — so twelve casks pinned by hand would always be behind. This
+# in two days — so fourteen casks pinned by hand would always be behind. This
 # moves every pin to upstream's latest release in one pass, tests the apps that
 # moved on both architectures, and lands each app that passed, so an upstream
 # packaging change that breaks one app holds back that app and nothing else.
 #
-# Why one run for all twelve: they share a template and a pins file, so a run
-# per app would mean twelve candidates racing over the same file. One candidate
+# Why one run for all fourteen: they share a template and a pins file, so a run
+# per app would mean fourteen candidates racing over the same file. One candidate
 # holds every app that moved, and _finish lands them app by app.
 on:
   schedule:
@@ -35,7 +35,7 @@ jobs:
     with:
       kind: craft
       tokens: >-
-        photocraft-linux vectorcraft-linux pdfcraft-linux lightcraft-linux filmcraft-linux effectcraft-linux designcraft-linux wordcraft-linux gridcraft-linux deckcraft-linux cadcraft-linux soundcraft-linux
+        photocraft-linux vectorcraft-linux pdfcraft-linux lightcraft-linux filmcraft-linux effectcraft-linux designcraft-linux wordcraft-linux gridcraft-linux deckcraft-linux cadcraft-linux soundcraft-linux figcraft-linux artcraft-launcher-linux
       candidate: auto/bump-craft
 
   validate:
@@ -58,7 +58,7 @@ jobs:
     with:
       pipeline: "Craft casks"
       tokens: >-
-        photocraft-linux vectorcraft-linux pdfcraft-linux lightcraft-linux filmcraft-linux effectcraft-linux designcraft-linux wordcraft-linux gridcraft-linux deckcraft-linux cadcraft-linux soundcraft-linux
+        photocraft-linux vectorcraft-linux pdfcraft-linux lightcraft-linux filmcraft-linux effectcraft-linux designcraft-linux wordcraft-linux gridcraft-linux deckcraft-linux cadcraft-linux soundcraft-linux figcraft-linux artcraft-launcher-linux
       candidate: auto/bump-craft
       sha: ${{ needs.propose.outputs.sha }}
       moved: ${{ needs.propose.outputs.moved }}

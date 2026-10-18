@@ -333,5 +333,57 @@
         "ai.storyteller.soundcraft.xml"
       ]
     }
+  },
+  "figcraft": {
+    "version": "0.7.0",
+    "sha256": {
+      "arm64_linux": "a70838b92fd3023513b87f8667e42f8adcac6344f01c68d3394d68b1d7916039",
+      "x86_64_linux": "f3ddf6194d2bbd523cd3195df90fa2cd5782d3946fc7833b7f6bf88fda37908d"
+    },
+    "manifest": {
+      "bin": [
+        "figcraft",
+        "figcraft-cli"
+      ],
+      "desktop": "ai.storyteller.figcraft.desktop",
+      "icons": [
+        "128x128/apps/ai.storyteller.figcraft.png",
+        "16x16/apps/ai.storyteller.figcraft.png",
+        "256x256/apps/ai.storyteller.figcraft.png",
+        "32x32/apps/ai.storyteller.figcraft.png",
+        "48x48/apps/ai.storyteller.figcraft.png",
+        "512x512/apps/ai.storyteller.figcraft.png",
+        "64x64/apps/ai.storyteller.figcraft.png",
+        "scalable/apps/ai.storyteller.figcraft.svg"
+      ],
+      "mime": [
+        "ai.storyteller.figcraft.xml"
+      ]
+    }
+  },
+  "artcraft-launcher": {
+    "version": "0.5.1",
+    "sha256": {
+      "arm64_linux": "0d8de0ce10051f11763bee0c0c7ceb886c846ba9c4185a4b7547e7922f14737b",
+      "x86_64_linux": "6cb893c5635e30f35629117c6992e1ea120e0bb6c17f0432e2c11387f3a7858a"
+    },
+    "manifest": {
+      "bin": [
+        "artcraft-launcher"
+      ],
+      "desktop": "ai.storyteller.artcraft-launcher.desktop",
+      "icons": [
+        "128x128/apps/ai.storyteller.artcraft-launcher.png",
+        "16x16/apps/ai.storyteller.artcraft-launcher.png",
+        "24x24/apps/ai.storyteller.artcraft-launcher.png",
+        "256x256/apps/ai.storyteller.artcraft-launcher.png",
+        "32x32/apps/ai.storyteller.artcraft-launcher.png",
+        "48x48/apps/ai.storyteller.artcraft-launcher.png",
+        "512x512/apps/ai.storyteller.artcraft-launcher.png",
+        "64x64/apps/ai.storyteller.artcraft-launcher.png",
+        "scalable/apps/ai.storyteller.artcraft-launcher.svg"
+      ],
+      "mime": []
+    }
   }
 }

@@ -10,7 +10,7 @@ cask "soundcraft-linux" do
   url "https://github.com/storytold/soundcraft/releases/download/v#{version}/soundcraft-#{version}-linux-#{arch}.tar.gz"
   name "SoundCraft"
   desc "Pro Tools-style digital audio workstation"
-  homepage "https://github.com/storytold/soundcraft"
+  homepage "https://getartcraft.com/apps/soundcraft"
 
   livecheck do
     url :url

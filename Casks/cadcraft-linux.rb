@@ -10,7 +10,7 @@ cask "cadcraft-linux" do
   url "https://github.com/storytold/cadcraft/releases/download/v#{version}/cadcraft-#{version}-linux-#{arch}.tar.gz"
   name "CADCraft"
   desc "AutoCAD-style 2D drafting and design app"
-  homepage "https://github.com/storytold/cadcraft"
+  homepage "https://getartcraft.com/apps/cadcraft"
 
   livecheck do
     url :url

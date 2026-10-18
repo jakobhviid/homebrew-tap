@@ -10,7 +10,7 @@ cask "deckcraft-linux" do
   url "https://github.com/storytold/deckcraft/releases/download/v#{version}/deckcraft-#{version}-linux-#{arch}.tar.gz"
   name "DeckCraft"
   desc "Microsoft PowerPoint-style presentation app"
-  homepage "https://github.com/storytold/deckcraft"
+  homepage "https://getartcraft.com/apps/deckcraft"
 
   livecheck do
     url :url

@@ -10,7 +10,7 @@ cask "wordcraft-linux" do
   url "https://github.com/storytold/wordcraft/releases/download/v#{version}/wordcraft-#{version}-linux-#{arch}.tar.gz"
   name "WordCraft"
   desc "Microsoft Word-style word processor"
-  homepage "https://github.com/storytold/wordcraft"
+  homepage "https://getartcraft.com/apps/wordcraft"
 
   livecheck do
     url :url

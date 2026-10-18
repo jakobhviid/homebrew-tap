@@ -6,7 +6,7 @@ bumps and the formulae the tool repos push. A candidate commit has been tested;
 this decides package by package what it may land:
 
 * A package whose tests passed lands, even if another in the same candidate
-  failed. One broken Craft app no longer holds back the other eleven.
+  failed. One broken Craft app no longer holds back the other thirteen.
 * Landing copies the tested files onto the *current* main and commits, rather
   than fast-forwarding main to the candidate. Each package is its own file (plus
   its pin, for Craft), so this lands byte for byte what was tested, and two
