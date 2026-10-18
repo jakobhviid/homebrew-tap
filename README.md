@@ -82,7 +82,10 @@ brew untap jakobhviid/tap         # remove the tap entirely
   renders its formula and pushes it to `auto/formula-<name>` here, and the gate
   workflow lands it once it installs and passes `brew test`. Bottles are built
   in CI, attached to that tool's GitHub release, and pinned by `sha256` in the
-  formula.
+  formula. The two formulae whose upstream isn't ours, `crw` and
+  `proton-drive-cli`, are bumped daily here instead by
+  `scripts/bump-formula.py`, which repackages upstream's x86_64 Linux binary as
+  a bottle and publishes it in this repo's releases.
 - **Casks are bumped daily** from upstream's releases, through the same steps.
   A daily freshness check (`brew livecheck`) also flags any package left behind
   upstream, in case whatever should have moved it has quietly stopped.

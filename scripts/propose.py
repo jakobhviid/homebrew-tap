@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Move each of a pipeline's casks to upstream's latest release, one at a time.
+"""Move each of a pipeline's packages to upstream's latest release, one at a time.
 
-The propose half of every bump: for each cask it runs that cask's bump script
-on its own, so a feed that cannot be read marks that cask broken and nothing
-else. Casks that moved go forward to be tested; broken ones are reported; the
-rest are already at upstream's latest. Craft's apps share a pins file and a
-template, but `gen-craft-casks.py --bump <app>` moves one app's pin and
-re-renders, so they bump one at a time too.
+The propose half of every bump: for each package it runs that package's bump
+script on its own, so a feed that cannot be read marks that package broken and
+nothing else. Packages that moved go forward to be tested; broken ones are
+reported; the rest are already at upstream's latest. Craft's apps share a pins
+file and a template, but `gen-craft-casks.py --bump <app>` moves one app's pin
+and re-renders, so they bump one at a time too. The `formula` kind covers the
+third-party formulae, whose bump also builds the bottle the caller publishes.
 
 Writes `moved`, `broken` and `message` to $GITHUB_OUTPUT when it is set, and
 prints them either way. `message` is `<token> <version>, ...`, the tap's commit
@@ -16,6 +17,7 @@ Usage:
     scripts/propose.py github orca-linux
     scripts/propose.py proton proton-mail-linux proton-meet-linux proton-pass-linux
     scripts/propose.py craft photocraft-linux vectorcraft-linux ...
+    scripts/propose.py formula crw proton-drive-cli
 """
 
 from __future__ import annotations
@@ -29,25 +31,30 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = ROOT / "scripts"
 
-# kind -> how to bump one cask. Each script exits non-zero when it cannot read
-# upstream or cannot rewrite the cask, and leaves the files untouched then.
+# kind -> how to bump one package. Each script exits non-zero when it cannot read
+# upstream or cannot rewrite its package, and leaves the files untouched then.
 KINDS = {
     "github": lambda token: [SCRIPTS / "bump-cask.py", ROOT / "Casks" / f"{token}.rb"],
     "claude": lambda token: [SCRIPTS / "bump-claude.py", ROOT / "Casks" / f"{token}.rb"],
     "proton": lambda token: [SCRIPTS / "bump-proton.py", ROOT / "Casks" / f"{token}.rb"],
     "craft": lambda token: [SCRIPTS / "gen-craft-casks.py", "--bump", token.removesuffix("-linux")],
+    "formula": lambda token: [SCRIPTS / "bump-formula.py", token],
 }
 
 
+def path(token: str) -> str:
+    return f"Casks/{token}.rb" if (ROOT / "Casks" / f"{token}.rb").exists() else f"Formula/{token}.rb"
+
+
 def version(token: str) -> str:
-    text = (ROOT / "Casks" / f"{token}.rb").read_text(encoding="utf-8")
+    text = (ROOT / path(token)).read_text(encoding="utf-8")
     m = re.search(r'^  version "([^"]+)"$', text, re.M)
     return m.group(1) if m else "?"
 
 
 def changed(token: str) -> bool:
     diff = subprocess.run(
-        ["git", "diff", "--quiet", "--", f"Casks/{token}.rb"], cwd=ROOT, check=False
+        ["git", "diff", "--quiet", "--", path(token)], cwd=ROOT, check=False
     )
     return diff.returncode != 0
 

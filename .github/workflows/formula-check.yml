@@ -26,7 +26,8 @@ on:
     - cron: "30 5 * * 1"
   workflow_dispatch:
   # Why: the formula gate calls this to test a formula a tool repo proposed,
-  # before it is allowed onto main. The gate reports the outcome itself.
+  # and the third-party formula bump to test one it moved, before either is
+  # allowed onto main. Both callers report the outcome themselves.
   workflow_call:
     inputs:
       ref:
@@ -58,10 +59,10 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
       # Landing regenerates the README's catalog, so an unattended change never
-      # leaves it stale. A change made by hand has to carry it too. Not on the
-      # gate's candidates: they come from tool repos, and landing fills it in.
+      # leaves it stale. A change made by hand has to carry it too. Not on a
+      # caller's candidate (only callers pass `ref`): landing fills it in.
       - name: README lists every formula and cask
-        if: ${{ !startsWith(github.ref, 'refs/heads/auto/') }}
+        if: inputs.ref == ''
         run: python3 scripts/gen-readme.py --check
 
       - name: Pick the formulae this run covers
@@ -176,9 +177,9 @@ jobs:
   # whoever opened them.
   report:
     needs: [select, formula]
-    # The gate runs on its candidate branches (auto/formula-*) and reports
-    # through _finish instead.
-    if: always() && github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/heads/auto/')
+    # A caller — the gate or the formula bump, the only runs that pass `ref` —
+    # reports through _finish instead.
+    if: always() && github.event_name != 'pull_request' && inputs.ref == ''
     runs-on: ubuntu-latest
     permissions:
       contents: read

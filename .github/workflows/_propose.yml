@@ -1,19 +1,19 @@
 name: Propose a bump
 
-# The first stage of every cask bump: move each cask to upstream's latest on
-# its own (scripts/propose.py), and push whatever moved to a scratch branch for
-# the caller's test suite. A cask whose feed cannot be read is reported broken
+# The first stage of every bump: move each package to upstream's latest on its
+# own (scripts/propose.py), and push whatever moved to a scratch branch for the
+# caller's test suite. A package whose feed cannot be read is reported broken
 # and the rest carry on. The caller then tests the candidate and hands it to
 # _finish.yml, which lands what passed.
 on:
   workflow_call:
     inputs:
       kind:
-        description: "Which bump script: github, claude, proton or craft."
+        description: "Which bump script: github, claude, proton, craft or formula."
         type: string
         required: true
       tokens:
-        description: "Space-separated casks this pipeline bumps."
+        description: "Space-separated packages this pipeline bumps."
         type: string
         required: true
       candidate:
@@ -41,11 +41,22 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Move each cask to upstream's latest
+      - name: Move each package to upstream's latest
         id: bump
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 scripts/propose.py ${{ inputs.kind }} ${{ inputs.tokens }}
+
+      # Why before the candidate is tested: the tests pour each formula's bottle
+      # from its root_url, which is this repo's release for that version. A
+      # bottle for a version that then fails its tests stays published but
+      # unused; the next bump of that formula replaces or supersedes it.
+      - name: Publish the moved formulae's bottles
+        if: inputs.kind == 'formula' && steps.bump.outputs.moved != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MOVED: ${{ steps.bump.outputs.moved }}
+        run: python3 scripts/bump-formula.py --publish $MOVED
 
       - name: Push the candidate to a scratch branch
         id: push
@@ -59,7 +70,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A Casks scripts/craft-casks.json
+          git add -A Casks Formula scripts/craft-casks.json
           git commit -m "$MESSAGE"
           # Force-push: the branch is scratch space for this run only. _finish
           # lands the tested files onto whatever main is by then, so it does not

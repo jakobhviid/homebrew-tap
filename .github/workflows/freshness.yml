@@ -10,7 +10,8 @@ name: Check packages keep up with upstream
 # behind, which a daily-releasing upstream can be while its pipeline works.
 on:
   schedule:
-    # Daily, nominally after every bump (the last, Craft, is due at 08:15).
+    # Daily, nominally after every bump (the last, the third-party formulae,
+    # is due at 08:45).
     # Scheduled runs here fire hours late, so a bump can still land after this
     # check; the unchanged-version rule is what keeps that from reading as stuck.
     - cron: "0 12 * * *"

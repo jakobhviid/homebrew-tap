@@ -2,8 +2,8 @@
 """Land what passed, report what did not, and clear the candidate branch.
 
 The second half of every pipeline that changes the tap unattended — the cask
-bumps and the formulae the tool repos push. A candidate commit has been tested;
-this decides package by package what it may land:
+and formula bumps, and the formulae the tool repos push. A candidate commit has
+been tested; this decides package by package what it may land:
 
 * A package whose tests passed lands, even if another in the same candidate
   failed. One broken Craft app no longer holds back the other thirteen.

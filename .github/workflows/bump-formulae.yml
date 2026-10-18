@@ -1,0 +1,67 @@
+name: Bump third-party formulae
+
+# Why: crw and the Proton Drive CLI are the formulae here whose upstream is not
+# one of our own tools, so no release pipeline of ours renders them. This moves
+# each to upstream's latest, publishes its x86_64 Linux bottle in this repo's
+# releases, tests it on every platform it claims, and lands each one that
+# passed — the same propose -> test -> land as the cask bumps. It replaces the
+# crw-brew and proton-drive-cli-brew repositories, which did this from outside
+# with a deploy key into the tap.
+on:
+  schedule:
+    # 08:45 UTC: after the last cask bump (Craft, 08:15), so they do not
+    # contend for the same runners and API budget, and well before the 12:00
+    # freshness check.
+    - cron: "45 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump-formulae
+  cancel-in-progress: false
+
+jobs:
+  propose:
+    uses: ./.github/workflows/_propose.yml
+    permissions:
+      # Commits the candidate, and creates the bottles' releases.
+      contents: write
+    with:
+      kind: formula
+      tokens: crw proton-drive-cli
+      candidate: auto/bump-formulae
+
+  validate:
+    needs: propose
+    if: needs.propose.outputs.moved != ''
+    uses: ./.github/workflows/formula-check.yml
+    # What formula-check's own report job asks for. It is skipped here, but
+    # GitHub checks every called job's permissions before the run starts.
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    with:
+      ref: ${{ needs.propose.outputs.sha }}
+      # Only the formulae that moved: the other is on main as it is.
+      formulae: ${{ needs.propose.outputs.moved }}
+
+  finish:
+    needs: [propose, validate]
+    if: always()
+    uses: ./.github/workflows/_finish.yml
+    permissions:
+      contents: write
+      issues: write
+      actions: read
+    with:
+      pipeline: "Third-party formulae"
+      tokens: crw proton-drive-cli
+      candidate: auto/bump-formulae
+      sha: ${{ needs.propose.outputs.sha }}
+      moved: ${{ needs.propose.outputs.moved }}
+      broken: ${{ needs.propose.outputs.broken }}
+      propose-result: ${{ needs.propose.result }}
+      validate-result: ${{ needs.validate.result }}
