@@ -3,9 +3,9 @@
 cask "designcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.8.0"
-  sha256 arm64_linux:  "86419263db3b4c7dfd0bf61948eb1931b32cea56ce9caca5b4b03cd146dd3926",
-         x86_64_linux: "96a835fd89ebf6970b7dec93652e1b2f081123a69c78e19998ca6c84ca322d77"
+  version "0.9.0"
+  sha256 arm64_linux:  "8ba293ae78d76d990684fe407382e1f848bd06b91f65917593a08911d7c82de1",
+         x86_64_linux: "9c57880889d6b5c399c450b5321ba6c37c9e54e58ac08161d7857a1115d89755"
 
   url "https://github.com/storytold/designcraft/releases/download/v#{version}/designcraft-#{version}-linux-#{arch}.tar.gz"
   name "DesignCraft"

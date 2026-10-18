@@ -3,9 +3,9 @@
 cask "photocraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.9.0"
-  sha256 arm64_linux:  "c956084444653142dd25274cff08dbc17e8bf99815380db7f64eec026e882fc7",
-         x86_64_linux: "91300c1485ad710839604b085531c90e77ac7ebdb2a30259309ad74afcfdb90d"
+  version "0.10.0"
+  sha256 arm64_linux:  "829780d331e6443ddf1bada932ed07e0e9dc541b213b275f3c3a3209607bc7c7",
+         x86_64_linux: "c5d455785d9c2eaf695bf8e6327c4d6d23a39ddb956a6114f0c5b64326f984e1"
 
   url "https://github.com/storytold/photocraft/releases/download/v#{version}/photocraft-#{version}-linux-#{arch}.tar.gz"
   name "PhotoCraft"
