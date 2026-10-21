@@ -3,9 +3,9 @@
 cask "artcraft-launcher-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.5.1"
-  sha256 arm64_linux:  "0d8de0ce10051f11763bee0c0c7ceb886c846ba9c4185a4b7547e7922f14737b",
-         x86_64_linux: "6cb893c5635e30f35629117c6992e1ea120e0bb6c17f0432e2c11387f3a7858a"
+  version "0.6.1"
+  sha256 arm64_linux:  "3888bbe5345d5e82c2978a0d3bf19aa2851e2e1897aa332744e20fb482097d03",
+         x86_64_linux: "46c9fcdbc72a82245e544a5804d305d05795ada2e17825615b54a4e3fe614881"
 
   url "https://github.com/storytold/craft-launcher/releases/download/v#{version}/artcraft-launcher-#{version}-linux-#{arch}.tar.gz"
   name "ArtCraft Launcher"

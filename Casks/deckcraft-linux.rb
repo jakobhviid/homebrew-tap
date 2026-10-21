@@ -3,9 +3,9 @@
 cask "deckcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.8.0"
-  sha256 arm64_linux:  "7325c0277d5ecce335da2dabd5dbea4d90b704edccde4d23a6423189e0bcdcc4",
-         x86_64_linux: "227b8c9cdd2c06b7866807f995fe5d2d0675523a61208f9bc26cf2760fddcb8f"
+  version "0.9.0"
+  sha256 arm64_linux:  "02115811f8a7a48064e4e5b5e80f8b1ed6fc1b8c747630137641fdf53df7570b",
+         x86_64_linux: "531b4c8cd434ca767ef21da0d44e099664af5d5d968b038bc8f927717f8fa8f1"
 
   url "https://github.com/storytold/deckcraft/releases/download/v#{version}/deckcraft-#{version}-linux-#{arch}.tar.gz"
   name "DeckCraft"
