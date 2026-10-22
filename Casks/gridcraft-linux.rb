@@ -3,9 +3,9 @@
 cask "gridcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.9.0"
-  sha256 arm64_linux:  "1dbd8d6c053f9c14d2703873809ab6d82d70f9c5ef2142d046733dce3ed5aa24",
-         x86_64_linux: "811482f2e4bb66f8c35d59b79e532e1d0812d362bac24e63fd6ddc0844d66bc9"
+  version "0.10.0"
+  sha256 arm64_linux:  "ddf1f0630c45872d52bdc56aa8a2306551efcfe423219196fb04e845283f8520",
+         x86_64_linux: "b78a28605cd34594fc35dfc1ad36a924054571a1382625fb7506fd70cdfb9197"
 
   url "https://github.com/storytold/gridcraft/releases/download/v#{version}/gridcraft-#{version}-linux-#{arch}.tar.gz"
   name "GridCraft"
