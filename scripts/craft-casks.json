@@ -1,9 +1,9 @@
 {
   "photocraft": {
-    "version": "0.12.0",
+    "version": "0.14.0",
     "sha256": {
-      "arm64_linux": "daba522ddac492b96e0c137ce032227cb1ba943f9cc38f323dc373e36f4a470a",
-      "x86_64_linux": "fb2b830230e3202a1ee18ec20e3f6d250d276b165d78811e83eb6a75725f9ce2"
+      "arm64_linux": "43e7b4bdd69bc5ad747d1f6161aef6fba4839e7807a86eb0cd1d008897395615",
+      "x86_64_linux": "3d1f60a76c25aafbf53f23cfedd3687bd99eb6f5309920e140d588bd3212c936"
     },
     "manifest": {
       "bin": [
@@ -28,10 +28,10 @@
     }
   },
   "vectorcraft": {
-    "version": "0.14.0",
+    "version": "0.16.0",
     "sha256": {
-      "arm64_linux": "c6a3269bea4a0b47e04d4e20b904f10af414aa9b9ef47f367a1a7bb5197d01a1",
-      "x86_64_linux": "5b34a05f123ca4cc611e8ce69a83106daed8ea288baf63e1abb99a42cb3b486d"
+      "arm64_linux": "7a624f47c20c10e4a8c07bba90e30f3da2ff26e5653632f942c7c5404105d02e",
+      "x86_64_linux": "651fac17255271ad1dbc8ba1e8287db9f28e529ba9a14dd0383eca93a2cc5aa6"
     },
     "manifest": {
       "bin": [
@@ -56,10 +56,10 @@
     }
   },
   "pdfcraft": {
-    "version": "0.11.0",
+    "version": "0.13.0",
     "sha256": {
-      "arm64_linux": "4ce373f5a17f90a9f91ed01983b7683bdff544d188222a0f3addbdd1729a4fbb",
-      "x86_64_linux": "0dad5d4b21fc8fd1192e8b854d38dcc257fae6681ae17f10f1b3f41e84488f4f"
+      "arm64_linux": "12efbe4c18d965c54b2b848aa4321880b967370443973b42a5ca4aa0d7959248",
+      "x86_64_linux": "598519ea2bc77c66ca9a906241e1fe3eccf745f50627ce3cdbd5b5e675a456d3"
     },
     "manifest": {
       "bin": [
@@ -84,10 +84,10 @@
     }
   },
   "lightcraft": {
-    "version": "0.11.0",
+    "version": "0.13.0",
     "sha256": {
-      "arm64_linux": "c8f3f31193055d3c804536e626b29c70d32a0f8a5ae6551a0b08c5193bf8ddda",
-      "x86_64_linux": "a2d1be1c52abb81f5a0736624a20ce9287183e0b0955005829f4a9dda41496ba"
+      "arm64_linux": "5f47cb0e71d17d21c130aa06bf9c3e0895185c5501b94f14633a9de6a587ca48",
+      "x86_64_linux": "873c795e641ea8c345e02e4895f6c2659015e531420f68352ca3421aa9b8edcd"
     },
     "manifest": {
       "bin": [
@@ -112,10 +112,10 @@
     }
   },
   "filmcraft": {
-    "version": "0.10.0",
+    "version": "0.12.0",
     "sha256": {
-      "arm64_linux": "29b2d805723947bad7e36b020f43b39bbc9ba849cd3bfaff04ec2c0ac4a79070",
-      "x86_64_linux": "95d7a1afcb9e2021d3371a011700af6ce2ffe1af0e1cfe99c6fb98b3aa320f80"
+      "arm64_linux": "83714c4a73774a3f54a3d2bf52ae0065d3fb8ca8c781deb7cb3450f9b4e74568",
+      "x86_64_linux": "ddff0a2ec0d89e5e9e65644ed724b5b79959600b1602fd4ea6653b5a54bf88fd"
     },
     "manifest": {
       "bin": [
@@ -140,10 +140,10 @@
     }
   },
   "effectcraft": {
-    "version": "0.14.0",
+    "version": "0.16.0",
     "sha256": {
-      "arm64_linux": "000938d39fe2e9f9f68b3adc61fed537f004ff5defb68e82a9c3c5b2c7f8714d",
-      "x86_64_linux": "7f464e4cedcda418f8b84063c5b3a79bdf59a8a6c0a4e229bf7aaaf052a5d9a7"
+      "arm64_linux": "bf38cec1717b35432d73a6f48cfc075c0d2b110fae357fba5c4242d55c4aae97",
+      "x86_64_linux": "91b40da9e18be49157467a96db7b2fbf7c20b5182d8c415c59bed51591bc1de0"
     },
     "manifest": {
       "bin": [
@@ -168,10 +168,10 @@
     }
   },
   "designcraft": {
-    "version": "0.11.0",
+    "version": "0.12.0",
     "sha256": {
-      "arm64_linux": "0f529995352cf50b5756906c2ef2691d80d01192d0bab9cf1fd0f1f58ef8f12a",
-      "x86_64_linux": "12076f89ce445af5cf96c0048701a7d48373dccbd524de19fe2308601b554d58"
+      "arm64_linux": "eb055f655ab26a137d5e46d63c6d7d91683148814766224a36de73ecbff7a6b3",
+      "x86_64_linux": "0e7bbe349670f8d5eb178fa9bd4a1bf1c7c51d6a54e1b802b8dcdbb2ae68fe1d"
     },
     "manifest": {
       "bin": [
@@ -196,10 +196,10 @@
     }
   },
   "wordcraft": {
-    "version": "0.9.0",
+    "version": "0.10.0",
     "sha256": {
-      "arm64_linux": "580abb0ff237d331e287523dda85f5dc5532e2f9b89676c8d64aaead0294061b",
-      "x86_64_linux": "8f507802e971b16afa1b6dc565317eb30885ffb2aec2e976d3a1ddaa47c529d4"
+      "arm64_linux": "77e838120d9da38752ab355066a0987253d9bc95dfddad1c47bac1f180975bbb",
+      "x86_64_linux": "ca99ea350ba0aea4103fc8020cad98f051c58d9e9fcf670c119d810108cc45ff"
     },
     "manifest": {
       "bin": [
@@ -224,10 +224,10 @@
     }
   },
   "gridcraft": {
-    "version": "0.10.0",
+    "version": "0.11.1",
     "sha256": {
-      "arm64_linux": "ddf1f0630c45872d52bdc56aa8a2306551efcfe423219196fb04e845283f8520",
-      "x86_64_linux": "b78a28605cd34594fc35dfc1ad36a924054571a1382625fb7506fd70cdfb9197"
+      "arm64_linux": "16e4da4873867a9080ec41d76e38430a8d0e62fa22b43edb6d7b1dbde0925435",
+      "x86_64_linux": "f2c83e6c26449a6c45983e903bf32c1d4c302b2042f263ead995271129c70e87"
     },
     "manifest": {
       "bin": [
@@ -252,10 +252,10 @@
     }
   },
   "deckcraft": {
-    "version": "0.9.0",
+    "version": "0.10.0",
     "sha256": {
-      "arm64_linux": "02115811f8a7a48064e4e5b5e80f8b1ed6fc1b8c747630137641fdf53df7570b",
-      "x86_64_linux": "531b4c8cd434ca767ef21da0d44e099664af5d5d968b038bc8f927717f8fa8f1"
+      "arm64_linux": "7be0594d90c4c0be15b812a597b85f6005271716be778b2999cb492f52c8676b",
+      "x86_64_linux": "546616eb2300ce8efb20b44a53e60abfe6b96d71ac606b452a36fd21c6b1ff28"
     },
     "manifest": {
       "bin": [
@@ -280,10 +280,10 @@
     }
   },
   "cadcraft": {
-    "version": "0.10.0",
+    "version": "0.12.0",
     "sha256": {
-      "arm64_linux": "96494730880b30fbf2cf1d74cb822fdcbcd36f59eee877c445f948f4978684a2",
-      "x86_64_linux": "2bf13abe4645655c971d452304c06f98081849ace86a3289fc991bec55392d18"
+      "arm64_linux": "29a674e41223c18532359c38f2afc936dde1aa774e2c6479ca1246d3f3bf97f6",
+      "x86_64_linux": "6ae27b9eabc3608caef356a00f69b9fdccbf1e408d6308b5614b6e6b256308de"
     },
     "manifest": {
       "bin": [
@@ -307,10 +307,10 @@
     }
   },
   "soundcraft": {
-    "version": "0.11.0",
+    "version": "0.12.1",
     "sha256": {
-      "arm64_linux": "470dbf417913bb063d9022848b1cb14444bd4b1d8179ee74c736d555e8ff3f7e",
-      "x86_64_linux": "3f4b0368310f10400439b4da304862a7d463231cfc51d6057e1146962a2ffa35"
+      "arm64_linux": "b16513d16be67a9715ec650db955ee6b41624db21fc182905ccaaa311547700d",
+      "x86_64_linux": "b0a56bd6b5d27de6b12e354580c362be6f59125ea58f573044c84f6a7da87780"
     },
     "manifest": {
       "bin": [
@@ -335,10 +335,10 @@
     }
   },
   "figcraft": {
-    "version": "0.9.0",
+    "version": "0.10.0",
     "sha256": {
-      "arm64_linux": "849a72fe8c9b8d7b274080ece41ff6955bf40279390671c43e883489e34d8cd9",
-      "x86_64_linux": "67f786c816c255598bc120a150ac57cb5a8f246935d29fe8b4d2afa08f88330c"
+      "arm64_linux": "fd5d55f7999d95bf8dd5677559dde8eafead8021a397eed9eacdeb9a5abe1df9",
+      "x86_64_linux": "b3e2ffdab54d203a3f6ed1a0018b8325300bd22dbed6a02f0af6757f3eb669da"
     },
     "manifest": {
       "bin": [
@@ -362,10 +362,10 @@
     }
   },
   "artcraft-launcher": {
-    "version": "0.6.1",
+    "version": "0.7.0",
     "sha256": {
-      "arm64_linux": "3888bbe5345d5e82c2978a0d3bf19aa2851e2e1897aa332744e20fb482097d03",
-      "x86_64_linux": "46c9fcdbc72a82245e544a5804d305d05795ada2e17825615b54a4e3fe614881"
+      "arm64_linux": "879ebee75c86b8551c71d0feb71590328a62aca5eb38e10c94d53ce7d4f06090",
+      "x86_64_linux": "d2b420d9e080549829ada1f44f3c3735fcc20bd18936702b36a598e2dc713ab9"
     },
     "manifest": {
       "bin": [
