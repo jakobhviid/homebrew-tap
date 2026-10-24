@@ -1,9 +1,9 @@
 {
   "photocraft": {
-    "version": "0.14.0",
+    "version": "0.15.1",
     "sha256": {
-      "arm64_linux": "43e7b4bdd69bc5ad747d1f6161aef6fba4839e7807a86eb0cd1d008897395615",
-      "x86_64_linux": "3d1f60a76c25aafbf53f23cfedd3687bd99eb6f5309920e140d588bd3212c936"
+      "arm64_linux": "ff2ea1945df3b413b17c64ec7c0131c093b09c717994a47b4c46c0dabf1c822f",
+      "x86_64_linux": "b622be40355513056f8152afe895d0a05c1bc3c344a027f772a9a12fa3d1c223"
     },
     "manifest": {
       "bin": [
