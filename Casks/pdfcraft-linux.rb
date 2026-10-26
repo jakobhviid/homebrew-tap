@@ -3,9 +3,9 @@
 cask "pdfcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.13.0"
-  sha256 arm64_linux:  "12efbe4c18d965c54b2b848aa4321880b967370443973b42a5ca4aa0d7959248",
-         x86_64_linux: "598519ea2bc77c66ca9a906241e1fe3eccf745f50627ce3cdbd5b5e675a456d3"
+  version "0.14.0"
+  sha256 arm64_linux:  "fe6711b5e211bc01405f3dad799f252f4e1b2cc976b7c47f83fe7a97cebe9838",
+         x86_64_linux: "a93f511e87f63036ca5f5300b1a7a18a3cd2285205deab15394caa6ee83c6f1f"
 
   url "https://github.com/storytold/pdfcraft/releases/download/v#{version}/pdfcraft-#{version}-linux-#{arch}.tar.gz"
   name "PdfCraft"
