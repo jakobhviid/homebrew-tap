@@ -3,9 +3,9 @@
 cask "lightcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.14.0"
-  sha256 arm64_linux:  "eba0b3ca3704b7023fc485897443ecaaf40b378540a9921f59c9ca74f2f8cfe0",
-         x86_64_linux: "b8233b9373d6e99b1180c1c39fdcb13d49c441f80092770831fab195c4c4fda2"
+  version "0.15.0"
+  sha256 arm64_linux:  "3821538bfd8a23b2a5e824c4762d46b23a5f8f06f6e0a6c6dbd329accb49cd62",
+         x86_64_linux: "0b1acdefc085babb334b9add290dd1a69b50e96efbdad2ec15d44bd6d64bfd3d"
 
   url "https://github.com/storytold/lightcraft/releases/download/v#{version}/lightcraft-#{version}-linux-#{arch}.tar.gz"
   name "LightCraft"

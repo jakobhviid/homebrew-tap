@@ -3,9 +3,9 @@
 cask "soundcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.13.1"
-  sha256 arm64_linux:  "0f6320a73fd41fdf9dbf5c069fc93124b9e087141a568577eb5c1b3e31b259ec",
-         x86_64_linux: "09ee6c8845934feef4bbf4c5c0e2f0ffca3fc91126fd7a6a4061b1f83907456d"
+  version "0.14.0"
+  sha256 arm64_linux:  "912ef157833753c5ec87c79fe76ef42a7f68c746fd117882cbc2c8d6e1eb357d",
+         x86_64_linux: "2f83503feda6aa2c8d4bc12c44f571422c4389fc664a92bbed092d2bf1d500ad"
 
   url "https://github.com/storytold/soundcraft/releases/download/v#{version}/soundcraft-#{version}-linux-#{arch}.tar.gz"
   name "SoundCraft"

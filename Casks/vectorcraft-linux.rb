@@ -3,9 +3,9 @@
 cask "vectorcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.17.0"
-  sha256 arm64_linux:  "28cbc71ced0b4349b2d4208f0f2f922c13ec099627a323b0eb3d5e1b1372dca3",
-         x86_64_linux: "66c289d0bd354b71e4cd787193ea0481e3a1cd239f2a18068110ea36852fc026"
+  version "0.18.0"
+  sha256 arm64_linux:  "191358b946897249f4a51dd8171060eb2867eda07f7d2eaf1b63c5c099c0e87e",
+         x86_64_linux: "76948b50ef78dd482a6ece06f10b7047937bbc0c05f5cf6bc43d88b07f74d826"
 
   url "https://github.com/storytold/vectorcraft/releases/download/v#{version}/vectorcraft-#{version}-linux-#{arch}.tar.gz"
   name "VectorCraft"
