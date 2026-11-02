@@ -9,7 +9,7 @@ on:
   workflow_call:
     inputs:
       kind:
-        description: "Which bump script: github, claude, proton, craft or formula."
+        description: "Which bump script: github, claude, proton or formula."
         type: string
         required: true
       tokens:
@@ -70,7 +70,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A Casks Formula scripts/craft-casks.json
+          git add -A Casks Formula
           git commit -m "$MESSAGE"
           # Force-push: the branch is scratch space for this run only. _finish
           # lands the tested files onto whatever main is by then, so it does not

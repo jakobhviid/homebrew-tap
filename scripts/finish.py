@@ -6,11 +6,11 @@ and formula bumps, and the formulae the tool repos push. A candidate commit has
 been tested; this decides package by package what it may land:
 
 * A package whose tests passed lands, even if another in the same candidate
-  failed. One broken Craft app no longer holds back the other thirteen.
+  failed. One broken Proton app does not hold back the other two.
 * Landing copies the tested files onto the *current* main and commits, rather
-  than fast-forwarding main to the candidate. Each package is its own file (plus
-  its pin, for Craft), so this lands byte for byte what was tested, and two
-  pipelines finishing at once retry instead of one failing on a moved main.
+  than fast-forwarding main to the candidate. Each package is its own file, so
+  this lands byte for byte what was tested, and two pipelines finishing at once
+  retry instead of one failing on a moved main.
 * Every package's outcome goes to scripts/report-ci.py, which keeps one issue
   open per broken package and closes it once the package passes.
 
@@ -24,7 +24,6 @@ VALIDATE_RESULT, plus GH_TOKEN and the usual GITHUB_* variables.
 from __future__ import annotations
 
 import importlib.util
-import json
 import os
 import re
 import subprocess
@@ -32,7 +31,6 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PINS = "scripts/craft-casks.json"
 
 spec = importlib.util.spec_from_file_location("report_ci", ROOT / "scripts" / "report-ci.py")
 report_ci = importlib.util.module_from_spec(spec)
@@ -55,8 +53,9 @@ def path_of(sha: str, name: str) -> str:
 def failed_tests(moved: list[str]) -> list[str]:
     """The moved packages whose test jobs failed; all of them if unattributable.
 
-    Each suite names its matrix jobs after the package first — `cask (pdfcraft,
-    ...)`, `formula (temper, ...)` — so a failed job maps back to its package.
+    Each suite names its matrix jobs after the package first — `cask
+    (proton-mail-linux, ...)`, `formula (temper, ...)` — so a failed job maps
+    back to its package.
     A failed job that maps to none (a template check, a select job, orca's
     per-architecture jobs) leaves no way to tell, so every moved package fails.
     """
@@ -65,7 +64,7 @@ def failed_tests(moved: list[str]) -> list[str]:
         if not job["name"].startswith("validate /") or job["conclusion"] != "failure":
             continue
         field = report_ci.job_subject(job["name"])
-        name = next((t for t in moved if field in (t, t.removesuffix("-linux"))), None)
+        name = next((t for t in moved if field == t), None)
         if name is None:
             return moved
         found.add(name)
@@ -74,22 +73,8 @@ def failed_tests(moved: list[str]) -> list[str]:
 
 def apply(sha: str, names: list[str]) -> None:
     """Put each package's tested files into the working tree, on top of main."""
-    pins = json.loads((ROOT / PINS).read_text(encoding="utf-8"))
-    tested_pins = json.loads(show(sha, PINS) or "{}")
-    touched_pins = False
     for name in names:
         git("checkout", sha, "--", path_of(sha, name))
-        app = name.removesuffix("-linux")
-        if app in tested_pins and app in pins and pins[app] != tested_pins[app]:
-            # Main's order, this one app's tested pin: the other apps keep
-            # whatever main has, which may be newer than the candidate's.
-            pins[app] = tested_pins[app]
-            touched_pins = True
-    if touched_pins:
-        (ROOT / PINS).write_text(json.dumps(pins, indent=2) + "\n", encoding="utf-8")
-        # The landed casks must be exactly what the pins render to, or the
-        # Craft suite fails main on its next push.
-        subprocess.run([sys.executable, "scripts/gen-craft-casks.py", "--check"], cwd=ROOT, check=True)
     for name in names:
         path = path_of(sha, name)
         if git("diff", "--quiet", sha, "--", path, check=False).returncode != 0:
@@ -116,7 +101,7 @@ def land(sha: str, names: list[str]) -> bool:
         git("fetch", "--quiet", "origin", "main")
         git("checkout", "--quiet", "--force", "-B", "land", "origin/main")
         apply(sha, names)
-        git("add", "-A", "Casks", "Formula", PINS, "README.md")
+        git("add", "-A", "Casks", "Formula", "README.md")
         if git("diff", "--cached", "--quiet", check=False).returncode == 0:
             print("main already has these; nothing to land")
             return True

@@ -11,8 +11,8 @@ that finds the package healthy closes it. The open issues with the
 `ci-failure` label are the whole list of what needs a human.
 
 A key is a cask token wherever the failure can be pinned on one cask. Where it
-cannot — Craft's and Proton's bump scripts stop at the first feed they cannot
-read, before saying which — the key is the pipeline's own name, so the failure
+cannot — Proton's bump script stops at the first feed it cannot read,
+before saying which — the key is the pipeline's own name, so the failure
 is still reported once rather than not at all.
 
 Usage (from a workflow job that `needs:` the jobs it reports on; the bumps and
@@ -80,7 +80,7 @@ def run_jobs() -> list[dict]:
 
 
 def job_subject(name: str) -> str:
-    """The first matrix value in a job name: `cask (pdfcraft, ...)` -> pdfcraft."""
+    """The first matrix value in a job name: `cask (proton-mail-linux, ...)` -> proton-mail-linux."""
     m = re.search(r"\(([^,)]+)", name)
     return m.group(1).strip() if m else ""
 

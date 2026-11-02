@@ -1,0 +1,16 @@
+{
+  "artcraft-launcher-linux": "homebrew/cask/artcraft-launcher",
+  "cadcraft-linux": "homebrew/cask/cadcraft",
+  "deckcraft-linux": "homebrew/cask/deckcraft",
+  "designcraft-linux": "homebrew/cask/designcraft",
+  "effectcraft-linux": "homebrew/cask/effectcraft",
+  "figcraft-linux": "homebrew/cask/figcraft",
+  "filmcraft-linux": "homebrew/cask/filmcraft",
+  "gridcraft-linux": "homebrew/cask/gridcraft",
+  "lightcraft-linux": "homebrew/cask/lightcraft",
+  "pdfcraft-linux": "homebrew/cask/pdfcraft",
+  "photocraft-linux": "homebrew/cask/photocraft",
+  "soundcraft-linux": "homebrew/cask/soundcraft",
+  "vectorcraft-linux": "homebrew/cask/vectorcraft",
+  "wordcraft-linux": "homebrew/cask/wordcraft"
+}

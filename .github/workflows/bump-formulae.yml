@@ -9,7 +9,7 @@ name: Bump third-party formulae
 # with a deploy key into the tap.
 on:
   schedule:
-    # 08:45 UTC: after the last cask bump (Craft, 08:15), so they do not
+    # 08:45 UTC: after the last cask bump (paseo, 07:45), so they do not
     # contend for the same runners and API budget, and well before the 12:00
     # freshness check.
     - cron: "45 8 * * *"
