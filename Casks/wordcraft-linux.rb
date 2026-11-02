@@ -3,9 +3,9 @@
 cask "wordcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.13.2"
-  sha256 arm64_linux:  "da662713548ba9e1d901e889bfccd854803220135ad35907373eb856d5b6f734",
-         x86_64_linux: "6cf4fcc030a2d4fbaf334f9d6c60d73c2a1fdee2a6951c067e5fa115fe10738f"
+  version "0.14.0"
+  sha256 arm64_linux:  "a02e3ef3eab365aca36c5a6a0b8b00a9252562c90ab7da884b83ef701dfae8f0",
+         x86_64_linux: "3010da3d352d95256ec9a17a03966280a1d41ba09d0ebe569af23092d8b64987"
 
   url "https://github.com/storytold/wordcraft/releases/download/v#{version}/wordcraft-#{version}-linux-#{arch}.tar.gz"
   name "WordCraft"

@@ -3,9 +3,9 @@
 cask "figcraft-linux" do
   arch arm: "aarch64", intel: "x86_64"
 
-  version "0.13.1"
-  sha256 arm64_linux:  "14c6a5a782b5eebb356a232d9ea5a5a013f19c92c4f37056efbbfcecdbd0d935",
-         x86_64_linux: "865cf29c75a737cd859d93fa48e9d4aa8dc6023f258aa127e88b97d887f90d27"
+  version "0.14.0"
+  sha256 arm64_linux:  "17849e8fee7fa6655e02ef071e27f7bdb7edd0019172cd2e8e3523204cab0535",
+         x86_64_linux: "0ea489ce299238af96106940cddb42091c3eba109c05fdf843b4e7f8eb970829"
 
   url "https://github.com/storytold/figcraft/releases/download/v#{version}/figcraft-#{version}-linux-#{arch}.tar.gz"
   name "FigCraft"
