@@ -1,0 +1,63 @@
+name: Bump navibeat-linux
+
+# Why: NaviBeat ships several Linux releases on a busy day, and the AppImage
+# filename carries no version, so nothing about a stale pin is visible from the
+# URL — the cask would just keep installing an old build. This bumps it
+# unattended, and lands the commit on main only after the navibeat suite has
+# passed against that exact commit on both architectures, so an upstream change
+# that breaks the cask leaves main alone and shows up as a failed run instead.
+on:
+  schedule:
+    # Upstream's releases land between roughly 15:00 and 23:00 UTC. 08:00 clears
+    # that and sits between the paseo (07:45) and formula (08:45) bumps rather
+    # than on top of either, which would contend for the same runners and API
+    # budget.
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump-navibeat
+  cancel-in-progress: false
+
+# The shape every bump shares: _propose moves each cask on its own and pushes
+# what moved to a scratch branch; the suite below tests that commit; _finish
+# lands each cask that passed onto main and keeps one issue per broken cask.
+jobs:
+  propose:
+    uses: ./.github/workflows/_propose.yml
+    permissions:
+      contents: write
+    with:
+      kind: github
+      tokens: >-
+        navibeat-linux
+      candidate: auto/bump-navibeat-linux
+
+  validate:
+    needs: propose
+    if: needs.propose.outputs.moved != ''
+    uses: ./.github/workflows/test-navibeat-cask.yml
+    with:
+      ref: ${{ needs.propose.outputs.sha }}
+
+  finish:
+    needs: [propose, validate]
+    if: always()
+    uses: ./.github/workflows/_finish.yml
+    permissions:
+      contents: write
+      issues: write
+      actions: read
+    with:
+      pipeline: navibeat-linux
+      tokens: >-
+        navibeat-linux
+      candidate: auto/bump-navibeat-linux
+      sha: ${{ needs.propose.outputs.sha }}
+      moved: ${{ needs.propose.outputs.moved }}
+      broken: ${{ needs.propose.outputs.broken }}
+      propose-result: ${{ needs.propose.result }}
+      validate-result: ${{ needs.validate.result }}

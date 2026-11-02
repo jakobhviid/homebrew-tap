@@ -50,6 +50,15 @@ CASKS = {
         # URL that moves. There is no arm64 Linux asset to pin.
         {None: "Paseo-x86_64.AppImage"},
     ),
+    "navibeat-linux": (
+        "nenadjokic/navibeat-linux",
+        # Versionless like paseo's, but both architectures are published. The
+        # `-slim` assets beside them are a different build, not an alias.
+        {
+            "arm64_linux": "NaviBeat-linux-aarch64.AppImage",
+            "x86_64_linux": "NaviBeat-linux-x86_64.AppImage",
+        },
+    ),
 }
 
 VERSION_RE = re.compile(r'^(?P<pre>  version ")(?P<version>[^"]*)(?P<post>")$', re.MULTILINE)
