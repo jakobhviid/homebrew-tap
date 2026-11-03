@@ -4,23 +4,23 @@ class ImmichMount < Formula
   # Linux-only (FUSE), but Homebrew needs a url on EVERY platform just to parse the formula: with the url only
   # inside `on_linux`, macOS sees an empty spec and every `brew` command errors. So x86_64 Linux is the top-level
   # default, and `depends_on :linux` is what keeps macOS from installing it.
-  url "https://github.com/jakobhviid/immich-mount/releases/download/v1.0.3/immich-mount-x86_64-unknown-linux-musl.tar.gz"
-  version "1.0.3"
-  sha256 "ca81e19fa6a0b9f078b1095fc027652414565eff00d4b9d9cac9c1a4e7c01b5b"
+  url "https://github.com/jakobhviid/immich-mount/releases/download/v1.1.1/immich-mount-x86_64-unknown-linux-musl.tar.gz"
+  version "1.1.1"
+  sha256 "bc4f1bf3d10c235e31a1997f29dbe706b2134735f8c383be7c34b791f7636fcc"
   license "MIT"
 
   # A prebuilt x86_64 Linux bottle, so `brew install` pours it; aarch64 uses the url and install below.
   bottle do
-    root_url "https://github.com/jakobhviid/immich-mount/releases/download/v1.0.3"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "3ab3ffcdf603436a630ba7266c55f98c9875ee146088451046476e466e4fab35"
+    root_url "https://github.com/jakobhviid/immich-mount/releases/download/v1.1.1"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "ad4d78cefb8c11a20cef173738c00058d3e83115dcad227a29211c46c154dcba"
   end
 
   depends_on :linux
 
   on_linux do
     on_arm do
-      url "https://github.com/jakobhviid/immich-mount/releases/download/v1.0.3/immich-mount-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "ccfbc65c2f0b0af8fb1e52dc7d80f98c057c84af78c52b83df97fae7c6780f07"
+      url "https://github.com/jakobhviid/immich-mount/releases/download/v1.1.1/immich-mount-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "5e809e68527ba4f2b6508149a75607581506cb6ae57081c0e4f941ad42fc270c"
     end
   end
 
@@ -44,8 +44,8 @@ class ImmichMount < Formula
       Sign in, then mount it now and at every login:
         immich-mount login --server https://photos.example.org
         brew services start immich-mount
-      For the GNOME or KDE app, use the .rpm or .deb packages on the GitHub releases instead of this
-      formula: they bring their own daemon, and the app starts it at its first run.
+      For the app, install the cask instead, which brings this formula with it:
+        brew install --cask jakobhviid/tap/immich-mount-linux
       Immich Mount is an independent, unofficial project, not affiliated with the Immich project or FUTO.
     EOS
   end
