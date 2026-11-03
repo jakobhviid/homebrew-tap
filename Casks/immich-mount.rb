@@ -32,8 +32,8 @@ cask "immich-mount" do
   binary "immich-mount"
   manpage "immich-mount.1"
   bash_completion "immich-mount.bash"
-  fish_completion "immich-mount.fish"
   zsh_completion "_immich-mount"
+  fish_completion "immich-mount.fish"
   # Why the release's desktop ID: it is the app ID both interfaces run under, so the shell matches their windows to
   # this launcher, and it declares the app.immich scheme the browser's sign-in redirect returns through.
   artifact "dev.hviid.ImmichMount.desktop",
