@@ -50,6 +50,11 @@ CASKS = {
         # URL that moves. There is no arm64 Linux asset to pin.
         {None: "Paseo-x86_64.AppImage"},
     ),
+    "immich-mount-linux": (
+        "jakobhviid/immich-mount",
+        # The app's interfaces, x86_64 only, in one archive named without a version.
+        {None: "immich-mount-app-x86_64.tar.gz"},
+    ),
     "navibeat-linux": (
         "nenadjokic/navibeat-linux",
         # Versionless like paseo's, but both architectures are published. The

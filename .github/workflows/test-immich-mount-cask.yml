@@ -1,0 +1,125 @@
+name: Test immich-mount-linux on Linux
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Casks/immich-mount-linux.rb"
+      - ".github/workflows/test-immich-mount-cask.yml"
+      - ".github/actions/mount-tap/**"
+      - ".github/actions/fetch/**"
+  pull_request:
+    paths:
+      - "Casks/immich-mount-linux.rb"
+      - ".github/workflows/test-immich-mount-cask.yml"
+      - ".github/actions/mount-tap/**"
+      - ".github/actions/fetch/**"
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit or branch to test. Defaults to the triggering ref."
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-immich-mount-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Why x86_64 only: the cask carries one archive, built in immich-mount's Fedora 44 job for x86_64.
+  cask:
+    runs-on: ubuntu-latest
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Install the desktop tools the cask's steps call
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends desktop-file-utils
+
+      - uses: ./.github/actions/mount-tap
+        with:
+          ref: ${{ inputs.ref }}
+          verify: immich-mount-linux
+
+      - name: Audit
+        run: |
+          brew audit --cask --strict jakobhviid/tap/immich-mount-linux
+          brew style --cask jakobhviid/tap/immich-mount-linux
+
+      - uses: ./.github/actions/fetch
+        with:
+          package: jakobhviid/tap/immich-mount-linux
+          kind: cask
+
+      - name: Install
+        run: brew install --cask jakobhviid/tap/immich-mount-linux
+
+      - name: Verify the interfaces, the launcher and the formula they need
+        run: |
+          set -x
+          command -v immich-mount-gnome
+          command -v immich-mount-kde
+          # The formula came with the cask: the daemon, and the launcher the desktop entry runs.
+          version="$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/immich-mount-linux.rb)"
+          test "$(immich-mount --version)" = "immich-mount $version"
+
+      - name: Verify the desktop entry and the icons
+        run: |
+          set -x
+          desktop="$HOME/.local/share/applications/dev.hviid.ImmichMount.desktop"
+          test -f "$desktop"
+          cat "$desktop"
+          desktop-file-validate "$desktop"
+          # Exec must run the formula's launcher through the stable Homebrew symlink, keeping the redirect's %u.
+          grep -qx "Exec=$(brew --prefix)/bin/immich-mount app %u" "$desktop"
+          grep -qx "Icon=dev.hviid.ImmichMount" "$desktop"
+          grep -qx "MimeType=x-scheme-handler/app.immich;" "$desktop"
+          test -f "$HOME/.local/share/icons/hicolor/scalable/apps/dev.hviid.ImmichMount.svg"
+          test -f "$HOME/.local/share/icons/hicolor/symbolic/apps/dev.hviid.ImmichMount-symbolic.svg"
+
+      - name: Verify the launcher passes over an interface that does not load
+        run: |
+          # Why not a GUI smoke test: the interfaces link Fedora 44's glibc, GTK 4.18 and libadwaita 1.8, newer than
+          # this runner's, so they cannot load here. That is exactly the case `immich-mount app` must survive: it
+          # probes each interface and says so, rather than crashing or opening nothing silently.
+          set +e
+          out="$(XDG_CURRENT_DESKTOP=GNOME WAYLAND_DISPLAY=wayland-test immich-mount app 2>&1)"
+          status=$?
+          set -e
+          printf '%s\n' "$out"
+          test "$status" -ne 0
+          grep -q "does not load on this system" <<<"$out"
+
+      - name: Reinstall to exercise the version-bump path
+        run: |
+          set -x
+          brew reinstall --cask jakobhviid/tap/immich-mount-linux
+          desktop="$HOME/.local/share/applications/dev.hviid.ImmichMount.desktop"
+          test -f "$desktop"
+          grep -qx "Exec=$(brew --prefix)/bin/immich-mount app %u" "$desktop"
+
+      - name: Uninstall with zap and verify nothing is left behind
+        run: |
+          set -x
+          brew uninstall --cask --zap jakobhviid/tap/immich-mount-linux
+          gone() {
+            if [ -e "$1" ]; then
+              echo "::error::uninstall left $1 behind"
+              exit 1
+            fi
+          }
+          gone "$HOME/.local/share/applications/dev.hviid.ImmichMount.desktop"
+          gone "$HOME/.local/share/icons/hicolor/scalable/apps/dev.hviid.ImmichMount.svg"
+          if command -v immich-mount-gnome; then
+            echo "::error::immich-mount-gnome is still on PATH after uninstall"
+            exit 1
+          fi

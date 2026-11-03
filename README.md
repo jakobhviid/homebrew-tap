@@ -28,6 +28,7 @@ launcher entry and icon included — and installs with the same command; run
 | [dotsync](https://github.com/jakobhviid/dotsync) | Sync user-level config between machines through a cloud folder, using symlinks | macOS, Linux (x86_64, arm64) |
 | [grove](https://github.com/jakobhviid/grove) | Portable git shortcuts plus a multi-repo overview & sync, for any shell | macOS, Linux (x86_64, arm64) |
 | [immich-mount](https://github.com/jakobhviid/immich-mount) | Your Immich photos and videos as a drive in your file manager (unofficial) | Linux (x86_64, arm64) |
+| [immich-mount-linux](https://github.com/jakobhviid/immich-mount) | Your Immich photos and videos as a drive in your file manager (unofficial) | Linux (x86_64) |
 | [llama-matrix](https://github.com/jakobhviid/llama-matrix) | Measure llama-swap model memory footprints and generate a co-residency matrix so as many models run concurrently as physically fit - without exceeding VRAM | macOS, Linux (x86_64, arm64) |
 | [navibeat-linux](https://navibeat.app/linux) | Desktop music player for Navidrome and other OpenSubsonic servers | Linux (x86_64, arm64) |
 | [opencode-provider-manager](https://github.com/jakobhviid/opencode-provider-manager) | Install & manage the opencode-provider-manager plugin for opencode | macOS, Linux (x86_64, arm64) |

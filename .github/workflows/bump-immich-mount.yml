@@ -1,0 +1,62 @@
+name: Bump immich-mount-linux
+
+# Why: immich-mount releases on every push to its main, and the app's archive
+# carries no version in its filename, so nothing about a stale pin shows in the
+# URL. The formula is pushed by immich-mount's own release; this keeps the cask
+# beside it, and lands the commit on main only after the immich-mount suite has
+# passed against that exact commit, so a release that breaks the cask leaves
+# main alone and shows up as a failed run instead.
+on:
+  schedule:
+    # 08:15 sits between the navibeat (08:00) and formula (08:45) bumps rather
+    # than on top of either, which would contend for the same runners and API
+    # budget.
+    - cron: "15 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump-immich-mount
+  cancel-in-progress: false
+
+# The shape every bump shares: _propose moves each cask on its own and pushes
+# what moved to a scratch branch; the suite below tests that commit; _finish
+# lands each cask that passed onto main and keeps one issue per broken cask.
+jobs:
+  propose:
+    uses: ./.github/workflows/_propose.yml
+    permissions:
+      contents: write
+    with:
+      kind: github
+      tokens: >-
+        immich-mount-linux
+      candidate: auto/bump-immich-mount-linux
+
+  validate:
+    needs: propose
+    if: needs.propose.outputs.moved != ''
+    uses: ./.github/workflows/test-immich-mount-cask.yml
+    with:
+      ref: ${{ needs.propose.outputs.sha }}
+
+  finish:
+    needs: [propose, validate]
+    if: always()
+    uses: ./.github/workflows/_finish.yml
+    permissions:
+      contents: write
+      issues: write
+      actions: read
+    with:
+      pipeline: immich-mount-linux
+      tokens: >-
+        immich-mount-linux
+      candidate: auto/bump-immich-mount-linux
+      sha: ${{ needs.propose.outputs.sha }}
+      moved: ${{ needs.propose.outputs.moved }}
+      broken: ${{ needs.propose.outputs.broken }}
+      propose-result: ${{ needs.propose.result }}
+      validate-result: ${{ needs.validate.result }}
