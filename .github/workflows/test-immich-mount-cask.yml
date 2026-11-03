@@ -1,16 +1,16 @@
-name: Test immich-mount-linux on Linux
+name: Test immich-mount on Linux
 
 on:
   push:
     branches: [main]
     paths:
-      - "Casks/immich-mount-linux.rb"
+      - "Casks/immich-mount.rb"
       - ".github/workflows/test-immich-mount-cask.yml"
       - ".github/actions/mount-tap/**"
       - ".github/actions/fetch/**"
   pull_request:
     paths:
-      - "Casks/immich-mount-linux.rb"
+      - "Casks/immich-mount.rb"
       - ".github/workflows/test-immich-mount-cask.yml"
       - ".github/actions/mount-tap/**"
       - ".github/actions/fetch/**"
@@ -48,29 +48,36 @@ jobs:
       - uses: ./.github/actions/mount-tap
         with:
           ref: ${{ inputs.ref }}
-          verify: immich-mount-linux
+          verify: immich-mount
 
       - name: Audit
         run: |
-          brew audit --cask --strict jakobhviid/tap/immich-mount-linux
-          brew style --cask jakobhviid/tap/immich-mount-linux
+          brew audit --cask --strict jakobhviid/tap/immich-mount
+          brew style --cask jakobhviid/tap/immich-mount
 
       - uses: ./.github/actions/fetch
         with:
-          package: jakobhviid/tap/immich-mount-linux
+          package: jakobhviid/tap/immich-mount
           kind: cask
 
+      # Why without --cask: the one command the README gives. No formula has this name, so brew finds the cask.
       - name: Install
-        run: brew install --cask jakobhviid/tap/immich-mount-linux
+        run: brew install jakobhviid/tap/immich-mount
 
-      - name: Verify the interfaces, the launcher and the formula they need
+      - name: Verify the interfaces, the daemon and its man page and completions
         run: |
           set -x
           command -v immich-mount-gnome
           command -v immich-mount-kde
-          # The formula came with the cask: the daemon, and the launcher the desktop entry runs.
-          version="$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/immich-mount-linux.rb)"
+          # The daemon, and the launcher the desktop entry runs, are the cask's own.
+          version="$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/immich-mount.rb)"
           test "$(immich-mount --version)" = "immich-mount $version"
+          test "$(readlink -f "$(command -v immich-mount)")" = "$(brew --prefix)/Caskroom/immich-mount/$version/immich-mount"
+          prefix="$(brew --prefix)"
+          test -f "$prefix/share/man/man1/immich-mount.1"
+          test -f "$prefix/etc/bash_completion.d/immich-mount" || test -f "$prefix/share/bash-completion/completions/immich-mount"
+          test -f "$prefix/share/zsh/site-functions/_immich-mount"
+          test -f "$prefix/share/fish/vendor_completions.d/immich-mount.fish"
 
       - name: Verify the desktop entry and the icons
         run: |
@@ -79,7 +86,7 @@ jobs:
           test -f "$desktop"
           cat "$desktop"
           desktop-file-validate "$desktop"
-          # Exec must run the formula's launcher through the stable Homebrew symlink, keeping the redirect's %u.
+          # Exec must run the cask's launcher through the stable Homebrew symlink, keeping the redirect's %u.
           grep -qx "Exec=$(brew --prefix)/bin/immich-mount app %u" "$desktop"
           grep -qx "Icon=dev.hviid.ImmichMount" "$desktop"
           grep -qx "MimeType=x-scheme-handler/app.immich;" "$desktop"
@@ -102,7 +109,7 @@ jobs:
       - name: Reinstall to exercise the version-bump path
         run: |
           set -x
-          brew reinstall --cask jakobhviid/tap/immich-mount-linux
+          brew reinstall --cask jakobhviid/tap/immich-mount
           desktop="$HOME/.local/share/applications/dev.hviid.ImmichMount.desktop"
           test -f "$desktop"
           grep -qx "Exec=$(brew --prefix)/bin/immich-mount app %u" "$desktop"
@@ -110,7 +117,7 @@ jobs:
       - name: Uninstall with zap and verify nothing is left behind
         run: |
           set -x
-          brew uninstall --cask --zap jakobhviid/tap/immich-mount-linux
+          brew uninstall --cask --zap jakobhviid/tap/immich-mount
           gone() {
             if [ -e "$1" ]; then
               echo "::error::uninstall left $1 behind"
@@ -119,7 +126,9 @@ jobs:
           }
           gone "$HOME/.local/share/applications/dev.hviid.ImmichMount.desktop"
           gone "$HOME/.local/share/icons/hicolor/scalable/apps/dev.hviid.ImmichMount.svg"
-          if command -v immich-mount-gnome; then
-            echo "::error::immich-mount-gnome is still on PATH after uninstall"
-            exit 1
-          fi
+          for program in immich-mount-gnome immich-mount-kde immich-mount; do
+            if command -v "$program"; then
+              echo "::error::$program is still on PATH after uninstall"
+              exit 1
+            fi
+          done

@@ -1,9 +1,9 @@
-name: Bump immich-mount-linux
+name: Bump immich-mount
 
 # Why: immich-mount releases on every push to its main, and the app's archive
 # carries no version in its filename, so nothing about a stale pin shows in the
-# URL. The formula is pushed by immich-mount's own release; this keeps the cask
-# beside it, and lands the commit on main only after the immich-mount suite has
+# URL. The headless formula is pushed by immich-mount's own release; this keeps
+# the app's cask beside it, and lands the commit on main only after the immich-mount suite has
 # passed against that exact commit, so a release that breaks the cask leaves
 # main alone and shows up as a failed run instead.
 on:
@@ -32,8 +32,8 @@ jobs:
     with:
       kind: github
       tokens: >-
-        immich-mount-linux
-      candidate: auto/bump-immich-mount-linux
+        immich-mount
+      candidate: auto/bump-immich-mount
 
   validate:
     needs: propose
@@ -51,10 +51,10 @@ jobs:
       issues: write
       actions: read
     with:
-      pipeline: immich-mount-linux
+      pipeline: immich-mount
       tokens: >-
-        immich-mount-linux
-      candidate: auto/bump-immich-mount-linux
+        immich-mount
+      candidate: auto/bump-immich-mount
       sha: ${{ needs.propose.outputs.sha }}
       moved: ${{ needs.propose.outputs.moved }}
       broken: ${{ needs.propose.outputs.broken }}
