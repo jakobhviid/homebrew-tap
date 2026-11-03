@@ -86,9 +86,11 @@ cask "immich-mount" do
   end
 
   # Why not ~/.local/share/immich-mount: it keeps files that could not be uploaded, which are the user's.
+  # Why the link in default.target.wants: it is what enabling the service made, and left alone it points at nothing.
   zap trash: [
     "~/.cache/immich-mount",
     "~/.config/immich-mount",
+    "~/.config/systemd/user/default.target.wants/immich-mount.service",
     "~/.config/systemd/user/immich-mount.service",
   ]
 
