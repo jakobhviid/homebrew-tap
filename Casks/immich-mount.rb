@@ -86,16 +86,16 @@ cask "immich-mount" do
   end
 
   # Why not ~/.local/share/immich-mount: it keeps files that could not be uploaded, which are the user's.
-  # Why delete for the cache: it holds downloaded originals and copies being uploaded, private photos a trash
-  # folder would keep. Why the link in default.target.wants: enabling the service made it, and alone it points at
-  # nothing.
-  zap delete: "~/.cache/immich-mount",
-      trash:  [
-        "~/.config/immich-mount",
-        "~/.config/systemd/user/default.target.wants/immich-mount.service",
-        "~/.config/systemd/user/gvfs-udisks2-volume-monitor.service.d/immich-mount.conf",
-        "~/.config/systemd/user/immich-mount.service",
-      ]
+  # Why trash, not delete, for the cache too: Homebrew deletes through sudo, which asks for an admin password to
+  # remove the user's own files and fails without a display. `immich-mount logout` deletes the cache before an
+  # uninstall. Why the link in default.target.wants: enabling the service made it, and alone it points at nothing.
+  zap trash: [
+    "~/.cache/immich-mount",
+    "~/.config/immich-mount",
+    "~/.config/systemd/user/default.target.wants/immich-mount.service",
+    "~/.config/systemd/user/gvfs-udisks2-volume-monitor.service.d/immich-mount.conf",
+    "~/.config/systemd/user/immich-mount.service",
+  ]
 
   caveats <<~EOS
     Open Immich Mount from the app grid: its first run signs you in and starts the mount.
