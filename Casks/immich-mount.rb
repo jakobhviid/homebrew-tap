@@ -86,14 +86,16 @@ cask "immich-mount" do
   end
 
   # Why not ~/.local/share/immich-mount: it keeps files that could not be uploaded, which are the user's.
-  # Why the link in default.target.wants: it is what enabling the service made, and left alone it points at nothing.
-  zap trash: [
-    "~/.cache/immich-mount",
-    "~/.config/immich-mount",
-    "~/.config/systemd/user/default.target.wants/immich-mount.service",
-    "~/.config/systemd/user/gvfs-udisks2-volume-monitor.service.d/immich-mount.conf",
-    "~/.config/systemd/user/immich-mount.service",
-  ]
+  # Why delete for the cache: it holds downloaded originals and copies being uploaded, private photos a trash
+  # folder would keep. Why the link in default.target.wants: enabling the service made it, and alone it points at
+  # nothing.
+  zap delete: "~/.cache/immich-mount",
+      trash:  [
+        "~/.config/immich-mount",
+        "~/.config/systemd/user/default.target.wants/immich-mount.service",
+        "~/.config/systemd/user/gvfs-udisks2-volume-monitor.service.d/immich-mount.conf",
+        "~/.config/systemd/user/immich-mount.service",
+      ]
 
   caveats <<~EOS
     Open Immich Mount from the app grid: its first run signs you in and starts the mount.
