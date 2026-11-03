@@ -80,6 +80,15 @@ def platforms(src: str) -> str:
             for token, label in ARCH_LABELS.items():
                 if s.startswith(token):
                     oses[current].add(label)
+    # A Linux-only formula keeps one architecture's download at the top level, outside on_linux (Homebrew needs a url
+    # on every platform just to parse it), and guards only the other: the top-level url's architecture counts too.
+    if re.search(r"^\s*depends_on :linux\b", src, re.MULTILINE):
+        default = field(src, "url") or ""
+        linux = oses.setdefault("Linux", set())
+        if "x86_64" in default:
+            linux.add("x86_64")
+        elif "aarch64" in default or "arm64" in default:
+            linux.add("arm64")
     return summarize(oses)
 
 

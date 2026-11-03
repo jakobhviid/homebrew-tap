@@ -27,7 +27,7 @@ launcher entry and icon included — and installs with the same command; run
 | [crw](https://github.com/us/crw) | Turn URLs into clean markdown or JSON — scrape, crawl, search, MCP server | macOS, Linux (x86_64, arm64) |
 | [dotsync](https://github.com/jakobhviid/dotsync) | Sync user-level config between machines through a cloud folder, using symlinks | macOS, Linux (x86_64, arm64) |
 | [grove](https://github.com/jakobhviid/grove) | Portable git shortcuts plus a multi-repo overview & sync, for any shell | macOS, Linux (x86_64, arm64) |
-| [immich-mount](https://github.com/jakobhviid/immich-mount) | Your Immich photos and videos as a drive in your file manager (unofficial) | Linux (arm64) |
+| [immich-mount](https://github.com/jakobhviid/immich-mount) | Your Immich photos and videos as a drive in your file manager (unofficial) | Linux (x86_64, arm64) |
 | [llama-matrix](https://github.com/jakobhviid/llama-matrix) | Measure llama-swap model memory footprints and generate a co-residency matrix so as many models run concurrently as physically fit - without exceeding VRAM | macOS, Linux (x86_64, arm64) |
 | [navibeat-linux](https://navibeat.app/linux) | Desktop music player for Navidrome and other OpenSubsonic servers | Linux (x86_64, arm64) |
 | [opencode-provider-manager](https://github.com/jakobhviid/opencode-provider-manager) | Install & manage the opencode-provider-manager plugin for opencode | macOS, Linux (x86_64, arm64) |
@@ -37,7 +37,7 @@ launcher entry and icon included — and installs with the same command; run
 | [proton-mail-linux](https://proton.me/mail) | Encrypted email client | Linux (x86_64) |
 | [proton-meet-linux](https://proton.me/meet) | End-to-end encrypted video conferencing | Linux (x86_64) |
 | [proton-pass-linux](https://proton.me/pass) | Password manager | Linux (x86_64) |
-| [pwtune](https://github.com/jakobhviid/pwtune) | Measure any speaker with any mic and build a PipeWire EQ profile | Linux (arm64) |
+| [pwtune](https://github.com/jakobhviid/pwtune) | Measure any speaker with any mic and build a PipeWire EQ profile | Linux (x86_64, arm64) |
 | [temper](https://github.com/jakobhviid/temper) | Converge a machine to a declared spec kept in a folder of human-readable files | macOS, Linux (x86_64, arm64) |
 <!-- END TOOLS -->
 
