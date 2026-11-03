@@ -30,7 +30,6 @@ launcher entry and icon included — and installs with the same command; run
 | [immich-mount](https://github.com/jakobhviid/immich-mount) | Your Immich photos and videos as a drive in your file manager (unofficial) | Linux (x86_64) |
 | [immich-mount-headless](https://github.com/jakobhviid/immich-mount) | Immich photos and videos as a drive, without the desktop app (unofficial) | Linux (x86_64, arm64) |
 | [llama-matrix](https://github.com/jakobhviid/llama-matrix) | Measure llama-swap model memory footprints and generate a co-residency matrix so as many models run concurrently as physically fit - without exceeding VRAM | macOS, Linux (x86_64, arm64) |
-| [navibeat-linux](https://navibeat.app/linux) | Desktop music player for Navidrome and other OpenSubsonic servers | Linux (x86_64, arm64) |
 | [opencode-provider-manager](https://github.com/jakobhviid/opencode-provider-manager) | Install & manage the opencode-provider-manager plugin for opencode | macOS, Linux (x86_64, arm64) |
 | [orca-linux](https://onorca.dev/) | IDE for orchestrating AI coding agents across terminals and worktrees | Linux (x86_64, arm64) |
 | [paseo-linux](https://paseo.sh/) | Self-hosted control plane for running coding agents from any device | Linux (x86_64) |
@@ -92,3 +91,20 @@ brew untap jakobhviid/tap         # remove the tap entirely
   artcraft-launcher`. `tap_migrations.json` points each old `-linux` name at
   its official cask, so an existing install moves over on the next
   `brew update`, and a Brewfile that still names it installs the official one.
+- **NaviBeat lives in its developer's tap.** `navibeat-linux` started here and
+  is now the official cask in
+  [nenadjokic/homebrew-tap](https://github.com/nenadjokic/homebrew-tap), which
+  NaviBeat's own release script bumps the same day a release lands:
+  `brew install --cask nenadjokic/tap/navibeat-linux`. Homebrew will not move
+  an install into a tap you have not trusted, so `tap_migrations.json` points
+  the old name there and `brew update` says, once, what to run. Until then an
+  install from this tap stays on the version it has:
+
+  ```sh
+  brew tap nenadjokic/tap
+  brew trust nenadjokic/tap/navibeat-linux
+  brew reinstall navibeat-linux
+  ```
+
+  After that, a Brewfile that still names `jakobhviid/tap/navibeat-linux`
+  installs the official one.

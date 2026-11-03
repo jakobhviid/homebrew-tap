@@ -8,7 +8,7 @@ name: Bump immich-mount
 # main alone and shows up as a failed run instead.
 on:
   schedule:
-    # 08:15 sits between the navibeat (08:00) and formula (08:45) bumps rather
+    # 08:15 sits between the paseo (07:45) and formula (08:45) bumps rather
     # than on top of either, which would contend for the same runners and API
     # budget.
     - cron: "15 8 * * *"

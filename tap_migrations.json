@@ -8,6 +8,7 @@
   "filmcraft-linux": "homebrew/cask/filmcraft",
   "gridcraft-linux": "homebrew/cask/gridcraft",
   "lightcraft-linux": "homebrew/cask/lightcraft",
+  "navibeat-linux": "nenadjokic/tap",
   "pdfcraft-linux": "homebrew/cask/pdfcraft",
   "photocraft-linux": "homebrew/cask/photocraft",
   "soundcraft-linux": "homebrew/cask/soundcraft",
