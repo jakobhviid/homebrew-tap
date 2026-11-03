@@ -1,6 +1,6 @@
 cask "immich-mount" do
-  version "1.3.7"
-  sha256 "a76b845571e17cd58b398d5feea5e9381ccf4e6ad086c7eb56f01f898a829259"
+  version "1.3.12"
+  sha256 "a827f7d1d6c9d03e751c60434e1b7ae54bbed53a461ae4599ce2b4e957b11f7c"
 
   # The whole app: both interfaces, the static daemon and command line (also the launcher the desktop entry runs), its
   # man page and completions. The filename carries no version, so the release tag is the only part of the URL that
