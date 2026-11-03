@@ -6,23 +6,23 @@ class ImmichMountHeadless < Formula
   # Linux-only (FUSE), but Homebrew needs a url on EVERY platform just to parse the formula: with the url only
   # inside `on_linux`, macOS sees an empty spec and every `brew` command errors. So x86_64 Linux is the top-level
   # default, and `depends_on :linux` is what keeps macOS from installing it.
-  url "https://github.com/jakobhviid/immich-mount/releases/download/v1.4.1/immich-mount-x86_64-unknown-linux-musl.tar.gz"
-  version "1.4.1"
-  sha256 "dd34dd1a316cdee0adaf53b424f46f96a2d42a64ae78ed8161f74d830cb2a094"
+  url "https://github.com/jakobhviid/immich-mount/releases/download/v1.4.2/immich-mount-x86_64-unknown-linux-musl.tar.gz"
+  version "1.4.2"
+  sha256 "b4bf41bb22117f1dd489e196b66b87ba0863b0cff9068d74e8083573f19de8a2"
   license "MIT"
 
   # A prebuilt x86_64 Linux bottle, so `brew install` pours it; aarch64 uses the url and install below.
   bottle do
-    root_url "https://github.com/jakobhviid/immich-mount/releases/download/v1.4.1"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "07cc708c9683b912c8303c09697b41f16b208d8edbc33ae4d0d0fff41b8e9331"
+    root_url "https://github.com/jakobhviid/immich-mount/releases/download/v1.4.2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "188eddecf28ed1c6dc0bb9e74b880c18cca843703fe97708adca5d422effe236"
   end
 
   depends_on :linux
 
   on_linux do
     on_arm do
-      url "https://github.com/jakobhviid/immich-mount/releases/download/v1.4.1/immich-mount-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "3abf32ff531c0e6031fdfc0b058220c8476506ae82924f5c7c9b7eea44218693"
+      url "https://github.com/jakobhviid/immich-mount/releases/download/v1.4.2/immich-mount-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "0adc50c372dec43ac4db73c7389e606c747c60ad84302c355bb89cc2135fdc17"
     end
   end
 
