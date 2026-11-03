@@ -91,6 +91,7 @@ cask "immich-mount" do
     "~/.cache/immich-mount",
     "~/.config/immich-mount",
     "~/.config/systemd/user/default.target.wants/immich-mount.service",
+    "~/.config/systemd/user/gvfs-udisks2-volume-monitor.service.d/immich-mount.conf",
     "~/.config/systemd/user/immich-mount.service",
   ]
 
