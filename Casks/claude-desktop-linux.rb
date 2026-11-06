@@ -4,8 +4,8 @@ cask "claude-desktop-linux" do
   # URL needs both — a repackaging fix ships a new 3.2.x against the same Claude
   # build. Homebrew's composite version keeps the pair in one stanza: `csv.first`
   # is Claude's, `csv.second` is the packaging's.
-  version "4.16336.0,3.3.15"
-  sha256 "c01f51fcb1e43a5626b81af5e6b878105e51ed890960278e884e47acd87ba5a0"
+  version "4.23118.0,3.3.15"
+  sha256 "b620c86bbb6e664da320f29f865d85b3e4d0a0f6f76410e0f3f2339342cf35ae"
 
   # The `+` in the tag `v3.2.4+claude1.49585.0` is percent-encoded, matching the
   # asset URL GitHub itself serves; an unencoded `+` is a different path.
