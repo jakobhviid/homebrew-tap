@@ -100,11 +100,12 @@ def cask_platforms(src: str) -> str:
         if re.search(rf'^\s*(?:sha256\s+)?{key}:\s', src, re.MULTILINE):
             oses.setdefault(os_name, set()).add(arch)
 
-    # A `depends_on :linux` / `depends_on macos:` gate is authoritative: it can
-    # rule out an OS whose arch keys are present, and stands alone for a cask
-    # whose sha256 is a single universal hash.
+    # A top-level `depends_on :linux` / `depends_on macos:` gate is authoritative:
+    # it can rule out an OS whose arch keys are present, and stands alone for a
+    # cask whose sha256 is a single universal hash. One nested in an on_macos or
+    # on_linux block (indented further) only narrows that OS, so it is no gate.
     def gated(pattern: str) -> bool:
-        return re.search(rf"^\s*depends_on\s+{pattern}", src, re.MULTILINE) is not None
+        return re.search(rf"^  depends_on\s+{pattern}", src, re.MULTILINE) is not None
 
     for os_name, pattern in (("Linux", r"(?::linux\b|linux:)"), ("macOS", r"(?::macos\b|macos:)")):
         if gated(pattern):
@@ -116,7 +117,7 @@ def cask_platforms(src: str) -> str:
             # just "Linux" for a cask that only runs on one of the two.
             if not oses[os_name]:
                 for arch_pattern, arch in ((r":x86_64\b", "x86_64"), ((r":arm64\b"), "arm64")):
-                    if re.search(rf"^\s*depends_on\s+arch:\s+{arch_pattern}", src, re.MULTILINE):
+                    if re.search(rf"^  depends_on\s+arch:\s+{arch_pattern}", src, re.MULTILINE):
                         oses[os_name].add(arch)
             break
     else:

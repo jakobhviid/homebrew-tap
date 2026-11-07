@@ -27,7 +27,7 @@ launcher entry and icon included — and installs with the same command; run
 | [crw](https://github.com/us/crw) | Turn URLs into clean markdown or JSON — scrape, crawl, search, MCP server | macOS, Linux (x86_64, arm64) |
 | [dotsync](https://github.com/jakobhviid/dotsync) | Sync user-level config between machines through a cloud folder, using symlinks | macOS, Linux (x86_64, arm64) |
 | [grove](https://github.com/jakobhviid/grove) | Portable git shortcuts plus a multi-repo overview & sync, for any shell | macOS, Linux (x86_64, arm64) |
-| [immich-mount](https://github.com/jakobhviid/immich-mount) | Your Immich photos and videos as a drive in your file manager (unofficial) | Linux (x86_64) |
+| [immich-mount](https://jakob.hviid.phd/immich-mount/) | Your Immich photos and videos as a drive in your file manager (unofficial) | macOS (x86_64, arm64) · Linux (x86_64) |
 | [immich-mount-headless](https://github.com/jakobhviid/immich-mount) | Immich photos and videos as a drive, without the desktop app (unofficial) | Linux (x86_64, arm64) |
 | [llama-matrix](https://github.com/jakobhviid/llama-matrix) | Measure llama-swap model memory footprints and generate a co-residency matrix so as many models run concurrently as physically fit - without exceeding VRAM | macOS, Linux (x86_64, arm64) |
 | [opencode-provider-manager](https://github.com/jakobhviid/opencode-provider-manager) | Install & manage the opencode-provider-manager plugin for opencode | macOS, Linux (x86_64, arm64) |
