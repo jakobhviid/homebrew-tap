@@ -32,7 +32,8 @@ from pathlib import Path
 # cask stem -> (GitHub repo, {cask sha256 key: release asset name}).
 #
 # The asset map is keyed by the cask's own sha256 key so the rewrite can find the
-# line it belongs to. `None` means the cask carries a single bare `sha256 "..."`,
+# line it belongs to. An asset name may carry `{version}`, filled with the new
+# version. `None` means the cask carries a single bare `sha256 "..."`,
 # which is what a one-architecture cask has to use — arch-keying it would leave
 # `brew audit` on the other architecture with no hash at all.
 CASKS = {
@@ -52,8 +53,13 @@ CASKS = {
     ),
     "immich-mount": (
         "jakobhviid/immich-mount",
-        # The whole app (interfaces and daemon), x86_64 only, in one archive named without a version.
-        {None: "immich-mount-app-x86_64.tar.gz"},
+        # On macOS the notarized universal disk image, named with its version; on Linux the whole app (interfaces and
+        # daemon), x86_64 only, in one archive named without one.
+        {
+            "arm": "immich-mount-{version}.dmg",
+            "intel": "immich-mount-{version}.dmg",
+            "x86_64_linux": "immich-mount-app-x86_64.tar.gz",
+        },
     ),
 }
 
@@ -122,8 +128,15 @@ def main() -> None:
     if check:
         sys.exit(f"{cask.stem} is behind: {current} -> {latest}")
 
-    # Hash before rewriting, so a download failure leaves the cask untouched.
-    shas = {key: asset_sha256(repo, latest, asset) for key, asset in assets.items()}
+    # Hash before rewriting, so a download failure leaves the cask untouched. An asset two keys share (one disk image
+    # for both Mac architectures) is downloaded once.
+    by_name: dict[str, str] = {}
+    shas = {}
+    for key, asset in assets.items():
+        name = asset.format(version=latest)
+        if name not in by_name:
+            by_name[name] = asset_sha256(repo, latest, name)
+        shas[key] = by_name[name]
 
     src = VERSION_RE.sub(lambda m: f"{m['pre']}{latest}{m['post']}", src, count=1)
     for key, sha in shas.items():

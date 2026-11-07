@@ -1,4 +1,4 @@
-name: Test immich-mount on Linux
+name: Test immich-mount on Linux and macOS
 
 on:
   push:
@@ -132,3 +132,50 @@ jobs:
               exit 1
             fi
           done
+
+  macos:
+    # The cask's macOS part: the notarized disk image puts the app in Applications, signed and with its notarization
+    # ticket stapled, at the cask's version, and zap takes it away again.
+    runs-on: macos-latest
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: ./.github/actions/mount-tap
+        with:
+          ref: ${{ inputs.ref }}
+          verify: immich-mount
+
+      - name: Audit
+        run: |
+          brew audit --cask --strict jakobhviid/tap/immich-mount
+          brew style --cask jakobhviid/tap/immich-mount
+
+      - uses: ./.github/actions/fetch
+        with:
+          package: jakobhviid/tap/immich-mount
+          kind: cask
+
+      - name: Install
+        run: brew install --cask jakobhviid/tap/immich-mount
+
+      - name: Verify the app's version, signature and notarization
+        run: |
+          set -x
+          app="/Applications/Immich Mount.app"
+          version="$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/immich-mount.rb)"
+          test "$(defaults read "$app/Contents/Info" CFBundleShortVersionString)" = "$version"
+          codesign --verify --deep --strict "$app"
+          xcrun stapler validate "$app"
+
+      - name: Uninstall with zap and verify the app is gone
+        run: |
+          set -x
+          brew uninstall --cask --zap jakobhviid/tap/immich-mount
+          if [ -e "/Applications/Immich Mount.app" ]; then
+            echo "::error::uninstall left the app behind"
+            exit 1
+          fi
