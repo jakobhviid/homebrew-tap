@@ -2,9 +2,15 @@
 """Bump a GitHub-released cask to the latest upstream version.
 
 Reads the cask's current `version`, asks GitHub for the newest release, and if
-they differ rewrites `version` and every `sha256` in place. The assets are
-streamed straight into a hash, so nothing large is written to disk and the
-script is cheap enough to run on a schedule.
+they differ rewrites `version` and every `sha256` in place. The hashes come from
+the digests GitHub reports for release assets; an asset without one is streamed
+straight into a hash, so nothing large is written to disk and the script is
+cheap enough to run on a schedule.
+
+At the same version, the hashes are compared with those digests too: a release
+run again replaces its assets with rebuilt ones (a disk image signed again),
+and the cask follows. A release that lacks one of the cask's assets leaves the
+cask as it is, at the last release that has them all.
 
 A sibling to bump-proton.py, which exists because Proton publishes no GitHub
 releases at all. Everything reachable through the releases API belongs here
@@ -77,6 +83,12 @@ def sha_pattern(key: str | None) -> re.Pattern[str]:
     )
 
 
+def pinned_sha(src: str, key: str | None) -> str | None:
+    """The hash the cask pins for one key, None when it has no such line."""
+    match = sha_pattern(key).search(src)
+    return match["sha"] if match else None
+
+
 def get(url: str) -> bytes:
     request = urllib.request.Request(url, headers={"User-Agent": "jakobhviid-homebrew-tap"})
     # A token lifts the 60/hour anonymous limit; the API call works without one.
@@ -86,9 +98,14 @@ def get(url: str) -> bytes:
         return response.read()
 
 
-def latest_version(repo: str) -> str:
+def latest_release(repo: str) -> tuple[str, dict[str, str | None]]:
+    """The newest release's version, and its assets by name with the sha256 GitHub reports (None where it has none)."""
     release = json.loads(get(f"https://api.github.com/repos/{repo}/releases/latest"))
-    return release["tag_name"].lstrip("v")
+    digests = {}
+    for asset in release.get("assets", []):
+        digest = asset.get("digest") or ""
+        digests[asset["name"]] = digest.removeprefix("sha256:") if digest.startswith("sha256:") else None
+    return release["tag_name"].lstrip("v"), digests
 
 
 def asset_sha256(repo: str, version: str, asset: str) -> str:
@@ -120,22 +137,30 @@ def main() -> None:
         sys.exit(f"error: no top-level `version` stanza in {cask}")
     current = match.group("version")
 
-    latest = latest_version(repo)
-    if current == latest:
-        print(f"{cask.stem} is up to date at {current}.")
+    latest, published = latest_release(repo)
+    names = {key: asset.format(version=latest) for key, asset in assets.items()}
+    missing = sorted({name for name in names.values() if name not in published})
+    if missing:
+        print(f"{cask.stem} stays at {current}: release {latest} lacks {', '.join(missing)}.", file=sys.stderr)
         return
-    print(f"{cask.stem}: {current} -> {latest}", file=sys.stderr)
+    if current == latest:
+        rebuilt = [key for key, name in names.items() if published[name] and published[name] != pinned_sha(src, key)]
+        if not rebuilt:
+            print(f"{cask.stem} is up to date at {current}.")
+            return
+        print(f"{cask.stem}: {current} was released again; new hashes for {', '.join(map(str, rebuilt))}", file=sys.stderr)
+    else:
+        print(f"{cask.stem}: {current} -> {latest}", file=sys.stderr)
     if check:
         sys.exit(f"{cask.stem} is behind: {current} -> {latest}")
 
     # Hash before rewriting, so a download failure leaves the cask untouched. An asset two keys share (one disk image
-    # for both Mac architectures) is downloaded once.
+    # for both Mac architectures) is hashed once.
     by_name: dict[str, str] = {}
     shas = {}
-    for key, asset in assets.items():
-        name = asset.format(version=latest)
+    for key, name in names.items():
         if name not in by_name:
-            by_name[name] = asset_sha256(repo, latest, name)
+            by_name[name] = published[name] or asset_sha256(repo, latest, name)
         shas[key] = by_name[name]
 
     src = VERSION_RE.sub(lambda m: f"{m['pre']}{latest}{m['post']}", src, count=1)

@@ -34,6 +34,8 @@ cask "immich-mount" do
       System Settings, under General, Login Items & Extensions, File Providers.
       It lives in the menu bar, and your library in Finder's sidebar.
 
+      Before uninstalling, sign out in its menu, so its location leaves Finder.
+
       Immich Mount is an independent, unofficial project, not affiliated with the
       Immich project or FUTO.
     EOS
