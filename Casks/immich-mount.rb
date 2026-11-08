@@ -1,8 +1,8 @@
 cask "immich-mount" do
-  version "2.21.6"
-  sha256 arm:          "98390e8e73daefa7b17604ad421172b771a672079fb7d89892b28e28f9a009aa",
-         intel:        "98390e8e73daefa7b17604ad421172b771a672079fb7d89892b28e28f9a009aa",
-         x86_64_linux: "ae8ca2604ec1eb7dbda7b167b6ecc95b50f1b4e79204c424bf847d7c9ebeecb1"
+  version "2.21.10"
+  sha256 arm:          "8abd9c5a91d2c67faf1a4b12ea1067c9d871ea8f0520ebdcc4f5ca9cd39dc35f",
+         intel:        "8abd9c5a91d2c67faf1a4b12ea1067c9d871ea8f0520ebdcc4f5ca9cd39dc35f",
+         x86_64_linux: "038f1db804349dd1b57d82e4431d22cc33f7b9f819746299df3fed07d18fd8ed"
 
   # Why one cask for both systems: `brew install jakobhviid/tap/immich-mount` is the one command on either, and both
   # carry the same version, from the same release.
