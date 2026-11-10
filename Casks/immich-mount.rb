@@ -16,10 +16,25 @@ cask "immich-mount" do
 
     app "Immich Mount.app"
 
-    uninstall quit: "dev.hviid.ImmichMount"
+    # Why the script: macOS runs nothing when an app is deleted, and keeps a provider's Finder location until the app
+    # removes it, so the app signs out first, once quit (`Immich Mount --uninstall`), and its location leaves Finder
+    # with it. Only an app whose Info.plist says it can (ImmichMountUninstall): an older one would ignore the argument
+    # and start, and the uninstall would wait on it.
+    uninstall quit:   "dev.hviid.ImmichMount",
+              script: {
+                executable:   "/bin/sh",
+                args:         [
+                  "-c",
+                  "/usr/libexec/PlistBuddy -c 'Print :ImmichMountUninstall' \"$1/Contents/Info.plist\" " \
+                  ">/dev/null 2>&1 || exit 0; exec \"$1/Contents/MacOS/Immich Mount\" --uninstall",
+                  "sh",
+                  "#{appdir}/Immich Mount.app",
+                ],
+                must_succeed: false,
+              }
 
     # Why these: the app and its Finder extension are sandboxed, so all they keep is in their containers and the
-    # team's App Group (the sign-in, the settings, the extension's store). Sign out first, so Finder's location goes.
+    # team's App Group (the sign-in, the settings, the extension's store).
     zap trash: [
       "~/Library/Application Scripts/dev.hviid.ImmichMount",
       "~/Library/Application Scripts/dev.hviid.ImmichMount.FileProvider",
@@ -30,11 +45,11 @@ cask "immich-mount" do
     ]
 
     caveats <<~EOS
-      Open Immich Mount from Applications and sign in, then switch it on once in
-      System Settings, under General, Login Items & Extensions, File Providers.
-      It lives in the menu bar, and your library in Finder's sidebar.
+      Open Immich Mount from Applications and sign in, then click Enable at the
+      top of its Finder window, as the app shows. It lives in the menu bar, and
+      your library in Finder's sidebar.
 
-      Before uninstalling, sign out in its menu, so its location leaves Finder.
+      brew uninstall signs it out first, so its location leaves Finder too.
 
       Immich Mount is an independent, unofficial project, not affiliated with the
       Immich project or FUTO.
