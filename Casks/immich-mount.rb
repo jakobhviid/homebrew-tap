@@ -1,8 +1,8 @@
 cask "immich-mount" do
-  version "2.30.0"
-  sha256 arm:          "6ba1e1c350672c1d2ff9f1dfe60cec8f4b4047419e4fb13a58951ee943f92b91",
-         intel:        "6ba1e1c350672c1d2ff9f1dfe60cec8f4b4047419e4fb13a58951ee943f92b91",
-         x86_64_linux: "f612fb8181182e42ba37fa0c9594c1bb0cee62fd93411b1dd71526be58f4d053"
+  version "2.31.1"
+  sha256 arm:          "4432337dc59704598447e1498552ea93e4914895d7933574af27ec02541ff8c0",
+         intel:        "4432337dc59704598447e1498552ea93e4914895d7933574af27ec02541ff8c0",
+         x86_64_linux: "c36ad183c0b6e712317696a710dbe89a8bc16153cfff8c07143a07f47759be1a"
 
   # Why one cask for both systems: `brew install jakobhviid/tap/immich-mount` is the one command on either, and both
   # carry the same version, from the same release.
@@ -75,6 +75,11 @@ cask "immich-mount" do
     # interface native to the desktop. The app's first run writes and starts the daemon's user service itself, from
     # this binary's stable link in Homebrew's bin.
     binary "immich-mount"
+    # Why in Dolphin: KIO finds plugins only on Qt's plugin path. A link, so the plugin finds its translations beside
+    # its real file, in a folder that holds only it; the Plasma login script puts that folder on QT_PLUGIN_PATH, so
+    # Dolphin offers the items from the next login.
+    binary "immich-mount-dolphin.so",
+           target: "#{Dir.home}/.local/lib/immich-mount/plugins/kf6/kfileitemaction/immich-mount-dolphin.so"
     manpage "immich-mount.1"
     bash_completion "immich-mount.bash"
     zsh_completion "_immich-mount"
@@ -88,6 +93,14 @@ cask "immich-mount" do
     # Why the symbolic icon too: the daemon's notifications carry it.
     artifact "dev.hviid.ImmichMount-symbolic.svg",
              target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.ImmichMount-symbolic.svg"
+    # Why Open in Immich comes this way in Files: Nautilus loads C extensions only from its folder in /usr, read-only
+    # on Bazzite and the atomic desktops, while nautilus-python, which they ship, loads from the home folder
+    # (GSConnect installs itself the same way). It stays quiet where the packages' C extension is installed.
+    artifact "immich-mount-nautilus.py",
+             target: "#{Dir.home}/.local/share/nautilus-python/extensions/immich-mount-nautilus.py"
+    # The Plasma login script that puts the plugin's folder on QT_PLUGIN_PATH (above).
+    artifact "immich-mount-plasma-env.sh",
+             target: "#{Dir.home}/.config/plasma-workspace/env/immich-mount.sh"
 
     preflight_steps do
       # Why: the release's entry leaves where the launcher lives to the installer. Point it at Homebrew's bin symlink,
@@ -140,6 +153,8 @@ cask "immich-mount" do
       "~/.config/systemd/user/default.target.wants/immich-mount.service",
       "~/.config/systemd/user/gvfs-udisks2-volume-monitor.service.d/immich-mount.conf",
       "~/.config/systemd/user/immich-mount.service",
+      "~/.local/lib/immich-mount",
+      "~/.local/share/nautilus-python/extensions/__pycache__/immich-mount-nautilus.*.pyc",
     ]
 
     caveats <<~EOS
