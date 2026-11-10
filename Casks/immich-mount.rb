@@ -75,6 +75,11 @@ cask "immich-mount" do
     # interface native to the desktop. The app's first run writes and starts the daemon's user service itself, from
     # this binary's stable link in Homebrew's bin.
     binary "immich-mount"
+    # Why in Dolphin: KIO finds plugins only on Qt's plugin path. A link, so the plugin finds its translations beside
+    # its real file, in a folder that holds only it; the Plasma login script puts that folder on QT_PLUGIN_PATH, so
+    # Dolphin offers the items from the next login.
+    binary "immich-mount-dolphin.so",
+           target: "#{Dir.home}/.local/lib/immich-mount/plugins/kf6/kfileitemaction/immich-mount-dolphin.so"
     manpage "immich-mount.1"
     bash_completion "immich-mount.bash"
     zsh_completion "_immich-mount"
@@ -88,17 +93,12 @@ cask "immich-mount" do
     # Why the symbolic icon too: the daemon's notifications carry it.
     artifact "dev.hviid.ImmichMount-symbolic.svg",
              target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.ImmichMount-symbolic.svg"
-
     # Why Open in Immich comes this way in Files: Nautilus loads C extensions only from its folder in /usr, read-only on
     # Bazzite and the atomic desktops, while nautilus-python, which they ship, loads from the home folder (GSConnect
     # installs itself the same way). It stays quiet where the packages' C extension is installed.
     artifact "immich-mount-nautilus.py",
              target: "#{Dir.home}/.local/share/nautilus-python/extensions/immich-mount-nautilus.py"
-    # Why in Dolphin: KIO finds plugins only on Qt's plugin path. A link, so the plugin finds its translations beside
-    # its real file, in a folder that holds only it; the Plasma login script puts that folder on QT_PLUGIN_PATH, so
-    # Dolphin offers the items from the next login.
-    binary "immich-mount-dolphin.so",
-           target: "#{Dir.home}/.local/lib/immich-mount/plugins/kf6/kfileitemaction/immich-mount-dolphin.so"
+    # The Plasma login script that puts the plugin's folder on QT_PLUGIN_PATH (above).
     artifact "immich-mount-plasma-env.sh",
              target: "#{Dir.home}/.config/plasma-workspace/env/immich-mount.sh"
 
