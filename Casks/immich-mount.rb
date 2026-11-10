@@ -93,8 +93,8 @@ cask "immich-mount" do
     # Why the symbolic icon too: the daemon's notifications carry it.
     artifact "dev.hviid.ImmichMount-symbolic.svg",
              target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.ImmichMount-symbolic.svg"
-    # Why Open in Immich comes this way in Files: Nautilus loads C extensions only from its folder in /usr, read-only on
-    # Bazzite and the atomic desktops, while nautilus-python, which they ship, loads from the home folder (GSConnect
+    # Why Open in Immich comes this way in Files: Nautilus loads C extensions only from its folder in /usr, read-only
+    # on Bazzite and the atomic desktops, while nautilus-python, which they ship, loads from the home folder (GSConnect
     # installs itself the same way). It stays quiet where the packages' C extension is installed.
     artifact "immich-mount-nautilus.py",
              target: "#{Dir.home}/.local/share/nautilus-python/extensions/immich-mount-nautilus.py"
@@ -147,19 +147,13 @@ cask "immich-mount" do
     # Why trash, not delete, for the cache too: Homebrew deletes through sudo, which asks for an admin password to
     # remove the user's own files and fails without a display. `immich-mount logout` deletes the cache before an
     # uninstall. Why the link in default.target.wants: enabling the service made it, and alone it points at nothing.
-    uninstall rmdir: [
-      "~/.local/lib/immich-mount/plugins/kf6/kfileitemaction",
-      "~/.local/lib/immich-mount/plugins/kf6",
-      "~/.local/lib/immich-mount/plugins",
-      "~/.local/lib/immich-mount",
-    ]
-
     zap trash: [
       "~/.cache/immich-mount",
       "~/.config/immich-mount",
       "~/.config/systemd/user/default.target.wants/immich-mount.service",
       "~/.config/systemd/user/gvfs-udisks2-volume-monitor.service.d/immich-mount.conf",
       "~/.config/systemd/user/immich-mount.service",
+      "~/.local/lib/immich-mount",
       "~/.local/share/nautilus-python/extensions/__pycache__/immich-mount-nautilus.*.pyc",
     ]
 
