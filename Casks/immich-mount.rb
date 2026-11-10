@@ -94,8 +94,8 @@ cask "immich-mount" do
     artifact "dev.hviid.ImmichMount-symbolic.svg",
              target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.ImmichMount-symbolic.svg"
     # Why Open in Immich comes this way in Files: Nautilus loads C extensions only from its folder in /usr, read-only
-    # on Bazzite and the atomic desktops, while nautilus-python, which they ship, loads from the home folder (GSConnect
-    # installs itself the same way). It stays quiet where the packages' C extension is installed.
+    # on Bazzite and the atomic desktops, while nautilus-python, which they ship, loads from the home folder
+    # (GSConnect installs itself the same way). It stays quiet where the packages' C extension is installed.
     artifact "immich-mount-nautilus.py",
              target: "#{Dir.home}/.local/share/nautilus-python/extensions/immich-mount-nautilus.py"
     # The Plasma login script that puts the plugin's folder on QT_PLUGIN_PATH (above).
