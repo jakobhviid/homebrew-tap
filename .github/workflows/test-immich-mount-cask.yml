@@ -89,7 +89,8 @@ jobs:
           # Exec must run the cask's launcher through the stable Homebrew symlink, keeping the redirect's %u.
           grep -qx "Exec=$(brew --prefix)/bin/immich-mount app %u" "$desktop"
           grep -qx "Icon=dev.hviid.ImmichMount" "$desktop"
-          grep -qx "MimeType=x-scheme-handler/app.immich;" "$desktop"
+          # It takes the browser sign-in's redirect (app.immich) and links from other apps (immich-crosslink).
+          grep -qx "MimeType=x-scheme-handler/app.immich;x-scheme-handler/immich-crosslink;" "$desktop"
           test -f "$HOME/.local/share/icons/hicolor/scalable/apps/dev.hviid.ImmichMount.svg"
           test -f "$HOME/.local/share/icons/hicolor/symbolic/apps/dev.hviid.ImmichMount-symbolic.svg"
 
