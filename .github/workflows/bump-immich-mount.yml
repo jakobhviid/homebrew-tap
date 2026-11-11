@@ -13,6 +13,12 @@ on:
     # budget.
     - cron: "15 8 * * *"
   workflow_dispatch:
+  # immich-mount's release pushes a copy of main here once it has published, so
+  # the cask follows the release within the hour instead of at the next daily
+  # run, which stays to catch any release this missed. The branch is only a
+  # trigger: landing still goes through the candidate and the tests below.
+  push:
+    branches: ["auto/release-immich-mount"]
 
 permissions:
   contents: read
