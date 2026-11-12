@@ -3,7 +3,7 @@
 class Crw < Formula
   desc "Turn URLs into clean markdown or JSON — scrape, crawl, search, MCP server"
   homepage "https://github.com/us/crw"
-  version "0.43.2"
+  version "0.44.0"
   # Upstream declares the deprecated bare "AGPL-3.0" and ships AGPLv3 with no
   # "or later" clause, which is SPDX "AGPL-3.0-only".
   license "AGPL-3.0-only"
@@ -13,29 +13,29 @@ class Crw < Formula
   # macOS and other arches fall back to upstream's url below; macOS always has
   # clang via the required Command Line Tools, so no bottle is needed.
   bottle do
-    root_url "https://github.com/jakobhviid/homebrew-tap/releases/download/crw-0.43.2"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "c1e06d7d3e54cca7144f8c786a12d9f216cc55956d99ca26d74c7540aa039847"
+    root_url "https://github.com/jakobhviid/homebrew-tap/releases/download/crw-0.44.0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "5fa29e1b2d343a69695777e3c10f3d2d686f28c4d6f2c4449d965415c350d092"
   end
 
   on_macos do
     on_arm do
-      url "https://github.com/us/crw/releases/download/v0.43.2/crw-darwin-arm64.tar.gz"
-      sha256 "0c2f677bca41c1d57ae3e0d94555bb98d34b743acad8edec9275681280d081b5"
+      url "https://github.com/us/crw/releases/download/v0.44.0/crw-darwin-arm64.tar.gz"
+      sha256 "770553f9a4497c4b015e5c7617b8077c1d81439af7df3f9f1e9dc9473856a01d"
     end
     on_intel do
-      url "https://github.com/us/crw/releases/download/v0.43.2/crw-darwin-x64.tar.gz"
-      sha256 "6b748cafc47d0e6775d31b8a97f2b645707d06bc0ed422e58f1e4c735779e0a1"
+      url "https://github.com/us/crw/releases/download/v0.44.0/crw-darwin-x64.tar.gz"
+      sha256 "6bf3f1eaffbce7e90dc919bedf798329d02623ff4c0a3f190c3506ece5a235e3"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/us/crw/releases/download/v0.43.2/crw-linux-arm64.tar.gz"
-      sha256 "f1f125d465c2adf0ab651db562c184d45fe756fdd93af6bb8a03664c6495e54f"
+      url "https://github.com/us/crw/releases/download/v0.44.0/crw-linux-arm64.tar.gz"
+      sha256 "0a27b82f2a947715a9fec029c030eeb57ecbec36928ba6ca07ca22de294c8c2d"
     end
     on_intel do
-      url "https://github.com/us/crw/releases/download/v0.43.2/crw-linux-x64.tar.gz"
-      sha256 "9ddb8cb4e872fb8dc65366d3ff0ccab97166946c8ad15283e10325ec4b99c6d0"
+      url "https://github.com/us/crw/releases/download/v0.44.0/crw-linux-x64.tar.gz"
+      sha256 "a17d56549f21c302c1fcf007f11b662a7d9f92bba4cea5d41c82ade4a87cea2a"
     end
   end
 
