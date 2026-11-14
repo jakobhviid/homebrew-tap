@@ -38,7 +38,6 @@ cask "verso" do
            target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/dev.hviid.Verso.png"
   artifact "verso/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg",
            target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg"
-
   # Verso Drive's menu in Files (Open in Immich, Copy Immich Link, Show in other apps), for nautilus-python.
   artifact "verso/verso-nautilus.py",
            target: "#{Dir.home}/.local/share/nautilus-python/extensions/verso-nautilus.py"
@@ -82,13 +81,13 @@ cask "verso" do
 
   zap trash: [
     "~/.cache/verso",
-    "~/.local/share/applications/dev.hviid.Verso.Drive.desktop",
-    "~/.local/share/applications/dev.hviid.Verso.Gallery.desktop",
-    "~/.local/share/nautilus-python/extensions/__pycache__/verso-nautilus.*.pyc",
     "~/.config/systemd/user/default.target.wants/verso.service",
     "~/.config/systemd/user/gvfs-udisks2-volume-monitor.service.d/verso.conf",
     "~/.config/systemd/user/verso.service",
     "~/.config/verso",
+    "~/.local/share/applications/dev.hviid.Verso.Drive.desktop",
+    "~/.local/share/applications/dev.hviid.Verso.Gallery.desktop",
+    "~/.local/share/nautilus-python/extensions/__pycache__/verso-nautilus.*.pyc",
     "~/.local/share/verso",
     "~/.local/state/verso",
   ]
