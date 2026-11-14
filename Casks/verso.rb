@@ -1,6 +1,6 @@
 cask "verso" do
-  version "0.4.1"
-  sha256 "aac881c07120a92c1c61b18c13b8eaebe5331f42394251143cc3179e9ee9d2a5"
+  version "0.4.2"
+  sha256 "c99384de1fdd41421bee546f852d103cd39cdb6a5b7aa75a01f84ec5ed3f3848"
 
   # Why a releases-only repository: the source is private while the app is evaluated; the builds are public.
   url "https://github.com/jakobhviid/verso-releases/releases/download/v#{version}/verso-x86_64.tar.gz"
@@ -23,9 +23,20 @@ cask "verso" do
   binary "verso/verso-service"
   artifact "verso/dev.hviid.Verso.desktop",
            target: "#{Dir.home}/.local/share/applications/dev.hviid.Verso.desktop"
-  artifact "verso/dev.hviid.Verso.svg",
-           target: "#{Dir.home}/.local/share/icons/hicolor/scalable/apps/dev.hviid.Verso.svg"
-  artifact "verso/dev.hviid.Verso-symbolic.svg",
+  # The Mac app's icon at each size, and its menu bar icon as the symbolic one.
+  artifact "verso/hicolor/16x16/apps/dev.hviid.Verso.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/16x16/apps/dev.hviid.Verso.png"
+  artifact "verso/hicolor/32x32/apps/dev.hviid.Verso.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/32x32/apps/dev.hviid.Verso.png"
+  artifact "verso/hicolor/64x64/apps/dev.hviid.Verso.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/64x64/apps/dev.hviid.Verso.png"
+  artifact "verso/hicolor/128x128/apps/dev.hviid.Verso.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/128x128/apps/dev.hviid.Verso.png"
+  artifact "verso/hicolor/256x256/apps/dev.hviid.Verso.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/256x256/apps/dev.hviid.Verso.png"
+  artifact "verso/hicolor/512x512/apps/dev.hviid.Verso.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/dev.hviid.Verso.png"
+  artifact "verso/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg",
            target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg"
 
   # Why %u stays: the browser sign-in's redirect (app.immich:) and crosslink links reach the app as its argument.
