@@ -1,6 +1,6 @@
 cask "immich-gallery-linux" do
-  version "0.3.0"
-  sha256 "c7fbbb90a1801637e7fd21d0f4402586b07169ea53432c274f3b02b7c1474943"
+  version "0.3.1"
+  sha256 "c2a6c9ffd7a9867e8e6cb8905a2d6c07ad6a5200ea71997a8574e2168fd43ff2"
 
   # Why a releases-only repository: the source is private while the app is evaluated; the builds are public.
   url "https://github.com/jakobhviid/immich-gallery-linux-releases/releases/download/v#{version}/immich-gallery-linux-x86_64.tar.gz"
@@ -27,10 +27,11 @@ cask "immich-gallery-linux" do
   artifact "immich-gallery-linux/dev.hviid.ImmichGallery-symbolic.svg",
            target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.ImmichGallery-symbolic.svg"
 
+  # Why %u stays: the browser sign-in's redirect (app.immich:) and crosslink links reach the app as its argument.
   preflight_steps do
     inreplace "immich-gallery-linux/dev.hviid.ImmichGallery.desktop",
               /^Exec=.*$/,
-              "Exec={{HOMEBREW_PREFIX}}/bin/immich-gallery-gnome"
+              "Exec={{HOMEBREW_PREFIX}}/bin/immich-gallery-gnome %u"
   end
 
   postflight_steps do
