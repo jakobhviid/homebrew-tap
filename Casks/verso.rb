@@ -1,6 +1,6 @@
 cask "verso" do
-  version "0.4.3"
-  sha256 "a68dbf42a253985aef92bb7c5a8a35c5d0049bab504e023df75fa6a7c606124d"
+  version "0.5.0"
+  sha256 "539f0774aa695940ff36dcab017e027f2929657d0d83f7e1f1e33d136fcbe323"
 
   # Why a releases-only repository: the source is private while the app is evaluated; the builds are public.
   url "https://github.com/jakobhviid/verso-releases/releases/download/v#{version}/verso-x86_64.tar.gz"
@@ -38,6 +38,10 @@ cask "verso" do
            target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/dev.hviid.Verso.png"
   artifact "verso/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg",
            target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg"
+
+  # Verso Drive's menu in Files (Open in Immich, Copy Immich Link, Show in other apps), for nautilus-python.
+  artifact "verso/verso-nautilus.py",
+           target: "#{Dir.home}/.local/share/nautilus-python/extensions/verso-nautilus.py"
 
   # Why %u stays: the browser sign-in's redirect (app.immich:) and crosslink links reach the app as its argument.
   preflight_steps do
@@ -78,6 +82,9 @@ cask "verso" do
 
   zap trash: [
     "~/.cache/verso",
+    "~/.local/share/applications/dev.hviid.Verso.Drive.desktop",
+    "~/.local/share/applications/dev.hviid.Verso.Gallery.desktop",
+    "~/.local/share/nautilus-python/extensions/__pycache__/verso-nautilus.*.pyc",
     "~/.config/systemd/user/default.target.wants/verso.service",
     "~/.config/systemd/user/gvfs-udisks2-volume-monitor.service.d/verso.conf",
     "~/.config/systemd/user/verso.service",
