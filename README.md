@@ -27,7 +27,6 @@ launcher entry and icon included — and installs with the same command; run
 | [crw](https://github.com/us/crw) | Turn URLs into clean markdown or JSON — scrape, crawl, search, MCP server | macOS, Linux (x86_64, arm64) |
 | [dotsync](https://github.com/jakobhviid/dotsync) | Sync user-level config between machines through a cloud folder, using symlinks | macOS, Linux (x86_64, arm64) |
 | [grove](https://github.com/jakobhviid/grove) | Portable git shortcuts plus a multi-repo overview & sync, for any shell | macOS, Linux (x86_64, arm64) |
-| [immich-gallery-linux](https://github.com/jakobhviid/immich-gallery-linux-releases) | Gallery for an Immich photo library, beside Immich Mount (evaluation build) | Linux (x86_64) |
 | [immich-mount](https://jakob.hviid.phd/immich-mount/) | Your Immich photos and videos as a drive in your file manager (unofficial) | macOS (x86_64, arm64) · Linux (x86_64) |
 | [immich-mount-headless](https://github.com/jakobhviid/immich-mount) | Immich photos and videos as a drive, without the desktop app (unofficial) | Linux (x86_64, arm64) |
 | [llama-matrix](https://github.com/jakobhviid/llama-matrix) | Measure llama-swap model memory footprints and generate a co-residency matrix so as many models run concurrently as physically fit - without exceeding VRAM | macOS, Linux (x86_64, arm64) |
@@ -40,6 +39,7 @@ launcher entry and icon included — and installs with the same command; run
 | [proton-pass-linux](https://proton.me/pass) | Password manager | Linux (x86_64) |
 | [pwtune](https://github.com/jakobhviid/pwtune) | Measure any speaker with any mic and build a PipeWire EQ profile | Linux (x86_64, arm64) |
 | [temper](https://github.com/jakobhviid/temper) | Converge a machine to a declared spec kept in a folder of human-readable files | macOS, Linux (x86_64, arm64) |
+| [verso](https://github.com/jakobhviid/verso-releases) | Gallery, drive and tray for an Immich photo library (evaluation build) | Linux (x86_64) |
 <!-- END TOOLS -->
 
 Each tool's own repository (linked above) is the place for its usage docs. Some

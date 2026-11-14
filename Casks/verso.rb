@@ -1,12 +1,12 @@
-cask "immich-gallery-linux" do
-  version "0.3.1"
-  sha256 "c2a6c9ffd7a9867e8e6cb8905a2d6c07ad6a5200ea71997a8574e2168fd43ff2"
+cask "verso" do
+  version "0.4.0"
+  sha256 "c57079a0b8a79146606b826345f3a373c78e03f2904237f13d001a5f7a55552c"
 
   # Why a releases-only repository: the source is private while the app is evaluated; the builds are public.
-  url "https://github.com/jakobhviid/immich-gallery-linux-releases/releases/download/v#{version}/immich-gallery-linux-x86_64.tar.gz"
-  name "Immich Gallery for Linux"
-  desc "Gallery for an Immich photo library, beside Immich Mount (evaluation build)"
-  homepage "https://github.com/jakobhviid/immich-gallery-linux-releases"
+  url "https://github.com/jakobhviid/verso-releases/releases/download/v#{version}/verso-x86_64.tar.gz"
+  name "Verso for Immich"
+  desc "Gallery, drive and tray for an Immich photo library (evaluation build)"
+  homepage "https://github.com/jakobhviid/verso-releases"
 
   livecheck do
     url :url
@@ -15,23 +15,24 @@ cask "immich-gallery-linux" do
 
   # Why x86_64 and Fedora 44's libraries: it is built in Immich Mount's Fedora 44 toolbox and links the system's GTK 4
   # and libadwaita, as Immich Mount's own cask does. The map's library (libshumate), which a desktop may not have,
-  # comes with it in lib/, beside the binary that finds it there.
+  # comes with it in lib/, beside the window's program that finds it there.
   depends_on arch: :x86_64
   depends_on linux: :any
 
-  binary "immich-gallery-linux/immich-gallery-gnome"
-  artifact "immich-gallery-linux/dev.hviid.ImmichGallery.desktop",
-           target: "#{Dir.home}/.local/share/applications/dev.hviid.ImmichGallery.desktop"
-  artifact "immich-gallery-linux/dev.hviid.ImmichGallery.svg",
-           target: "#{Dir.home}/.local/share/icons/hicolor/scalable/apps/dev.hviid.ImmichGallery.svg"
-  artifact "immich-gallery-linux/dev.hviid.ImmichGallery-symbolic.svg",
-           target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.ImmichGallery-symbolic.svg"
+  binary "verso/verso"
+  binary "verso/verso-service"
+  artifact "verso/dev.hviid.Verso.desktop",
+           target: "#{Dir.home}/.local/share/applications/dev.hviid.Verso.desktop"
+  artifact "verso/dev.hviid.Verso.svg",
+           target: "#{Dir.home}/.local/share/icons/hicolor/scalable/apps/dev.hviid.Verso.svg"
+  artifact "verso/dev.hviid.Verso-symbolic.svg",
+           target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg"
 
   # Why %u stays: the browser sign-in's redirect (app.immich:) and crosslink links reach the app as its argument.
   preflight_steps do
-    inreplace "immich-gallery-linux/dev.hviid.ImmichGallery.desktop",
+    inreplace "verso/dev.hviid.Verso.desktop",
               /^Exec=.*$/,
-              "Exec={{HOMEBREW_PREFIX}}/bin/immich-gallery-gnome %u"
+              "Exec={{HOMEBREW_PREFIX}}/bin/verso %u"
   end
 
   postflight_steps do
@@ -64,11 +65,23 @@ cask "immich-gallery-linux" do
         must_succeed:   false
   end
 
-  zap trash: "~/.cache/immich-gallery"
+  zap trash: [
+    "~/.cache/verso",
+    "~/.config/systemd/user/default.target.wants/verso.service",
+    "~/.config/systemd/user/gvfs-udisks2-volume-monitor.service.d/verso.conf",
+    "~/.config/systemd/user/verso.service",
+    "~/.config/verso",
+    "~/.local/share/verso",
+    "~/.local/state/verso",
+  ]
 
   caveats <<~EOS
-    An evaluation build. It shares Immich Mount's sign-in: signed in there, it
-    opens signed in, and its Sign Out signs Immich Mount out too. "Immich
-    Gallery" is a working name.
+    An evaluation build. Open Verso from the app grid and sign in; where Immich
+    Mount is signed in, it offers that account. Its service then runs the tray
+    from login, and the drive once you switch it on in Preferences, Verso Drive.
+    On GNOME the tray needs the AppIndicator extension.
+
+    Verso is an independent, unofficial project, not affiliated with the Immich
+    project or FUTO.
   EOS
 end
