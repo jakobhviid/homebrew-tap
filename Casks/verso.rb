@@ -1,6 +1,6 @@
 cask "verso" do
-  version "0.5.6"
-  sha256 "daaffdf9b4c642193b403f1ca78b997db73df0b28434c1de4f35365205ed536e"
+  version "0.5.7"
+  sha256 "b2c32a4f4569158a31a484f4f628297cae321123c8361f73b8c67e0a316f06d2"
 
   # Why a releases-only repository: the source is private while the app is evaluated; the builds are public.
   url "https://github.com/jakobhviid/verso-releases/releases/download/v#{version}/verso-x86_64.tar.gz"
@@ -38,6 +38,19 @@ cask "verso" do
            target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/dev.hviid.Verso.png"
   artifact "verso/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg",
            target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg"
+  # Verso Drive's own icon, the app's with a drive's badge, for the drive in a dock, Files and Show in.
+  artifact "verso/hicolor/16x16/apps/dev.hviid.Verso.Drive.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/16x16/apps/dev.hviid.Verso.Drive.png"
+  artifact "verso/hicolor/32x32/apps/dev.hviid.Verso.Drive.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/32x32/apps/dev.hviid.Verso.Drive.png"
+  artifact "verso/hicolor/64x64/apps/dev.hviid.Verso.Drive.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/64x64/apps/dev.hviid.Verso.Drive.png"
+  artifact "verso/hicolor/128x128/apps/dev.hviid.Verso.Drive.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/128x128/apps/dev.hviid.Verso.Drive.png"
+  artifact "verso/hicolor/256x256/apps/dev.hviid.Verso.Drive.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/256x256/apps/dev.hviid.Verso.Drive.png"
+  artifact "verso/hicolor/512x512/apps/dev.hviid.Verso.Drive.png",
+           target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/dev.hviid.Verso.Drive.png"
   # Verso Drive's menu in Files (Open in Immich, Copy Immich Link, Show in other apps), for nautilus-python.
   artifact "verso/verso-nautilus.py",
            target: "#{Dir.home}/.local/share/nautilus-python/extensions/verso-nautilus.py"
