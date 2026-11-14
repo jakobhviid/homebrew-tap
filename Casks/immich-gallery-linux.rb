@@ -2,21 +2,15 @@ cask "immich-gallery-linux" do
   version "0.1.0"
   sha256 "a08ed077c630ddc6adffaff7b4d085c8c63d4de99fc9bb9c8941e484d557b6ad"
 
-  # Why the API address and a token: the repository stays private while the app is evaluated, and GitHub serves a
-  # private release's file only through its API, to a token that may read the repository (`gh auth token` gives one).
-  # The asset's number changes with each release; the version in the query is for brew (GitHub ignores it).
-  url "https://api.github.com/repos/jakobhviid/immich-gallery-linux/releases/assets/747367772?version=#{version}",
-      header: [
-        "Accept: application/octet-stream",
-        "Authorization: Bearer #{ENV.fetch("HOMEBREW_GITHUB_API_TOKEN", "")}",
-      ]
+  # Why a releases-only repository: the source is private while the app is evaluated; the builds are public.
+  url "https://github.com/jakobhviid/immich-gallery-linux-releases/releases/download/v#{version}/immich-gallery-linux-x86_64.tar.gz"
   name "Immich Gallery for Linux"
   desc "Gallery for an Immich photo library, beside Immich Mount (evaluation build)"
-  homepage "https://github.com/jakobhviid/immich-gallery-linux"
+  homepage "https://github.com/jakobhviid/immich-gallery-linux-releases"
 
-  # Why no livecheck: the releases are private, so nothing outside can read the latest one.
   livecheck do
-    skip "Private evaluation releases"
+    url :url
+    strategy :github_latest
   end
 
   # Why x86_64 and Fedora 44's libraries: it is built in Immich Mount's Fedora 44 toolbox and links the system's GTK 4
@@ -72,11 +66,8 @@ cask "immich-gallery-linux" do
   zap trash: "~/.cache/immich-gallery"
 
   caveats <<~EOS
-    An evaluation build from a private repository: brew downloads it with your
-    GitHub token, so install and upgrade it with
-      HOMEBREW_GITHUB_API_TOKEN=$(gh auth token) brew install jakobhviid/tap/immich-gallery-linux
-
-    It shares Immich Mount's sign-in: signed in there, it opens signed in, and
-    its Sign Out signs Immich Mount out too. "Immich Gallery" is a working name.
+    An evaluation build. It shares Immich Mount's sign-in: signed in there, it
+    opens signed in, and its Sign Out signs Immich Mount out too. "Immich
+    Gallery" is a working name.
   EOS
 end
