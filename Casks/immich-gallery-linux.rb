@@ -1,6 +1,6 @@
 cask "immich-gallery-linux" do
-  version "0.2.0"
-  sha256 "d84c849ad381f858c974bec1017cb3581087c821d493c0aabeacc86ed77ff0a4"
+  version "0.3.0"
+  sha256 "c7fbbb90a1801637e7fd21d0f4402586b07169ea53432c274f3b02b7c1474943"
 
   # Why a releases-only repository: the source is private while the app is evaluated; the builds are public.
   url "https://github.com/jakobhviid/immich-gallery-linux-releases/releases/download/v#{version}/immich-gallery-linux-x86_64.tar.gz"
