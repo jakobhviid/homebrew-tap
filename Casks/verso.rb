@@ -1,6 +1,6 @@
 cask "verso" do
-  version "0.5.14"
-  sha256 "d93842694db9da77fb7930cb229ac79e7dcb97f5fb928a871a96409d1314437a"
+  version "0.5.15"
+  sha256 "df6b0a2ed84acbfb2d420885935c6696b77b668c7b0003d9ae1b37ea758404f0"
 
   # Why a releases-only repository: the source is private while the app is evaluated; the builds are public.
   url "https://github.com/jakobhviid/verso-releases/releases/download/v#{version}/verso-x86_64.tar.gz"
@@ -38,6 +38,9 @@ cask "verso" do
            target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/dev.hviid.Verso.png"
   artifact "verso/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg",
            target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg"
+  # The top bar's icon while the server cannot be reached.
+  artifact "verso/hicolor/symbolic/apps/dev.hviid.Verso-offline-symbolic.svg",
+           target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.Verso-offline-symbolic.svg"
   # Verso Drive's own icon, the app's with a drive's badge, for the drive in a dock, Files and Show in.
   artifact "verso/hicolor/16x16/apps/dev.hviid.Verso.Drive.png",
            target: "#{Dir.home}/.local/share/icons/hicolor/16x16/apps/dev.hviid.Verso.Drive.png"
