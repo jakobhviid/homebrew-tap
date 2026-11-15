@@ -1,6 +1,6 @@
 cask "verso" do
-  version "0.5.15"
-  sha256 "df6b0a2ed84acbfb2d420885935c6696b77b668c7b0003d9ae1b37ea758404f0"
+  version "0.5.16"
+  sha256 "1d9113373dd2e6d4e5846a1d415600fa8a3605ebac9dcd38927a351a2b06201a"
 
   # Why a releases-only repository: the source is private while the app is evaluated; the builds are public.
   url "https://github.com/jakobhviid/verso-releases/releases/download/v#{version}/verso-x86_64.tar.gz"
@@ -38,9 +38,21 @@ cask "verso" do
            target: "#{Dir.home}/.local/share/icons/hicolor/512x512/apps/dev.hviid.Verso.png"
   artifact "verso/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg",
            target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.Verso-symbolic.svg"
-  # The top bar's icon while the server cannot be reached.
+  # The top bar icon's states: in the desktop's one colour, and in colour (Preferences, General, Colour).
   artifact "verso/hicolor/symbolic/apps/dev.hviid.Verso-offline-symbolic.svg",
            target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.Verso-offline-symbolic.svg"
+  artifact "verso/hicolor/symbolic/apps/dev.hviid.Verso-signed-out-symbolic.svg",
+           target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.Verso-signed-out-symbolic.svg"
+  artifact "verso/hicolor/symbolic/apps/dev.hviid.Verso-unmounted-symbolic.svg",
+           target: "#{Dir.home}/.local/share/icons/hicolor/symbolic/apps/dev.hviid.Verso-unmounted-symbolic.svg"
+  artifact "verso/hicolor/scalable/apps/dev.hviid.Verso-tray.svg",
+           target: "#{Dir.home}/.local/share/icons/hicolor/scalable/apps/dev.hviid.Verso-tray.svg"
+  artifact "verso/hicolor/scalable/apps/dev.hviid.Verso-tray-offline.svg",
+           target: "#{Dir.home}/.local/share/icons/hicolor/scalable/apps/dev.hviid.Verso-tray-offline.svg"
+  artifact "verso/hicolor/scalable/apps/dev.hviid.Verso-tray-signed-out.svg",
+           target: "#{Dir.home}/.local/share/icons/hicolor/scalable/apps/dev.hviid.Verso-tray-signed-out.svg"
+  artifact "verso/hicolor/scalable/apps/dev.hviid.Verso-tray-unmounted.svg",
+           target: "#{Dir.home}/.local/share/icons/hicolor/scalable/apps/dev.hviid.Verso-tray-unmounted.svg"
   # Verso Drive's own icon, the app's with a drive's badge, for the drive in a dock, Files and Show in.
   artifact "verso/hicolor/16x16/apps/dev.hviid.Verso.Drive.png",
            target: "#{Dir.home}/.local/share/icons/hicolor/16x16/apps/dev.hviid.Verso.Drive.png"
