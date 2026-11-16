@@ -1,6 +1,6 @@
 cask "verso" do
-  version "0.33.0"
-  sha256 "df0436f07c150d88e68bc1e494c81489d738b737e0d6a386be4cf5e42358e657"
+  version "0.41.1"
+  sha256 "4c37e1e1259edea88485148f4a7220a05e245cad74540a3d31e31bc864c7dfc6"
 
   # Why a releases-only repository: the source is private while the app is evaluated; the builds are public.
   url "https://github.com/jakobhviid/verso-releases/releases/download/v#{version}/verso-x86_64.tar.gz"
