@@ -1,6 +1,6 @@
 cask "paseo-linux" do
-  version "0.15.4"
-  sha256 "a35de13bb9642e75e418c2906ef54ab24c5364140645199d2cf2d9ef3d5c7797"
+  version "0.17.3"
+  sha256 "fc4c539ebdac54dc0fdd63081b847c8737695f2cb1473aafec5f5d7f6b841276"
 
   # Why the filename carries no version: upstream names the Linux AppImage after
   # the architecture only, so the release tag is the sole thing that moves. The
@@ -90,21 +90,12 @@ cask "paseo-linux" do
     # double the Caskroom footprint for no benefit.
     remove "Paseo-x86_64.AppImage"
 
-    # Why this one-word patch is load-bearing: upstream's AppRun finds its AppDir
-    # by walking *up* from its own location until it finds a directory containing
-    # "$1" — the first command-line argument, which is only ever an AppDir marker
-    # by accident. Inside a mounted AppImage nothing notices, because the AppImage
-    # runtime exports APPDIR and the discovery block is skipped entirely. Run from
-    # an extracted tree, APPDIR is unset, so the loop runs — and since upstream's
-    # own Exec passes `--no-sandbox %U`, "$1" is a flag that exists nowhere, the
-    # walk climbs past / and sets APPDIR to the empty string. The launcher then
-    # execs "/Paseo" and dies with "No such file or directory" (verified against
-    # 0.7.2). Testing for AppRun instead is what the loop was reaching for: the
-    # AppDir is the directory AppRun lives in, so it now terminates immediately
-    # and correctly whether or not arguments were passed.
-    inreplace "squashfs-root/AppRun",
-              '! -e "$path/$1"',
-              '! -e "$path/AppRun"'
+    # AppRun is used as shipped. Up to 0.15.x it found its AppDir by walking up
+    # from itself looking for "$1", which run from an extracted tree with any
+    # argument climbed past / and exec'd "/Paseo", so this cask patched the test
+    # to look for AppRun. electron-builder's template made that same fix itself,
+    # and Paseo ships it from 0.16.0 on. The paseo suite still checks it, so a
+    # regression upstream fails the bump instead of landing.
 
     # Why: Paseo ships an electron-updater manifest pointed at its own GitHub
     # releases. It cannot actually damage this install — AppRun assigns APPIMAGE

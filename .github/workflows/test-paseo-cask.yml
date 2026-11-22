@@ -106,24 +106,25 @@ jobs:
       - name: Verify AppRun finds its AppDir when given arguments
         run: |
           set -x
-          # Why this has its own step: upstream's AppRun locates the AppDir by
-          # walking up from itself looking for a directory containing "$1", which
-          # outside a mounted AppImage (where the runtime exports APPDIR) walks
-          # past / and leaves APPDIR empty as soon as any argument is passed —
-          # and the desktop entry passes two. The cask patches the test to look
-          # for AppRun itself, so this is the regression check for that patch.
+          # Why this has its own step: up to 0.15.x upstream's AppRun located the
+          # AppDir by walking up from itself looking for a directory containing
+          # "$1", which outside a mounted AppImage (where the runtime exports
+          # APPDIR) walks past / and leaves APPDIR empty as soon as any argument
+          # is passed — and the desktop entry passes two. The cask patched the
+          # test to look for AppRun until electron-builder's template made the
+          # same fix in 0.16.0; this now guards against upstream regressing.
           caskroom="$(brew --caskroom)/paseo-linux"
           grep -q 'e "$path/AppRun"' "$caskroom"/*/squashfs-root/AppRun
 
           # And the same thing end to end, through the Homebrew bin symlink. The
           # app rejects the URL as an unknown command and exits non-zero, which is
-          # fine and is upstream's business; what must not appear is the shell
-          # failing to find the binary at all, which is what an empty APPDIR
-          # produces ("/Paseo: No such file or directory").
+          # fine and is upstream's business; what must not appear is an empty
+          # APPDIR — which the old AppRun turned into "/Paseo: No such file or
+          # directory" and the current one reports by name.
           paseo-desktop --no-sandbox 'paseo://ci-appdir-check' >/tmp/appdir.log 2>&1 || true
           cat /tmp/appdir.log
-          if grep -q "No such file or directory" /tmp/appdir.log; then
-            echo "::error::AppRun resolved an empty AppDir — the APPDIR patch no longer applies"
+          if grep -qE "No such file or directory|could not locate the AppDir" /tmp/appdir.log; then
+            echo "::error::AppRun resolved an empty AppDir from the extracted tree"
             exit 1
           fi
           pkill -9 -f 'Paseo Daemon' 2>/dev/null || true
