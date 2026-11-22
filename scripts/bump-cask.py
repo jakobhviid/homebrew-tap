@@ -22,7 +22,7 @@ untouched otherwise, so a caller can branch on `git diff`.
 
 Usage:
     scripts/bump-cask.py Casks/orca-linux.rb
-    scripts/bump-cask.py Casks/immich-mount.rb --check   # report only, no rewrite
+    scripts/bump-cask.py Casks/paseo-linux.rb --check   # report only, no rewrite
 """
 
 from __future__ import annotations
@@ -49,6 +49,13 @@ CASKS = {
             "arm64_linux": "orca-linux-arm64.AppImage",
             "x86_64_linux": "orca-linux.AppImage",
         },
+    ),
+    "paseo-linux": (
+        "getpaseo/paseo",
+        # Upstream names the Linux AppImage after the architecture only — no
+        # version in the filename — so the release tag is the only part of the
+        # URL that moves. There is no arm64 Linux asset to pin.
+        {None: "Paseo-x86_64.AppImage"},
     ),
     "immich-mount": (
         "jakobhviid/immich-mount",

@@ -1,0 +1,62 @@
+name: Bump paseo-linux
+
+# Why: Paseo ships releases frequently and the Linux AppImage filename carries no
+# version, so nothing about a stale pin is visible from the URL — the cask would
+# just keep installing an old build. This bumps it unattended, and lands the
+# commit on main only after the paseo suite has passed against that exact commit,
+# so an upstream change that breaks the cask leaves main alone and shows up as a
+# failed run instead.
+on:
+  schedule:
+    # Upstream's releases land around 00:30 UTC. 07:45 clears that and does not
+    # collide with the orca (06:00), Proton (06:30) or claude (07:17) bumps,
+    # which would otherwise contend for the same runners and API budget.
+    - cron: "45 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump-paseo
+  cancel-in-progress: false
+
+# The shape every bump shares: _propose moves each cask on its own and pushes
+# what moved to a scratch branch; the suite below tests that commit; _finish
+# lands each cask that passed onto main and keeps one issue per broken cask.
+jobs:
+  propose:
+    uses: ./.github/workflows/_propose.yml
+    permissions:
+      contents: write
+    with:
+      kind: github
+      tokens: >-
+        paseo-linux
+      candidate: auto/bump-paseo-linux
+
+  validate:
+    needs: propose
+    if: needs.propose.outputs.moved != ''
+    uses: ./.github/workflows/test-paseo-cask.yml
+    with:
+      ref: ${{ needs.propose.outputs.sha }}
+
+  finish:
+    needs: [propose, validate]
+    if: always()
+    uses: ./.github/workflows/_finish.yml
+    permissions:
+      contents: write
+      issues: write
+      actions: read
+    with:
+      pipeline: paseo-linux
+      tokens: >-
+        paseo-linux
+      candidate: auto/bump-paseo-linux
+      sha: ${{ needs.propose.outputs.sha }}
+      moved: ${{ needs.propose.outputs.moved }}
+      broken: ${{ needs.propose.outputs.broken }}
+      propose-result: ${{ needs.propose.result }}
+      validate-result: ${{ needs.validate.result }}

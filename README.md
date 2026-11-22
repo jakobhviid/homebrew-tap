@@ -32,6 +32,7 @@ launcher entry and icon included — and installs with the same command; run
 | [llama-matrix](https://github.com/jakobhviid/llama-matrix) | Measure llama-swap model memory footprints and generate a co-residency matrix so as many models run concurrently as physically fit - without exceeding VRAM | macOS, Linux (x86_64, arm64) |
 | [opencode-provider-manager](https://github.com/jakobhviid/opencode-provider-manager) | Install & manage the opencode-provider-manager plugin for opencode | macOS, Linux (x86_64, arm64) |
 | [orca-linux](https://onorca.dev/) | IDE for orchestrating AI coding agents across terminals and worktrees | Linux (x86_64, arm64) |
+| [paseo-linux](https://paseo.sh/) | Self-hosted control plane for running coding agents from any device | Linux (x86_64) |
 | [proton-drive-cli](https://proton.me/drive) | Access Proton Drive end-to-end encrypted cloud storage from the terminal | macOS, Linux (x86_64, arm64) |
 | [proton-mail-linux](https://proton.me/mail) | Encrypted email client | Linux (x86_64) |
 | [proton-meet-linux](https://proton.me/meet) | End-to-end encrypted video conferencing | Linux (x86_64) |
@@ -108,18 +109,3 @@ brew untap jakobhviid/tap         # remove the tap entirely
 
   After that, a Brewfile that still names `jakobhviid/tap/navibeat-linux`
   installs the official one.
-- **Paseo lives in homebrew/cask.** This tap used to carry it as
-  `paseo-linux`, from before the official `paseo` cask had a Linux build. It
-  now installs the same AppImage, launcher entry and icon included:
-  `brew install --cask paseo`. `tap_migrations.json` points the old name at
-  it, so `brew update` moves an existing install over, but the official cask
-  lets Paseo update itself, which `brew upgrade` leaves alone — and the build
-  this tap installed has that updater taken out. Swap it once, or it stays on
-  the version it has:
-
-  ```sh
-  brew reinstall --cask paseo
-  ```
-
-  The official cask puts no `paseo` CLI on PATH on Linux;
-  `npm install -g @getpaseo/cli` does.

@@ -21,12 +21,12 @@ cask "orca-linux" do
   # Why imagemagick: every icon upstream ships is a macOS-style export — the
   # squircle is 824px in a 1024px canvas, Apple's icon grid exactly — so on a
   # Linux desktop the launcher draws about a sixth smaller than every neighbour
-  # that fills its tile. Unlike claude-desktop-linux, whose payload carries a
-  # borderless copy of the same artwork to switch to, this one has the margin
-  # baked into every asset it ships, including the 1024px masters. That leaves
-  # cropping, and `magick -trim` is the one dependency that does it from the
-  # artwork itself rather than from a number pinned here that would silently
-  # mis-crop the first time upstream redraws the icon.
+  # that fills its tile. Unlike claude-desktop-linux and paseo-linux, whose
+  # payloads each carry a borderless copy of the same artwork to switch to, this
+  # one has the margin baked into every asset it ships, including the 1024px
+  # masters. That leaves cropping, and `magick -trim` is the one dependency that
+  # does it from the artwork itself rather than from a number pinned here that
+  # would silently mis-crop the first time upstream redraws the icon.
   depends_on formula: "imagemagick"
   # Why the squashfs formula: extraction reads the image's embedded filesystem
   # with unsquashfs, so the tool has to be there on any host this installs on,
