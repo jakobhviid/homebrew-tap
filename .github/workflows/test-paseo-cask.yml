@@ -139,7 +139,7 @@ jobs:
           desktop-file-validate "$entry"
           # Exec must point at the stable Homebrew symlink, not AppRun, and must
           # keep both of upstream's arguments.
-          grep -qx "Exec=$(brew --prefix)/bin/paseo-desktop --no-sandbox %U" "$entry"
+          grep -qx "Exec=$(brew --prefix)/bin/paseo-desktop --class=Paseo %U" "$entry"
           # StartupWMClass is what lets the shell group Paseo's windows under the
           # icon, and Icon= is what makes the installed PNGs resolve by name.
           grep -qx "StartupWMClass=Paseo" "$entry"
@@ -191,7 +191,7 @@ jobs:
           # into the Caskroom and re-running preflight against fresh staging.
           # Reinstall walks that same path without needing two published versions.
           brew reinstall --cask jakobhviid/tap/paseo-linux
-          grep -qx "Exec=$(brew --prefix)/bin/paseo-desktop --no-sandbox %U" \
+          grep -qx "Exec=$(brew --prefix)/bin/paseo-desktop --class=Paseo %U" \
             "$HOME/.local/share/applications/Paseo.desktop"
           test "$(find "$HOME/.local/share/icons/hicolor" -path '*/apps/Paseo.png' | wc -l)" -eq 1
           paseo --version
@@ -208,9 +208,15 @@ jobs:
           export DISPLAY=:99
           sleep 3
 
-          # Launched exactly as the desktop entry does, --no-sandbox included, so
-          # this tests the configuration users actually get.
-          setsid paseo-desktop --no-sandbox >/tmp/gui.log 2>&1 &
+          # Launched exactly as the desktop entry does, so this tests the
+          # configuration users actually get — including AppRun's own choice of
+          # whether to sandbox, which hinges on the probe logged here.
+          if unshare -Ur true 2>/dev/null; then
+            echo "unprivileged user namespaces available: AppRun keeps the sandbox"
+          else
+            echo "unprivileged user namespaces unavailable: AppRun adds --no-sandbox"
+          fi
+          setsid paseo-desktop --class=Paseo >/tmp/gui.log 2>&1 &
           app_pid=$!
           alive=1
           for _ in $(seq 1 30); do

@@ -105,16 +105,18 @@ cask "paseo-linux" do
     # install, and keeps brew unambiguously in charge of the version.
     remove "squashfs-root/resources/app-update.yml"
 
-    # Why: `Exec=AppRun --no-sandbox %U` only resolves inside a mounted AppImage.
-    # Point it at the Homebrew bin symlink so the entry survives version bumps,
-    # and keep both of upstream's arguments: %U is what feeds the
-    # x-scheme-handler/paseo association its URL, and --no-sandbox is upstream's
-    # own launch flag, not this cask's choice (see the caveats). No
-    # `audit_result: false` here: a .desktop with no Exec line is a broken payload
-    # and should fail the install loudly.
+    # Why: `Exec=AppRun --class=Paseo %U` only resolves inside a mounted
+    # AppImage. Point it at the Homebrew bin symlink so the entry survives
+    # version bumps, and rewrite only the program so upstream's arguments pass
+    # through as shipped: %U is what feeds the x-scheme-handler/paseo
+    # association its URL, and --class=Paseo is what sets the WM_CLASS that
+    # StartupWMClass matches. Whether the Chromium sandbox is on is upstream's
+    # call too, made in AppRun at launch (see the caveats). No `audit_result:
+    # false` here: an entry that no longer launches AppRun is a payload this
+    # rewrite does not understand, and should fail the install loudly.
     inreplace "squashfs-root/Paseo.desktop",
-              /^Exec=.*$/,
-              "Exec={{HOMEBREW_PREFIX}}/bin/paseo-desktop --no-sandbox %U"
+              /^Exec=AppRun /,
+              "Exec={{HOMEBREW_PREFIX}}/bin/paseo-desktop "
     # Why: brew owns the version here, so an AppImage-provenance stamp would go
     # stale on the first upgrade and misreport what's installed. `audit_result:
     # false` keeps a build that omits the key installable — `inreplace` raises on
@@ -213,13 +215,10 @@ cask "paseo-linux" do
     dependencies first, or the binaries will fail at load time rather than on
     launch.
 
-    The desktop entry keeps upstream's own `--no-sandbox` flag, which is how
-    Paseo ships its Linux launcher: the Chromium sandbox is off. Nothing about
-    this cask requires it — the app starts without it on a host whose
-    unprivileged user namespaces are enabled — so if you would rather keep the
-    sandbox, drop the flag from
-    ~/.local/share/applications/Paseo.desktop, or launch `paseo-desktop`
-    directly.
+    The Chromium sandbox follows upstream's launcher: `paseo-desktop` turns it
+    off (adds `--no-sandbox`) only on a host where unprivileged user namespaces
+    are unavailable, since the app cannot start sandboxed there. Enable them
+    and it runs sandboxed; nothing in this cask turns the sandbox off.
 
     Starting the app starts a background daemon (`Paseo Daemon`) that outlives
     the window and keeps its state in ~/.paseo. Uninstalling does not stop a
