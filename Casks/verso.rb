@@ -1,6 +1,6 @@
 cask "verso" do
-  version "0.41.1"
-  sha256 "4c37e1e1259edea88485148f4a7220a05e245cad74540a3d31e31bc864c7dfc6"
+  version "0.72.0"
+  sha256 "3ae7f416573d91207ca251001313cf7e8b7cf6390c35cc92c9aebc70b1b5007c"
 
   # Why a releases-only repository: the source is private while the app is evaluated; the builds are public.
   url "https://github.com/jakobhviid/verso-releases/releases/download/v#{version}/verso-x86_64.tar.gz"
@@ -23,7 +23,7 @@ cask "verso" do
   binary "verso/verso-service"
   artifact "verso/dev.hviid.Verso.desktop",
            target: "#{Dir.home}/.local/share/applications/dev.hviid.Verso.desktop"
-  # The Mac app's icon at each size, and its menu bar icon as the symbolic one.
+  # The app's icon at each size, and its symbolic one.
   artifact "verso/hicolor/16x16/apps/dev.hviid.Verso.png",
            target: "#{Dir.home}/.local/share/icons/hicolor/16x16/apps/dev.hviid.Verso.png"
   artifact "verso/hicolor/32x32/apps/dev.hviid.Verso.png",
