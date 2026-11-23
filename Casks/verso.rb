@@ -13,9 +13,11 @@ cask "verso" do
     strategy :github_latest
   end
 
-  # Why x86_64 and Fedora 44's libraries: it is built in Immich Mount's Fedora 44 toolbox and links the system's GTK 4
-  # and libadwaita, as Immich Mount's own cask does. The map's library (libshumate), which a desktop may not have,
-  # comes with it in lib/, beside the window's program that finds it there.
+  # Why x86_64 and GNOME 49's libraries: it is built in a Fedora 44 toolbox and links the system's GTK 4 (4.18 at
+  # least) and libadwaita (1.8 at least). bin/verso is a script that checks the system's libadwaita first and says why
+  # on an older one, as the window binds every symbol as it loads and the loader would stop it unseen; it then runs
+  # the window, libexec/verso. The map's library (libshumate), which a desktop may not have, comes with it in
+  # libexec/lib/, beside the window's program that finds it there.
   depends_on arch: :x86_64
   depends_on linux: :any
 
@@ -125,6 +127,12 @@ cask "verso" do
     Mount is signed in, it offers that account. Its service then runs the tray
     from login, and the drive once you switch it on in Preferences, Verso Drive.
     On GNOME the tray needs the AppIndicator extension.
+
+    Verso needs GNOME 49's libraries or newer (libadwaita 1.8 and GTK 4.18):
+    Fedora 43 and newer, Ubuntu 25.10 and 26.04 LTS, Debian 14, Arch and other
+    rolling distributions. On an older system (Ubuntu 24.04 and what is built
+    on it, Debian 13, Fedora 42) Verso says so when it starts; its Flatpak,
+    verso-x86_64.flatpak on the releases page, runs there, without Verso Drive.
 
     Verso is an independent, unofficial project, not affiliated with the Immich
     project or FUTO.
