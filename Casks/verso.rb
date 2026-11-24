@@ -28,14 +28,12 @@ cask "verso" do
 
     url "https://github.com/jakobhviid/verso/releases/download/v#{version}/verso-x86_64.tar.gz"
 
-
     # Why x86_64 and GNOME 49's libraries: it is built in a Fedora 44 toolbox and links the system's GTK 4 (4.18 at
-    # least) and libadwaita (1.8 at least). bin/verso is a script that checks the system's libadwaita first and says why
-    # on an older one, as the window binds every symbol as it loads and the loader would stop it unseen; it then runs
-    # the window, libexec/verso. The map's library (libshumate), which a desktop may not have, comes with it in
+    # least) and libadwaita (1.8 at least). bin/verso is a script that checks the system's libadwaita first and says
+    # why on an older one, as the window binds every symbol as it loads and the loader would stop it unseen; it then
+    # runs the window, libexec/verso. The map's library (libshumate), which a desktop may not have, comes with it in
     # libexec/lib/, beside the window's program that finds it there.
     depends_on arch: :x86_64
-    depends_on linux: :any
 
     binary "verso/verso"
     binary "verso/verso-service"

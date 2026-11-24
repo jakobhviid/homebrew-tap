@@ -100,6 +100,17 @@ def cask_platforms(src: str) -> str:
         if re.search(rf'^\s*(?:sha256\s+)?{key}:\s', src, re.MULTILINE):
             oses.setdefault(os_name, set()).add(arch)
 
+    # A cask with a part per system (verso) carries a bare `sha256` inside each of
+    # its on_macos and on_linux blocks: each names its OS, narrowed by the block's
+    # own `depends_on arch:`; a Mac part without one is a universal app.
+    if not oses:
+        for os_name, block in (("macOS", "on_macos"), ("Linux", "on_linux")):
+            part = re.search(rf"^  {block} do\n(.*?)^  end$", src, re.MULTILINE | re.DOTALL)
+            if part and re.search(r'^    sha256\s+"', part.group(1), re.MULTILINE):
+                archs = {arch for pattern, arch in ((r":x86_64\b", "x86_64"), (r":arm64\b", "arm64"))
+                         if re.search(rf"^    depends_on\s+arch:\s+{pattern}", part.group(1), re.MULTILINE)}
+                oses[os_name] = archs or ({"x86_64", "arm64"} if os_name == "macOS" else set())
+
     # A top-level `depends_on :linux` / `depends_on macos:` gate is authoritative:
     # it can rule out an OS whose arch keys are present, and stands alone for a
     # cask whose sha256 is a single universal hash. One nested in an on_macos or

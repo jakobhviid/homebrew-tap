@@ -39,7 +39,7 @@ launcher entry and icon included — and installs with the same command; run
 | [proton-pass-linux](https://proton.me/pass) | Password manager | Linux (x86_64) |
 | [pwtune](https://github.com/jakobhviid/pwtune) | Measure any speaker with any mic and build a PipeWire EQ profile | Linux (x86_64, arm64) |
 | [temper](https://github.com/jakobhviid/temper) | Converge a machine to a declared spec kept in a folder of human-readable files | macOS, Linux (x86_64, arm64) |
-| [verso](https://github.com/jakobhviid/verso-releases) | Gallery, drive and tray for an Immich photo library (evaluation build) | Linux (x86_64) |
+| [verso](https://jakob.hviid.phd/verso/) | Gallery, drive and tray for an Immich photo library (unofficial) | macOS (x86_64, arm64) · Linux (x86_64) |
 <!-- END TOOLS -->
 
 Each tool's own repository (linked above) is the place for its usage docs. Some

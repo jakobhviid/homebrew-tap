@@ -71,6 +71,8 @@ jobs:
             # The tripwire: brew must report the version this checkout
             # declares, or a wrong-tree audit passes silently.
             expected="$(sed -n 's/^  version "\(.*\)"$/\1/p' "$cask")"
+            # A cask with a version per system (verso): brew on this Linux runner reports its on_linux part's.
+            [ -n "$expected" ] || expected="$(awk '$0 == "  on_linux do" { inside = 1 } inside && /^    version "/ { gsub(/^    version "|"$/, ""); print; exit }' "$cask")"
             actual="$(brew info --cask --json=v2 "jakobhviid/tap/$token" \
               | python3 -c 'import json,sys; print(json.load(sys.stdin)["casks"][0]["version"])')" || ok=false
             echo "$token: checkout=$expected brew=$actual"
