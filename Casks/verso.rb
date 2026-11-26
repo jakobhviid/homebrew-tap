@@ -2,8 +2,8 @@ cask "verso" do
   # Why one cask for both systems: `brew install --cask jakobhviid/tap/verso` is the one command on either. Each part
   # has a version of its own, as a release carries the Mac only when it was built for it.
   on_macos do
-    version "0.75.0"
-    sha256 "e67730754c74b2a25bb84dc802022bda78d1e2890bf90da9e2e2198bea076215"
+    version "0.76.0"
+    sha256 "b85d540dd8de6051c9acb84ccad8278cf596f95395978e10d569bb8246d41fb2"
 
     # The notarized universal app, one disk image for Apple silicon and Intel.
     url "https://github.com/jakobhviid/verso/releases/download/v#{version}/verso-#{version}.dmg"
@@ -23,8 +23,8 @@ cask "verso" do
     EOS
   end
   on_linux do
-    version "0.75.0"
-    sha256 "b900a34d3578ea9775a35fa9a93e06f2b1b46c7ec1fc5014c330099d764d76b1"
+    version "0.76.0"
+    sha256 "99c91c74aabcf0a9c633950aa8845540edbeb78c219ff60be724764de10dcf18"
 
     url "https://github.com/jakobhviid/verso/releases/download/v#{version}/verso-x86_64.tar.gz"
 
