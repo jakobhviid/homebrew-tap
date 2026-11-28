@@ -2,8 +2,8 @@ cask "verso" do
   # Why one cask for both systems: `brew install --cask jakobhviid/tap/verso` is the one command on either. Each part
   # has a version of its own, as a release carries the Mac only when it was built for it.
   on_macos do
-    version "0.77.0"
-    sha256 "2257e44ed1ba60bfbd09c66d266ae3d3a390f7de69a540a61db254d092d16a99"
+    version "0.78.0"
+    sha256 "044b6158ed0f7b6a162e1277b2e5e973361ad6a60a7bd54bab8a80723aa82585"
 
     # The notarized universal app, one disk image for Apple silicon and Intel.
     url "https://github.com/jakobhviid/verso/releases/download/v#{version}/verso-#{version}.dmg"
@@ -23,8 +23,8 @@ cask "verso" do
     EOS
   end
   on_linux do
-    version "0.77.0"
-    sha256 "8836c792d618cedee720918fe16122c1d7d0883577d1e3be44140bd1599d9f1a"
+    version "0.78.0"
+    sha256 "131fc9c767d4d19f7aed3d757b0ad662648e4f7f5ade629432f158da45ae68fd"
 
     url "https://github.com/jakobhviid/verso/releases/download/v#{version}/verso-x86_64.tar.gz"
 
@@ -137,7 +137,7 @@ cask "verso" do
     ]
 
     caveats <<~EOS
-      An evaluation build. Open Verso from the app grid and sign in; where Immich
+      Open Verso from the app grid and sign in; where Immich
       Mount is signed in, it offers that account. Its service then runs the tray
       from login, and the drive once you switch it on in Preferences, Verso Drive.
       On GNOME the tray needs the AppIndicator extension.
@@ -152,6 +152,8 @@ cask "verso" do
       project or FUTO.
     EOS
   end
+
+  conflicts_with cask: "verso@beta"
 
   name "Verso for Immich"
   desc "Gallery, drive and tray for an Immich photo library (unofficial)"
