@@ -40,6 +40,7 @@ launcher entry and icon included — and installs with the same command; run
 | [pwtune](https://github.com/jakobhviid/pwtune) | Measure any speaker with any mic and build a PipeWire EQ profile | Linux (x86_64, arm64) |
 | [temper](https://github.com/jakobhviid/temper) | Converge a machine to a declared spec kept in a folder of human-readable files | macOS, Linux (x86_64, arm64) |
 | [verso](https://jakob.hviid.phd/verso/) | Gallery, drive and tray for an Immich photo library (unofficial) | macOS (x86_64, arm64) · Linux (x86_64) |
+| [verso@beta](https://jakob.hviid.phd/verso/) | Gallery, drive and tray for an Immich photo library (unofficial, beta channel) | macOS (x86_64, arm64) · Linux (x86_64) |
 <!-- END TOOLS -->
 
 Each tool's own repository (linked above) is the place for its usage docs. Some
